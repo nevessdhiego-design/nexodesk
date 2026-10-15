@@ -52,6 +52,9 @@ public final class Dtos {
     public record UsuarioResponse(Long id, String nome, String email, String unidade, String perfil) {
     }
 
+    public record SessaoResponse(boolean autenticado, UsuarioResponse usuario) {
+    }
+
     public record CategoriaResponse(String codigo, String rotulo) {
     }
 
