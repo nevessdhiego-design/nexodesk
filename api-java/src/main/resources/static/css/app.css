@@ -122,9 +122,11 @@ button.link { background: none; color: var(--accent); padding: 0; font-weight: 6
 
 /* ---------- lista de chamados ---------- */
 .chamado { border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1rem; margin-bottom: .75rem; background: #fff; }
+.chamado { min-width: 0; }
 .chamado .linha { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
-.chamado .titulo { font-weight: 700; flex: 1; min-width: 200px; }
-.chamado .meta { color: var(--muted); font-size: .85rem; margin-top: .25rem; }
+/* overflow-wrap: um título longo sem espaços (ou uma URL) não pode empurrar a página para o lado no celular */
+.chamado .titulo { font-weight: 700; flex: 1; min-width: 200px; overflow-wrap: anywhere; }
+.chamado .meta { color: var(--muted); font-size: .85rem; margin-top: .25rem; overflow-wrap: anywhere; }
 .chamado .descricao { margin: .5rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .chamado details { margin-top: .5rem; }
 .chamado summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .9rem; }
@@ -148,7 +150,7 @@ button.link { background: none; color: var(--accent); padding: 0; font-weight: 6
   background: var(--danger); color: #fff; border-radius: 999px;
   font-size: .7rem; padding: 0 .4rem; font-weight: 700;
 }
-.notificacao { border-left: 4px solid var(--border); padding: .5rem .75rem; margin-bottom: .5rem; background: #fafbfb; border-radius: 0 8px 8px 0; }
+.notificacao { border-left: 4px solid var(--border); padding: .5rem .75rem; margin-bottom: .5rem; background: #fafbfb; border-radius: 0 8px 8px 0; overflow-wrap: anywhere; }
 .notificacao.nova { border-left-color: var(--highlight); background: #eef6f4; }
 
 @media (max-width: 640px) {

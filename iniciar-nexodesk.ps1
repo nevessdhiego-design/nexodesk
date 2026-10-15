@@ -79,8 +79,16 @@ if (-not (Test-Path $venvPython)) {
 
 # --- jar da API ---
 $jar = Join-Path $pastaApi "target\api-0.0.1-SNAPSHOT.jar"
-if ($Reconstruir -or -not (Test-Path $jar)) {
-    Write-Host "Gerando o .jar da API (so na primeira vez, leva ~1 minuto)..."
+# Reconstroi se o jar nao existe, se pediram, ou se algum arquivo da API (codigo, telas, pom) for mais novo que ele.
+$desatualizado = $false
+if (Test-Path $jar) {
+    $dataJar = (Get-Item $jar).LastWriteTime
+    $maisNovo = @(Get-ChildItem (Join-Path $pastaApi "src") -Recurse -File) + (Get-Item (Join-Path $pastaApi "pom.xml")) |
+        Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    $desatualizado = ($maisNovo.LastWriteTime -gt $dataJar)
+}
+if ($Reconstruir -or $desatualizado -or -not (Test-Path $jar)) {
+    Write-Host "Gerando o .jar da API (leva ~1 minuto)..."
     Push-Location $pastaApi
     try {
         & (Join-Path $pastaApi "mvnw.cmd") -B -q package -DskipTests
