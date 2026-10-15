@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NexoDesk - Painel do síndico</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Nexo<span>Desk</span></div>
+    <div class="espaco"></div>
+    <span class="usuario" id="usuario"></span>
+    <button type="button" class="secundario" id="botao-sair">Sair</button>
+  </header>
+
+  <main class="pagina">
+    <section class="estatisticas" id="estatisticas" aria-label="Resumo"></section>
+
+    <section class="cartao">
+      <h2>Fila de chamados</h2>
+      <p class="muted">Ordenados do mais fácil ao mais difícil de resolver. Em empate, o mais antigo primeiro.</p>
+      <label for="filtro">Mostrar</label>
+      <select id="filtro">
+        <option value="ativos">Pendentes (abertos e em andamento)</option>
+        <option value="todos">Todos</option>
+        <option value="ABERTO">Só abertos</option>
+        <option value="EM_ANDAMENTO">Só em andamento</option>
+        <option value="RESOLVIDO">Só resolvidos</option>
+      </select>
+      <div id="mensagem" class="mensagem hidden" role="alert"></div>
+      <div id="lista-chamados"></div>
+    </section>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/sindico.js"></script>
+</body>
+</html>

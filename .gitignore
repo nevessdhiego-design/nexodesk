@@ -1,0 +1,20 @@
+# Java
+api-java/target/
+api-java/data/
+api-java/uploads/
+api-java/.mvn/wrapper/maven-wrapper.jar
+
+# Python
+servico-prioridade/.venv/
+__pycache__/
+.pytest_cache/
+
+# Segredos e ambiente local: nunca no Git
+.env
+*.env
+*.log
+
+# Editores
+.idea/
+.vscode/
+*.iml
