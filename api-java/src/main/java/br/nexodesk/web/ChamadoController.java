@@ -1,7 +1,9 @@
 package br.nexodesk.web;
 
 import br.nexodesk.dominio.Categoria;
+import br.nexodesk.servico.AvaliacaoService;
 import br.nexodesk.servico.ChamadoService;
+import br.nexodesk.web.Dtos.AvaliacaoRequest;
 import br.nexodesk.web.Dtos.CategoriaResponse;
 import br.nexodesk.web.Dtos.ChamadoResponse;
 import br.nexodesk.web.Dtos.NovoChamadoForm;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,9 +29,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChamadoController {
 
     private final ChamadoService chamados;
+    private final AvaliacaoService avaliacoes;
 
-    public ChamadoController(ChamadoService chamados) {
+    public ChamadoController(ChamadoService chamados, AvaliacaoService avaliacoes) {
         this.chamados = chamados;
+        this.avaliacoes = avaliacoes;
     }
 
     @GetMapping("/categorias")
@@ -52,6 +57,14 @@ public class ChamadoController {
     @GetMapping("/chamados/{id}")
     public ChamadoResponse detalhe(@PathVariable Long id, Authentication autenticacao) {
         return chamados.detalhe(autenticacao.getName(), id);
+    }
+
+    /** O morador avalia o atendimento de um chamado dele que já foi resolvido. */
+    @PostMapping("/chamados/{id}/avaliacao")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void avaliar(@PathVariable Long id, @Valid @RequestBody AvaliacaoRequest dados,
+                        Authentication autenticacao) {
+        avaliacoes.avaliar(autenticacao.getName(), id, dados);
     }
 
     @GetMapping("/chamados/{id}/imagem")

@@ -3,6 +3,8 @@ package br.nexodesk.web;
 import br.nexodesk.config.LimitadorTentativasLogin;
 import br.nexodesk.servico.ApiException;
 import br.nexodesk.servico.UsuarioService;
+import br.nexodesk.web.Dtos.AlterarSenhaRequest;
+import br.nexodesk.web.Dtos.AtualizarPerfilRequest;
 import br.nexodesk.web.Dtos.CadastroRequest;
 import br.nexodesk.web.Dtos.LoginRequest;
 import br.nexodesk.web.Dtos.SessaoResponse;
@@ -20,6 +22,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -88,5 +91,30 @@ public class AuthController {
     @GetMapping("/me")
     public UsuarioResponse eu(Authentication autenticacao) {
         return usuarios.eu(autenticacao.getName());
+    }
+
+    /** "Minha conta": nome, telefone e unidade. E-mail e perfil não mudam por aqui. */
+    @PatchMapping("/me")
+    public UsuarioResponse atualizarPerfil(@Valid @RequestBody AtualizarPerfilRequest dados,
+                                           Authentication autenticacao) {
+        return usuarios.atualizarPerfil(autenticacao.getName(), dados);
+    }
+
+    /**
+     * Troca de senha. Errar a senha atual conta como falha de login (mesmo limitador), senão uma
+     * sessão sequestrada poderia tentar adivinhar a senha sem limite.
+     */
+    @PostMapping("/senha")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void alterarSenha(@Valid @RequestBody AlterarSenhaRequest dados, Authentication autenticacao,
+                             HttpServletRequest request) {
+        String email = autenticacao.getName();
+        String ip = request.getRemoteAddr();
+        limitador.verificar(ip, email);
+        if (!usuarios.alterarSenha(email, dados)) {
+            limitador.registrarFalha(ip, email);
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Senha atual incorreta.");
+        }
+        limitador.registrarSucesso(ip, email);
     }
 }

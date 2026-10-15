@@ -5,19 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NexoDesk - Meus chamados</title>
   <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/acessibilidade.css">
+  <script src="/js/acessibilidade.js"></script>
 </head>
 <body>
+  <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
   <header class="topo">
     <div class="marca">Nexo<span>Desk</span></div>
     <div class="espaco"></div>
     <span class="usuario" id="usuario"></span>
+    <a class="botao-link" href="/conta.html">Minha conta</a>
     <button type="button" class="secundario sino" id="botao-sino" aria-label="Notificações">
       Avisos <span class="contador hidden" id="contador"></span>
     </button>
     <button type="button" class="secundario" id="botao-sair">Sair</button>
   </header>
 
-  <main class="pagina">
+  <main class="pagina" id="conteudo" tabindex="-1">
     <section class="cartao hidden" id="painel-avisos" aria-live="polite">
       <h2>Avisos</h2>
       <div id="lista-avisos"></div>

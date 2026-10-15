@@ -33,7 +33,7 @@ relatório da 1ª parcial.
 | RF02 classificar por dificuldade | `servico-prioridade/app/regras.py`, `ClassificadorPython` |
 | RF03 síndico vê do mais fácil ao mais difícil | `ChamadoRepository.findByStatusInOrderByPontuacaoAscCriadoEmAsc`, `sindico.html` |
 | RF04 atualizar status (aberto, em andamento, resolvido) | `SindicoController.alterarStatus` + tabela `historico_status` |
-| RF05 notificar o morador | tabela `notificacoes` (aviso dentro do sistema); e-mail **não** implementado |
+| RF05 notificar o morador | tabela `notificacoes` (aviso dentro do sistema) e e-mail por SMTP (desligado por padrão; testado só contra servidor falso) |
 | RNF01 resposta < 3 s | chamada ao Python com limite de 2 s e reserva |
 | RNF02 senha criptografada | bcrypt (`SecurityConfig`) |
 | RNF03 interface responsiva | `app.css` (testado em largura de celular) |
@@ -79,6 +79,20 @@ use o passo a passo manual a seguir.
 
 Os dados do modo desenvolvimento ficam em `api-java/data/` e as fotos em `api-java/uploads/` (ambos fora do Git).
 
+### Ligar o aviso por e-mail (opcional)
+
+Por padrão **nenhum e-mail sai da máquina**: o sistema só registra no log (com o endereço mascarado). Para enviar de
+verdade quando o síndico muda o status, use o perfil `email` e defina as variáveis (nunca em arquivo):
+
+```powershell
+$env:NEXODESK_SMTP_HOST = 'smtp.exemplo.com'; $env:NEXODESK_SMTP_PORTA = '587'
+$env:NEXODESK_SMTP_USUARIO = '...'; $env:NEXODESK_SMTP_SENHA = '...'      # no Gmail, use "senha de app"
+$env:NEXODESK_EMAIL_REMETENTE = 'nexodesk@seudominio.com'
+.\iniciar-nexodesk.ps1 -Perfil email          # ou mysql,email
+```
+
+O envio por SMTP foi testado contra um servidor falso (testes automáticos), **não** contra um provedor real.
+
 ### Usar MySQL em vez do H2
 
 ```sql
@@ -123,7 +137,10 @@ cd api-java;           .\mvnw.cmd test                              # API comple
 | `POST /api/chamados` (multipart) | morador | abre chamado (foto opcional) |
 | `GET /api/chamados/meus`, `GET /api/chamados/{id}`, `GET /api/chamados/{id}/imagem` | dono ou síndico | consulta |
 | `GET /api/sindico/chamados?status=ativos\|todos\|ABERTO\|EM_ANDAMENTO\|RESOLVIDO` | síndico | fila priorizada |
-| `PATCH /api/sindico/chamados/{id}/status` | síndico | muda status e avisa o morador |
+| `PATCH /api/auth/me`, `POST /api/auth/senha` | logado | minha conta: dados e troca de senha |
+| `POST /api/chamados/{id}/avaliacao` | dono | nota de 1 a 5 (só chamado resolvido, uma vez) |
+| `GET /api/sindico/chamados/exportar.csv` | síndico | a fila em CSV (abre no Excel) |
+| `PATCH /api/sindico/chamados/{id}/status` | síndico | muda status, avisa o morador (sistema e e-mail) |
 | `GET /api/sindico/estatisticas` | síndico | contagens |
 | `GET /api/notificacoes`, `POST /api/notificacoes/{id}/lida` | logado | avisos |
 
@@ -142,6 +159,7 @@ cd api-java;           .\mvnw.cmd test                              # API comple
 
 ## Ainda não feito (decidir com o grupo)
 
-- Notificação por e-mail (RF05 hoje é só dentro do sistema).
+- E-mail testado com um provedor real (hoje só contra servidor SMTP falso).
+- Encerrar as outras sessões do usuário ao trocar a senha.
 - Gestão de vários condomínios, paginação da fila, recuperação de senha, painel desktop (PyQt5 do `aa`).
 - HTTPS e cookie `Secure` para publicar fora do localhost.

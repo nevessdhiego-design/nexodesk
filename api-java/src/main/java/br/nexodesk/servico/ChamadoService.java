@@ -1,5 +1,6 @@
 package br.nexodesk.servico;
 
+import br.nexodesk.dominio.Avaliacao;
 import br.nexodesk.dominio.Chamado;
 import br.nexodesk.dominio.Dificuldade;
 import br.nexodesk.dominio.HistoricoStatus;
@@ -7,6 +8,7 @@ import br.nexodesk.dominio.Notificacao;
 import br.nexodesk.dominio.Perfil;
 import br.nexodesk.dominio.StatusChamado;
 import br.nexodesk.dominio.Usuario;
+import br.nexodesk.repositorio.AvaliacaoRepository;
 import br.nexodesk.repositorio.ChamadoRepository;
 import br.nexodesk.repositorio.HistoricoStatusRepository;
 import br.nexodesk.repositorio.NotificacaoRepository;
@@ -17,8 +19,12 @@ import br.nexodesk.web.Dtos.HistoricoResponse;
 import br.nexodesk.web.Dtos.NovoChamadoForm;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Set;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -36,16 +42,21 @@ public class ChamadoService {
     private final UsuarioService usuarios;
     private final ClassificadorDificuldade classificador;
     private final ArmazenamentoImagem imagens;
+    private final AvaliacaoRepository avaliacoes;
+    private final ApplicationEventPublisher eventos;
 
     public ChamadoService(ChamadoRepository chamados, HistoricoStatusRepository historicos,
                           NotificacaoRepository notificacoes, UsuarioService usuarios,
-                          ClassificadorDificuldade classificador, ArmazenamentoImagem imagens) {
+                          ClassificadorDificuldade classificador, ArmazenamentoImagem imagens,
+                          AvaliacaoRepository avaliacoes, ApplicationEventPublisher eventos) {
         this.chamados = chamados;
         this.historicos = historicos;
         this.notificacoes = notificacoes;
         this.usuarios = usuarios;
         this.classificador = classificador;
         this.imagens = imagens;
+        this.avaliacoes = avaliacoes;
+        this.eventos = eventos;
     }
 
     /** RF01 + RF02: cadastra o chamado já classificado por dificuldade. */
@@ -76,15 +87,15 @@ public class ChamadoService {
         c = chamados.save(c);
 
         registrarHistorico(c, null, StatusChamado.ABERTO, morador, "Chamado aberto.");
-        return paraResposta(c, false, List.of());
+        return paraResposta(c, false, List.of(), null);
     }
 
     @Transactional(readOnly = true)
     public List<ChamadoResponse> meus(String emailMorador) {
         Usuario morador = usuarios.buscarPorEmail(emailMorador);
-        return chamados.findByMoradorOrderByCriadoEmDesc(morador).stream()
-                .map(c -> paraResposta(c, false, List.of()))
-                .toList();
+        List<Chamado> lista = chamados.findByMoradorOrderByCriadoEmDesc(morador);
+        Map<Long, Avaliacao> notas = avaliacoesDe(lista);
+        return lista.stream().map(c -> paraResposta(c, false, List.of(), notas.get(c.getId()))).toList();
     }
 
     /**
@@ -105,9 +116,9 @@ public class ChamadoService {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "Filtro de status inválido.");
             }
         }
-        return chamados.findByStatusInOrderByPontuacaoAscCriadoEmAsc(status).stream()
-                .map(c -> paraResposta(c, true, List.of()))
-                .toList();
+        List<Chamado> lista = chamados.findByStatusInOrderByPontuacaoAscCriadoEmAsc(status);
+        Map<Long, Avaliacao> notas = avaliacoesDe(lista);
+        return lista.stream().map(c -> paraResposta(c, true, List.of(), notas.get(c.getId()))).toList();
     }
 
     @Transactional(readOnly = true)
@@ -123,7 +134,8 @@ public class ChamadoService {
                         h.getObservacao(),
                         h.getCriadoEm()))
                 .toList();
-        return paraResposta(c, visaoSindico, historico);
+        Avaliacao nota = avaliacoes.buscarDosChamados(List.of(c)).stream().findFirst().orElse(null);
+        return paraResposta(c, visaoSindico, historico, nota);
     }
 
     /** RF04 + RF05: muda o status, registra o histórico e avisa o morador. */
@@ -148,7 +160,12 @@ public class ChamadoService {
         n.setMensagem(montarMensagem(c, anterior, observacao));
         notificacoes.save(n);
 
-        return paraResposta(c, true, List.of());
+        // o e-mail só sai depois que a transação confirmar (veja NotificadorEmailStatus)
+        eventos.publishEvent(new StatusAlteradoEvent(c.getId(), c.getTitulo(), c.getMorador().getNome(),
+                c.getMorador().getEmail(), anterior, c.getStatus(), observacao));
+
+        Avaliacao nota = avaliacoes.buscarDosChamados(List.of(c)).stream().findFirst().orElse(null);
+        return paraResposta(c, true, List.of(), nota);
     }
 
     @Transactional(readOnly = true)
@@ -159,7 +176,9 @@ public class ChamadoService {
                 chamados.countByStatus(StatusChamado.RESOLVIDO),
                 pendentes(Dificuldade.FACIL),
                 pendentes(Dificuldade.MEDIA),
-                pendentes(Dificuldade.DIFICIL));
+                pendentes(Dificuldade.DIFICIL),
+                media(avaliacoes.mediaDasNotas()),
+                avaliacoes.count());
     }
 
     @Transactional(readOnly = true)
@@ -178,6 +197,19 @@ public class ChamadoService {
     }
 
     // ---------- internos ----------
+
+    private Map<Long, Avaliacao> avaliacoesDe(List<Chamado> lista) {
+        if (lista.isEmpty()) {
+            return Map.of();
+        }
+        return avaliacoes.buscarDosChamados(lista).stream()
+                .collect(Collectors.toMap(a -> a.getChamado().getId(), Function.identity()));
+    }
+
+    /** Média com uma casa decimal (4,3333 vira 4,3), ou null se ninguém avaliou ainda. */
+    private static Double media(Double valor) {
+        return valor == null ? null : Math.round(valor * 10.0) / 10.0;
+    }
 
     private long pendentes(Dificuldade d) {
         return PENDENTES.stream().mapToLong(s -> chamados.countByStatusAndDificuldade(s, d)).sum();
@@ -216,7 +248,8 @@ public class ChamadoService {
     }
 
     /** No chamado anônimo o síndico não recebe nome nem unidade do morador. */
-    private static ChamadoResponse paraResposta(Chamado c, boolean visaoSindico, List<HistoricoResponse> historico) {
+    private static ChamadoResponse paraResposta(Chamado c, boolean visaoSindico, List<HistoricoResponse> historico,
+                                                Avaliacao avaliacao) {
         boolean ocultar = visaoSindico && c.isAnonimo();
         List<String> justificativa = c.getJustificativa() == null
                 ? List.of()
@@ -230,6 +263,9 @@ public class ChamadoService {
                 c.getPontuacao(), justificativa, c.isClassificacaoFallback(),
                 ocultar ? "Anônimo" : c.getMorador().getNome(),
                 ocultar ? null : c.getMorador().getUnidade(),
-                c.getCriadoEm(), c.getAtualizadoEm(), historico);
+                c.getCriadoEm(), c.getAtualizadoEm(),
+                avaliacao == null ? null : avaliacao.getNota(),
+                avaliacao == null ? null : avaliacao.getComentario(),
+                historico);
     }
 }

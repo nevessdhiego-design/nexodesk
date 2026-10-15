@@ -3,6 +3,8 @@ package br.nexodesk.servico;
 import br.nexodesk.dominio.Perfil;
 import br.nexodesk.dominio.Usuario;
 import br.nexodesk.repositorio.UsuarioRepository;
+import br.nexodesk.web.Dtos.AlterarSenhaRequest;
+import br.nexodesk.web.Dtos.AtualizarPerfilRequest;
 import br.nexodesk.web.Dtos.CadastroRequest;
 import br.nexodesk.web.Dtos.UsuarioResponse;
 import org.springframework.http.HttpStatus;
@@ -53,8 +55,33 @@ public class UsuarioService {
         return paraResposta(buscarPorEmail(email));
     }
 
+    /** Atualiza só nome, telefone e unidade. E-mail e perfil nunca mudam por aqui. */
+    @Transactional
+    public UsuarioResponse atualizarPerfil(String email, AtualizarPerfilRequest dados) {
+        Usuario u = buscarPorEmail(email);
+        u.setNome(dados.nome().trim());
+        u.setTelefone(vazioParaNulo(dados.telefone()));
+        u.setUnidade(vazioParaNulo(dados.unidade()));
+        return paraResposta(usuarios.save(u));
+    }
+
+    /** Troca a senha exigindo a atual. Devolve false se a senha atual estiver errada. */
+    @Transactional
+    public boolean alterarSenha(String email, AlterarSenhaRequest dados) {
+        Usuario u = buscarPorEmail(email);
+        if (!codificador.matches(dados.senhaAtual(), u.getSenhaHash())) {
+            return false;
+        }
+        if (dados.senhaAtual().equals(dados.novaSenha())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "A nova senha deve ser diferente da atual.");
+        }
+        u.setSenhaHash(codificador.encode(dados.novaSenha()));
+        usuarios.save(u);
+        return true;
+    }
+
     public static UsuarioResponse paraResposta(Usuario u) {
-        return new UsuarioResponse(u.getId(), u.getNome(), u.getEmail(), u.getUnidade(), u.getPerfil().name());
+        return new UsuarioResponse(u.getId(), u.getNome(), u.getEmail(), u.getTelefone(), u.getUnidade(), u.getPerfil().name());
     }
 
     private static String vazioParaNulo(String s) {

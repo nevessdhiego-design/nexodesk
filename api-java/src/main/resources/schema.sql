@@ -50,6 +50,20 @@ CREATE TABLE IF NOT EXISTS historico_status (
     INDEX idx_historico_chamado (chamado_id, criado_em)
 );
 
+-- Avaliação do atendimento: uma por chamado (UNIQUE), só do dono, só depois de RESOLVIDO (regra no serviço).
+CREATE TABLE IF NOT EXISTS avaliacoes (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    chamado_id  BIGINT       NOT NULL,
+    morador_id  BIGINT       NOT NULL,
+    nota        INT          NOT NULL,
+    comentario  VARCHAR(500),
+    criado_em   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_avaliacoes_chamado UNIQUE (chamado_id),
+    CONSTRAINT fk_avaliacoes_chamado FOREIGN KEY (chamado_id) REFERENCES chamados (id),
+    CONSTRAINT fk_avaliacoes_morador FOREIGN KEY (morador_id) REFERENCES usuarios (id),
+    CONSTRAINT ck_avaliacoes_nota CHECK (nota BETWEEN 1 AND 5)
+);
+
 CREATE TABLE IF NOT EXISTS notificacoes (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
     usuario_id  BIGINT       NOT NULL,

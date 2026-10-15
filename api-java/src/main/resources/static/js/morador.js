@@ -4,6 +4,49 @@ const listaAvisos = document.getElementById('lista-avisos');
 const painelAvisos = document.getElementById('painel-avisos');
 const contador = document.getElementById('contador');
 
+const ROTULOS_NOTA = { 5: 'Ótimo', 4: 'Bom', 3: 'Regular', 2: 'Ruim', 1: 'Péssimo' };
+
+function estrelas(nota) {
+  return '★'.repeat(nota) + '☆'.repeat(5 - nota);
+}
+
+/** Só aparece em chamado RESOLVIDO: a nota já dada, ou o formulário para dar uma. */
+function blocoAvaliacao(c) {
+  if (c.status !== 'RESOLVIDO') return null;
+  if (c.notaAvaliacao !== null && c.notaAvaliacao !== undefined) {
+    return el('div', { class: 'avaliacao' },
+      el('strong', { text: 'Sua avaliação: ' }),
+      el('span', { class: 'estrelas', text: estrelas(c.notaAvaliacao), 'aria-label': c.notaAvaliacao + ' de 5 estrelas' }),
+      c.comentarioAvaliacao ? el('p', { text: c.comentarioAvaliacao }) : null);
+  }
+  const nota = el('select', { id: 'nota-' + c.id },
+    el('option', { value: '', text: 'Escolha uma nota…' }),
+    [5, 4, 3, 2, 1].map((n) => el('option', { value: String(n), text: n + ' - ' + ROTULOS_NOTA[n] })));
+  const comentario = el('input', { type: 'text', id: 'comentario-' + c.id, maxlength: '500', placeholder: 'Comentário (opcional)' });
+  const enviar = el('button', { type: 'button', text: 'Enviar avaliação' });
+  const aviso = el('div', { class: 'mensagem hidden', role: 'alert' });
+  enviar.addEventListener('click', async () => {
+    limparMensagem(aviso);
+    if (!nota.value) { mostrarMensagem(aviso, 'Escolha uma nota de 1 a 5.', 'erro'); return; }
+    enviar.disabled = true;
+    try {
+      await api('/api/chamados/' + c.id + '/avaliacao', {
+        metodo: 'POST',
+        json: { nota: Number(nota.value), comentario: comentario.value },
+      });
+      await carregarChamados();
+    } catch (erro) {
+      mostrarMensagem(aviso, erro.message, 'erro');
+      enviar.disabled = false;
+    }
+  });
+  return el('div', { class: 'avaliacao' },
+    el('h3', { text: 'Como foi o atendimento?' }),
+    el('label', { for: 'nota-' + c.id, text: 'Nota' }), nota,
+    el('label', { for: 'comentario-' + c.id, text: 'Comentário' }), comentario,
+    el('div', { class: 'acoes' }, enviar), aviso);
+}
+
 function cartaoChamado(c) {
   const detalhes = el('div', { class: 'hidden' });
   let carregado = false;
@@ -44,6 +87,7 @@ function cartaoChamado(c) {
       selo('Dificuldade: ' + c.dificuldadeRotulo, c.dificuldade),
       c.anonimo ? selo('Anônimo', 'neutro') : null),
     el('div', { class: 'meta', text: c.categoriaRotulo + (c.localOcorrencia ? ' · ' + c.localOcorrencia : '') + ' · aberto em ' + formatarData(c.criadoEm) }),
+    blocoAvaliacao(c),
     alternar,
     detalhes);
 }
