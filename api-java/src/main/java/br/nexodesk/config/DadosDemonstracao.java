@@ -6,8 +6,10 @@ import br.nexodesk.dominio.StatusChamado;
 import br.nexodesk.dominio.Usuario;
 import br.nexodesk.repositorio.ChamadoRepository;
 import br.nexodesk.repositorio.UsuarioRepository;
+import br.nexodesk.servico.AvaliacaoService;
 import br.nexodesk.servico.ChamadoService;
 import br.nexodesk.web.Dtos.AlterarStatusRequest;
+import br.nexodesk.web.Dtos.AvaliacaoRequest;
 import br.nexodesk.web.Dtos.ChamadoResponse;
 import br.nexodesk.web.Dtos.NovoChamadoForm;
 import org.slf4j.Logger;
@@ -35,17 +37,19 @@ public class DadosDemonstracao implements ApplicationRunner {
     private final UsuarioRepository usuarios;
     private final ChamadoRepository chamados;
     private final ChamadoService servico;
+    private final AvaliacaoService avaliacoes;
     private final PasswordEncoder codificador;
     private final String senhaDemo;
     private final String emailSindico;
 
     public DadosDemonstracao(UsuarioRepository usuarios, ChamadoRepository chamados, ChamadoService servico,
-                             PasswordEncoder codificador,
+                             AvaliacaoService avaliacoes, PasswordEncoder codificador,
                              @Value("${nexodesk.demo.senha:}") String senhaDemo,
                              @Value("${nexodesk.sindico.email}") String emailSindico) {
         this.usuarios = usuarios;
         this.chamados = chamados;
         this.servico = servico;
+        this.avaliacoes = avaliacoes;
         this.codificador = codificador;
         this.senhaDemo = senhaDemo;
         this.emailSindico = emailSindico.trim().toLowerCase();
@@ -84,6 +88,7 @@ public class DadosDemonstracao implements ApplicationRunner {
         // dois chamados já andaram, para a demonstração mostrar histórico e avisos
         servico.alterarStatus(emailSindico, lampada.id(),
                 new AlterarStatusRequest(StatusChamado.RESOLVIDO, "Lâmpada trocada hoje."));
+        avaliacoes.avaliar(ana, lampada.id(), new AvaliacaoRequest(5, "Resolvido no mesmo dia, obrigada."));
         servico.alterarStatus(emailSindico, vazamento.id(),
                 new AlterarStatusRequest(StatusChamado.EM_ANDAMENTO, "Encanador agendado para amanhã."));
 

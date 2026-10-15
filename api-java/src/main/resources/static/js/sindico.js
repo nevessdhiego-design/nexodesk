@@ -40,6 +40,12 @@ function cartaoChamado(c, posicao) {
       + ' · ' + c.moradorNome + (c.moradorUnidade ? ' (' + c.moradorUnidade + ')' : '')
       + ' · ' + formatarData(c.criadoEm) }),
     el('p', { class: 'descricao', text: c.descricao }),
+    c.notaAvaliacao !== null && c.notaAvaliacao !== undefined
+      ? el('div', { class: 'avaliacao' },
+        el('strong', { text: 'Avaliação do morador: ' }),
+        el('span', { class: 'estrelas', text: '★'.repeat(c.notaAvaliacao) + '☆'.repeat(5 - c.notaAvaliacao), 'aria-label': c.notaAvaliacao + ' de 5 estrelas' }),
+        c.comentarioAvaliacao ? el('p', { text: c.comentarioAvaliacao }) : null)
+      : null,
     c.temImagem ? el('img', { class: 'foto', src: '/api/chamados/' + c.id + '/imagem', alt: 'Foto enviada no chamado' }) : null,
     el('details', {},
       el('summary', { text: 'Por que essa dificuldade?' }),
@@ -56,6 +62,8 @@ async function carregarEstatisticas() {
   const itens = [
     ['Abertos', e.abertos], ['Em andamento', e.emAndamento], ['Resolvidos', e.resolvidos],
     ['Pendentes fáceis', e.pendentesFaceis], ['Pendentes médios', e.pendentesMedios], ['Pendentes difíceis', e.pendentesDificeis],
+    ['Avaliação média', e.mediaAvaliacoes === null || e.mediaAvaliacoes === undefined
+      ? '—' : String(e.mediaAvaliacoes).replace('.', ',') + ' / 5 (' + e.totalAvaliacoes + ')'],
   ];
   document.getElementById('estatisticas').replaceChildren(...itens.map(([rotulo, valor]) =>
     el('div', { class: 'estatistica' },
@@ -64,6 +72,8 @@ async function carregarEstatisticas() {
 }
 
 async function carregar() {
+  // o link de exportação segue o filtro escolhido na tela
+  document.getElementById('exportar').href = '/api/sindico/chamados/exportar.csv?status=' + encodeURIComponent(filtro.value);
   const [chamados] = await Promise.all([
     api('/api/sindico/chamados?status=' + encodeURIComponent(filtro.value)),
     carregarEstatisticas(),

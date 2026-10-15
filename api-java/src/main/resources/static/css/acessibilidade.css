@@ -1,0 +1,149 @@
+/* Acessibilidade do NexoDesk. As classes são aplicadas em <html> por js/acessibilidade.js.
+   O tamanho do texto é controlado pelo JS em documentElement.style.fontSize (%). */
+
+/* ---------- link "pular para o conteúdo" (aparece só com o foco do teclado) ---------- */
+.pular-conteudo {
+  position: absolute;
+  left: .5rem;
+  top: -4rem;
+  z-index: 1000;
+  background: #fff;
+  color: #000;
+  padding: .6rem 1rem;
+  border-radius: 8px;
+  border: 2px solid #000;
+  font-weight: 700;
+}
+.pular-conteudo:focus { top: .5rem; }
+
+/* ---------- alto contraste ---------- */
+html.a11y-contraste {
+  --bg: #ffffff;
+  --card: #ffffff;
+  --text: #000000;
+  --muted: #000000;
+  --border: #000000;
+  --secondary: #000000;
+  --accent: #000000;
+  --highlight: #000000;
+}
+html.a11y-contraste body { font-weight: 500; }
+html.a11y-contraste a, html.a11y-contraste button.link { text-decoration: underline; }
+html.a11y-contraste .cartao, html.a11y-contraste .chamado, html.a11y-contraste .estatistica { border-width: 2px; }
+html.a11y-contraste input, html.a11y-contraste select, html.a11y-contraste textarea { border: 2px solid #000; }
+html.a11y-contraste .topo { background: #000; }
+html.a11y-contraste button:not(.secundario):not(.link):not(.abas button):hover { background: #333; }
+html.a11y-contraste .selo { border: 2px solid #000; background: #fff; color: #000; }
+
+/* ---------- modo escuro ---------- */
+html.a11y-escuro {
+  --bg: #1a1b1e;
+  --card: #25262b;
+  --text: #f2f2f4;
+  --muted: #b9bfc9;
+  --border: rgba(255, 255, 255, .22);
+  --secondary: #9fd4cc;
+  --accent: #4f7d75;
+  --highlight: #7eb8b0;
+  color-scheme: dark;
+}
+html.a11y-escuro .topo { background: #101113; }
+html.a11y-escuro h2, html.a11y-escuro h3 { color: #9fd4cc; }
+html.a11y-escuro input, html.a11y-escuro select, html.a11y-escuro textarea {
+  background: #1a1b1e;
+  color: var(--text);
+}
+html.a11y-escuro .chamado, html.a11y-escuro .estatistica { background: var(--card); }
+html.a11y-escuro .notificacao { background: #2c2d33; }
+html.a11y-escuro .notificacao.nova { background: #1f3a36; }
+html.a11y-escuro .abas button { background: #2c2d33; color: var(--text); }
+html.a11y-escuro .abas button.ativa { background: var(--accent); color: #fff; }
+html.a11y-escuro .mensagem.erro { background: #3a1f1f; color: #ffb4b4; border-color: #6b3434; }
+html.a11y-escuro .mensagem.ok { background: #1d3327; color: #a8e0bd; border-color: #2f5a42; }
+html.a11y-escuro .selo.FACIL, html.a11y-escuro .selo.MEDIA, html.a11y-escuro .selo.DIFICIL,
+html.a11y-escuro .selo.ABERTO, html.a11y-escuro .selo.EM_ANDAMENTO, html.a11y-escuro .selo.RESOLVIDO,
+html.a11y-escuro .selo.neutro { background: #2c2d33; border-color: var(--border); }
+html.a11y-escuro .selo.FACIL, html.a11y-escuro .selo.RESOLVIDO { color: #8fe0ae; }
+html.a11y-escuro .selo.MEDIA, html.a11y-escuro .selo.EM_ANDAMENTO { color: #f0cd7a; }
+html.a11y-escuro .selo.DIFICIL { color: #ffa3a3; }
+html.a11y-escuro .selo.ABERTO { color: #a9c6f0; }
+html.a11y-escuro .selo.neutro { color: var(--muted); }
+
+/* ---------- reduzir movimento ---------- */
+html.a11y-sem-movimento *, html.a11y-sem-movimento *::before, html.a11y-sem-movimento *::after {
+  animation-duration: .01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .01ms !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html *, html *::before, html *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ---------- fonte mais legível (sem arquivo externo: usa o que o sistema tiver) ---------- */
+html.a11y-fonte-legivel body, html.a11y-fonte-legivel button, html.a11y-fonte-legivel input,
+html.a11y-fonte-legivel select, html.a11y-fonte-legivel textarea {
+  font-family: "Atkinson Hyperlegible", Verdana, "Trebuchet MS", sans-serif !important;
+  letter-spacing: .02em;
+  word-spacing: .08em;
+  line-height: 1.7;
+}
+
+/* ---------- botão e painel flutuantes ---------- */
+#a11y-botao {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 900;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .6);
+  background: #253342;
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.05rem;
+  padding: 0;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .3);
+}
+#a11y-botao:hover, #a11y-botao:focus-visible { background: #3e5954; outline: 3px solid #5e9188; outline-offset: 2px; }
+
+#a11y-painel {
+  position: fixed;
+  right: 16px;
+  bottom: 78px;
+  z-index: 899;
+  width: min(340px, calc(100vw - 32px));
+  max-height: calc(100vh - 110px);
+  overflow: auto;
+  background: #fff;
+  color: #232226;
+  border: 1px solid rgba(35, 34, 38, .2);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .25);
+  font-size: 15px;
+}
+#a11y-painel[hidden] { display: none; }
+.a11y-cabecalho { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid rgba(35, 34, 38, .12); }
+.a11y-cabecalho h2 { margin: 0; font-size: 1.05rem; color: #253342; }
+#a11y-fechar { background: transparent; color: #253342; font-size: 1.6rem; line-height: 1; padding: .1rem .6rem; }
+#a11y-fechar:hover { background: rgba(35, 34, 38, .1); }
+.a11y-secao { padding: 12px 16px; border-bottom: 1px solid rgba(35, 34, 38, .1); }
+.a11y-secao h3 { margin: 0 0 8px; font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: #3e5954; }
+.a11y-linha { display: flex; align-items: center; gap: 8px; }
+.a11y-linha #a11y-fonte-rotulo { flex: 1; text-align: center; font-weight: 700; }
+.a11y-btn { min-width: 48px; min-height: 44px; background: #fff; color: #253342; border: 2px solid #253342; }
+.a11y-btn:hover, .a11y-btn:focus-visible { background: #253342; color: #fff; }
+.a11y-opcao { display: flex; align-items: center; gap: 10px; min-height: 40px; margin: 0; font-weight: 500; cursor: pointer; }
+.a11y-opcao input { width: 20px; height: 20px; accent-color: #3e5954; }
+#a11y-restaurar { display: block; width: calc(100% - 32px); margin: 12px 16px 16px; background: #f1f3f4; color: #253342; border: 2px dashed rgba(35, 34, 38, .3); }
+#a11y-restaurar:hover { background: #e3e7e9; }
+
+html.a11y-escuro #a11y-painel { background: #25262b; color: #f2f2f4; border-color: rgba(255, 255, 255, .2); }
+html.a11y-escuro .a11y-cabecalho h2, html.a11y-escuro #a11y-fechar { color: #f2f2f4; }
+html.a11y-escuro .a11y-secao h3 { color: #9fd4cc; }
+html.a11y-escuro .a11y-btn { background: #1a1b1e; color: #f2f2f4; border-color: #9fd4cc; }
+html.a11y-escuro .a11y-btn:hover { background: #9fd4cc; color: #1a1b1e; }
+html.a11y-escuro #a11y-restaurar { background: #1a1b1e; color: #f2f2f4; }
+html.a11y-contraste #a11y-botao { background: #000; border-color: #fff; }
+html.a11y-contraste #a11y-painel { border: 2px solid #000; }

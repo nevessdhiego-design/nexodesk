@@ -3,6 +3,8 @@ package br.nexodesk.web;
 import br.nexodesk.dominio.Categoria;
 import br.nexodesk.dominio.StatusChamado;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -42,6 +44,25 @@ public final class Dtos {
             MultipartFile imagem) {
     }
 
+    public record AtualizarPerfilRequest(
+            @NotBlank(message = "Informe o nome.") @Size(max = 120) String nome,
+            @Size(max = 20) String telefone,
+            @Size(max = 40) String unidade) {
+    }
+
+    public record AlterarSenhaRequest(
+            @NotBlank(message = "Informe a senha atual.") String senhaAtual,
+            @NotBlank(message = "Informe a nova senha.")
+            @Size(min = 8, max = 72, message = "A nova senha deve ter de 8 a 72 caracteres.") String novaSenha) {
+    }
+
+    public record AvaliacaoRequest(
+            @NotNull(message = "Informe a nota de 1 a 5.")
+            @Min(value = 1, message = "A nota deve ser de 1 a 5.")
+            @Max(value = 5, message = "A nota deve ser de 1 a 5.") Integer nota,
+            @Size(max = 500, message = "O comentário deve ter no máximo 500 caracteres.") String comentario) {
+    }
+
     public record AlterarStatusRequest(
             @NotNull(message = "Informe o novo status.") StatusChamado status,
             @Size(max = 500) String observacao) {
@@ -49,7 +70,7 @@ public final class Dtos {
 
     // ---------- saída ----------
 
-    public record UsuarioResponse(Long id, String nome, String email, String unidade, String perfil) {
+    public record UsuarioResponse(Long id, String nome, String email, String telefone, String unidade, String perfil) {
     }
 
     public record SessaoResponse(boolean autenticado, UsuarioResponse usuario) {
@@ -82,6 +103,8 @@ public final class Dtos {
             String moradorUnidade,
             LocalDateTime criadoEm,
             LocalDateTime atualizadoEm,
+            Integer notaAvaliacao,
+            String comentarioAvaliacao,
             List<HistoricoResponse> historico) {
     }
 
@@ -93,6 +116,7 @@ public final class Dtos {
     }
 
     public record EstatisticasResponse(long abertos, long emAndamento, long resolvidos,
-                                       long pendentesFaceis, long pendentesMedios, long pendentesDificeis) {
+                                       long pendentesFaceis, long pendentesMedios, long pendentesDificeis,
+                                       Double mediaAvaliacoes, long totalAvaliacoes) {
     }
 }

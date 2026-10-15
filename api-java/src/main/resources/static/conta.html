@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NexoDesk - Minha conta</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/acessibilidade.css">
+  <script src="/js/acessibilidade.js"></script>
+</head>
+<body>
+  <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="marca">Nexo<span>Desk</span></div>
+    <div class="espaco"></div>
+    <a class="botao-link" id="voltar" href="/index.html">Voltar</a>
+    <button type="button" class="secundario" id="botao-sair">Sair</button>
+  </header>
+
+  <main class="pagina" id="conteudo" tabindex="-1">
+    <section class="cartao">
+      <h2>Meus dados</h2>
+      <div id="mensagem-perfil" class="mensagem hidden" role="alert"></div>
+      <form id="form-perfil">
+        <label for="email">E-mail (não pode ser alterado)</label>
+        <input id="email" type="email" disabled>
+
+        <label for="nome">Nome</label>
+        <input id="nome" type="text" maxlength="120" autocomplete="name" required>
+
+        <label for="unidade">Unidade (bloco e apartamento)</label>
+        <input id="unidade" type="text" maxlength="40">
+
+        <label for="telefone">Telefone</label>
+        <input id="telefone" type="tel" maxlength="20" autocomplete="tel">
+
+        <div class="acoes"><button type="submit">Salvar dados</button></div>
+      </form>
+    </section>
+
+    <section class="cartao">
+      <h2>Trocar senha</h2>
+      <div id="mensagem-senha" class="mensagem hidden" role="alert"></div>
+      <form id="form-senha">
+        <label for="senha-atual">Senha atual</label>
+        <input id="senha-atual" type="password" autocomplete="current-password" required>
+
+        <label for="senha-nova">Nova senha (de 8 a 72 caracteres)</label>
+        <input id="senha-nova" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
+
+        <div class="acoes"><button type="submit">Trocar senha</button></div>
+      </form>
+    </section>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/conta.js"></script>
+</body>
+</html>

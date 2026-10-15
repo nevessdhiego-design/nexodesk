@@ -341,6 +341,183 @@ class FluxoChamadoTest {
                 .andExpect(jsonPath("$.pendentesFaceis").isNumber());
     }
 
+    // ---------- avaliação do atendimento ----------
+
+    void mudarStatus(MockHttpSession sindico, int id, String status) throws Exception {
+        mvc.perform(patch("/api/sindico/chamados/%d/status".formatted(id)).with(csrf()).session(sindico)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"%s\"}".formatted(status)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void avaliacaoSoDepoisDeResolvidoSoDoDonoEUmaVez() throws Exception {
+        MockHttpSession morador = moradorLogado();
+        MockHttpSession sindico = sindicoLogado();
+        int id = abrirChamado(morador, "Portão quebrado", "PORTARIA", false);
+        String url = "/api/chamados/%d/avaliacao".formatted(id);
+        String corpo = "{\"nota\":4,\"comentario\":\"Atendimento rápido.\"}";
+
+        // ainda aberto: não pode avaliar
+        mvc.perform(post(url).with(csrf()).session(morador).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("Só é possível avaliar chamados resolvidos."));
+
+        mudarStatus(sindico, id, "RESOLVIDO");
+
+        // nota fora da faixa
+        mvc.perform(post(url).with(csrf()).session(morador).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nota\":6}"))
+                .andExpect(status().isBadRequest());
+        // outro morador não avalia chamado alheio (404, não revela que existe)
+        mvc.perform(post(url).with(csrf()).session(moradorLogado()).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isNotFound());
+        // o dono avalia
+        mvc.perform(post(url).with(csrf()).session(morador).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isCreated());
+        // só uma vez
+        mvc.perform(post(url).with(csrf()).session(morador).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isConflict());
+
+        // a nota aparece para o dono e para o síndico
+        mvc.perform(get("/api/chamados/meus").session(morador))
+                .andExpect(jsonPath("$[0].notaAvaliacao").value(4))
+                .andExpect(jsonPath("$[0].comentarioAvaliacao").value("Atendimento rápido."));
+        mvc.perform(get("/api/sindico/chamados?status=todos").session(sindico))
+                .andExpect(jsonPath("$[?(@.id==%d)].notaAvaliacao".formatted(id)).value(4));
+        mvc.perform(get("/api/sindico/estatisticas").session(sindico))
+                .andExpect(jsonPath("$.totalAvaliacoes").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.mediaAvaliacoes").isNumber());
+    }
+
+    // ---------- minha conta ----------
+
+    @Test
+    void minhaContaAtualizaPerfilMasNuncaEmailNemPerfil() throws Exception {
+        String email = novoEmail();
+        cadastrar(email);
+        MockHttpSession sessao = entrar(email, SENHA);
+        mvc.perform(patch("/api/auth/me").with(csrf()).session(sessao).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nome\":\"Nome Novo\",\"telefone\":\"11 99999-0000\",\"unidade\":\"Bloco C, 30\","
+                                + "\"email\":\"outro@x.com\",\"perfil\":\"SINDICO\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nome").value("Nome Novo"))
+                .andExpect(jsonPath("$.telefone").value("11 99999-0000"))
+                .andExpect(jsonPath("$.unidade").value("Bloco C, 30"))
+                .andExpect(jsonPath("$.email").value(email))
+                .andExpect(jsonPath("$.perfil").value("MORADOR"));
+        mvc.perform(patch("/api/auth/me").with(csrf()).session(sessao).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nome\":\"   \"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void trocaDeSenhaExigeAAtualEFazAAntigaDeixarDeValer() throws Exception {
+        String email = novoEmail();
+        cadastrar(email);
+        MockHttpSession sessao = entrar(email, SENHA);
+        String nova = "Outra-Senha-Forte-9";
+
+        mvc.perform(post("/api/auth/senha").with(csrf()).session(sessao).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"senhaAtual\":\"errada-errada\",\"novaSenha\":\"%s\"}".formatted(nova)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("Senha atual incorreta."));
+        mvc.perform(post("/api/auth/senha").with(csrf()).session(sessao).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"senhaAtual\":\"%s\",\"novaSenha\":\"%s\"}".formatted(SENHA, SENHA)))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/auth/senha").with(csrf()).session(sessao).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"senhaAtual\":\"%s\",\"novaSenha\":\"curta\"}".formatted(SENHA)))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/auth/senha").with(csrf()).session(sessao).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"senhaAtual\":\"%s\",\"novaSenha\":\"%s\"}".formatted(SENHA, nova)))
+                .andExpect(status().isNoContent());
+
+        mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, SENHA)))
+                .andExpect(status().isUnauthorized());
+        entrar(email, nova);
+        assertThat(usuarios.findByEmail(email).orElseThrow().getSenhaHash()).startsWith("$2").doesNotContain(nova);
+    }
+
+    @Test
+    void senhaAtualErradaVariasVezesNaTrocaTambemBloqueia() throws Exception {
+        String email = novoEmail();
+        cadastrar(email);
+        MockHttpSession sessao = entrar(email, SENHA);
+        for (int i = 0; i < 5; i++) {
+            mvc.perform(post("/api/auth/senha").with(csrf()).with(ip("10.9.9.9")).session(sessao)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"senhaAtual\":\"errada-%d-errada\",\"novaSenha\":\"Qualquer-Nova-1\"}".formatted(i)))
+                    .andExpect(status().isBadRequest());
+        }
+        mvc.perform(post("/api/auth/senha").with(csrf()).with(ip("10.9.9.9")).session(sessao)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"senhaAtual\":\"%s\",\"novaSenha\":\"Qualquer-Nova-1\"}".formatted(SENHA)))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    // ---------- exportação CSV ----------
+
+    @Test
+    void csvDoSindicoRespeitaAnonimatoEBloqueiaFormula() throws Exception {
+        MockHttpSession morador = moradorLogado();
+        int anonimo = abrirChamado(morador, "=HYPERLINK(\"http://exemplo.invalido\";\"clique\")", "BARULHO", true);
+        int normal = abrirChamado(morador, "Lâmpada; queimada", "ILUMINACAO", false);
+
+        MvcResult r = mvc.perform(get("/api/sindico/chamados/exportar.csv?status=todos").session(sindicoLogado()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith("text/csv"))
+                .andReturn();
+        assertThat(r.getResponse().getHeader("Content-Disposition")).contains("attachment").contains(".csv");
+        String csv = r.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+
+        assertThat(csv).startsWith("﻿Fila;ID;");
+        String linhaAnonima = linhaDoId(csv, anonimo);
+        assertThat(linhaAnonima).contains("'=HYPERLINK").contains("Anônimo").doesNotContain("Morador Teste");
+        // ponto e vírgula dentro do texto não quebra a coluna: o campo vem entre aspas
+        assertThat(linhaDoId(csv, normal)).contains("\"Lâmpada; queimada\"").contains("Morador Teste");
+    }
+
+    static String linhaDoId(String csv, int id) {
+        // as linhas são "posição;id;..."; as colunas Título e Descrição podem ter aspas, mas não quebras aqui
+        return java.util.Arrays.stream(csv.split("\r\n"))
+                .filter(l -> l.matches("^\\d+;" + id + ";.*"))
+                .findFirst().orElseThrow(() -> new AssertionError("chamado " + id + " não está no CSV"));
+    }
+
+    @Test
+    void moradorNaoExportaCsvDoSindico() throws Exception {
+        mvc.perform(get("/api/sindico/chamados/exportar.csv").session(moradorLogado()))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/sindico/chamados/exportar.csv")).andExpect(status().isUnauthorized());
+    }
+
+    // ---------- e-mail de mudança de status ----------
+
+    @Autowired
+    br.nexodesk.servico.EnviadorEmailSimulado emailSimulado;
+
+    @Test
+    void mudarStatusGeraEmailSemADescricaoENoAssuntoSemOTitulo() throws Exception {
+        String email = novoEmail();
+        cadastrar(email);
+        MockHttpSession morador = entrar(email, SENHA);
+        int id = abrirChamado(morador, "Vazamento no teto", "HIDRAULICA", false);
+
+        mvc.perform(patch("/api/sindico/chamados/%d/status".formatted(id)).with(csrf()).session(sindicoLogado())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"EM_ANDAMENTO\",\"observacao\":\"Encanador agendado.\"}"))
+                .andExpect(status().isOk());
+
+        // o envio é assíncrono e só acontece depois do commit: espera aparecer
+        org.awaitility.Awaitility.await().atMost(java.time.Duration.ofSeconds(5)).untilAsserted(() ->
+                assertThat(emailSimulado.enviados()).anySatisfy(m -> {
+                    assertThat(m.para()).isEqualTo(email);
+                    assertThat(m.assunto()).isEqualTo("NexoDesk: atualização do chamado #" + id);
+                    assertThat(m.texto()).contains("Em andamento").contains("Encanador agendado.")
+                            .contains("Vazamento no teto").doesNotContain("Descrição de teste do chamado.");
+                }));
+    }
+
     // ---------- isolamento entre moradores ----------
 
     @Test

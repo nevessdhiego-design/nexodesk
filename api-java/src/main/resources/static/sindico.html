@@ -5,16 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NexoDesk - Painel do síndico</title>
   <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/acessibilidade.css">
+  <script src="/js/acessibilidade.js"></script>
 </head>
 <body>
+  <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
   <header class="topo">
     <div class="marca">Nexo<span>Desk</span></div>
     <div class="espaco"></div>
     <span class="usuario" id="usuario"></span>
+    <a class="botao-link" href="/conta.html">Minha conta</a>
     <button type="button" class="secundario" id="botao-sair">Sair</button>
   </header>
 
-  <main class="pagina">
+  <main class="pagina" id="conteudo" tabindex="-1">
     <section class="estatisticas" id="estatisticas" aria-label="Resumo"></section>
 
     <section class="cartao">
@@ -28,6 +32,7 @@
         <option value="EM_ANDAMENTO">Só em andamento</option>
         <option value="RESOLVIDO">Só resolvidos</option>
       </select>
+      <p><a class="botao-link escuro" id="exportar" href="/api/sindico/chamados/exportar.csv" download>Exportar esta lista (CSV)</a></p>
       <div id="mensagem" class="mensagem hidden" role="alert"></div>
       <div id="lista-chamados"></div>
     </section>
