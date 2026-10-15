@@ -3,7 +3,7 @@
 Projeto A3, Projeto e Engenharia de Software. Versão do documento: 15/10/2026.
 Código: este repositório (passo a passo de execução em [`../README.md`](../README.md); do protótipo antigo
 para este, em [`../MIGRACAO_AA.md`](../MIGRACAO_AA.md)). Documentos irmãos: [`casos-de-prioridade.md`](casos-de-prioridade.md)
-e [`roteiro-demonstracao.md`](roteiro-demonstracao.md).
+, [`roteiro-demonstracao.md`](roteiro-demonstracao.md) e [`indicadores-medidos.md`](indicadores-medidos.md).
 
 > Tudo o que está marcado como **verificado** foi executado em 14 e 15/10/2026 (comandos na seção 8).
 > O que não foi executado aparece em **Limitações** (seção 9).
@@ -26,7 +26,7 @@ O sistema evoluiu do protótipo "Nexo" (PHP + PyQt5). O que foi mantido, trocado
 | RF03 Síndico vê do mais fácil ao mais difícil | `ChamadoRepository.findByStatusInOrderByPontuacaoAscCriadoEmAsc`; tela `sindico.html` | verificado |
 | RF04 Atualizar status (aberto, em andamento, resolvido) | `SindicoController.alterarStatus`; tabela `historico_status` | verificado |
 | RF05 Notificar o morador | tabela `notificacoes` (aviso dentro do sistema) e e-mail por SMTP (`NotificadorEmailStatus`, desligado por padrão) | aviso interno verificado; e-mail verificado só contra servidor SMTP falso |
-| RNF01 Resposta em menos de 3 s | chamada ao serviço Python com limite de 2 s e reserva automática | limite configurado; tempo não medido |
+| RNF01 Resposta em menos de 3 s | chamada ao serviço Python com limite de 2 s e reserva automática | **medido**: pior caso 0,26 s (login com bcrypt); abrir chamado com o Python, em média 0,03 s. Em `localhost`, banco pequeno e um usuário por vez (detalhes em [`indicadores-medidos.md`](indicadores-medidos.md)) |
 | RNF02 Senha criptografada | bcrypt (`SecurityConfig.passwordEncoder`) | verificado |
 | RNF03 Interface responsiva | `css/app.css`; conferida em largura de celular (375 px) | verificado |
 
@@ -230,7 +230,8 @@ Para executar o sistema inteiro com um comando (Java, Python e, se quiser, dados
 - **E-mail (RF05):** implementado e testado contra um servidor SMTP falso, mas vem **desligado** e nunca foi testado com um
   provedor real (Gmail etc.). Ligar exige o perfil `email` e variáveis de ambiente (ver README).
 - **Troca de senha:** não encerra as outras sessões abertas do mesmo usuário.
-- **RNF01:** o limite de 2 s do serviço Python está configurado, mas o tempo de resposta das páginas não foi medido.
+- **RNF01:** medido só em `localhost`, com banco pequeno e uma pessoa por vez. Não há teste de carga (muitos usuários ao mesmo
+  tempo) nem medição com o banco em outra máquina.
 - Um único condomínio; sem paginação da fila; sem recuperação de senha; sem HTTPS (necessário para publicar fora do `localhost`).
 - Arquivos de foto não são removidos se o banco recusar a gravação (arquivo órfão).
 - Os diagramas UML do relatório (Canva) precisam ser conferidos contra os desta documentação.
