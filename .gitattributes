@@ -1,0 +1,13 @@
+* text=auto
+
+# O script do Maven Wrapper precisa de LF, senão não roda em Linux/macOS.
+api-java/mvnw text eol=lf
+api-java/mvnw.cmd text eol=crlf
+*.sh text eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+*.png binary
+*.jpg binary
+*.gif binary

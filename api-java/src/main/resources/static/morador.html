@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NexoDesk - Meus chamados</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Nexo<span>Desk</span></div>
+    <div class="espaco"></div>
+    <span class="usuario" id="usuario"></span>
+    <button type="button" class="secundario sino" id="botao-sino" aria-label="Notificações">
+      Avisos <span class="contador hidden" id="contador"></span>
+    </button>
+    <button type="button" class="secundario" id="botao-sair">Sair</button>
+  </header>
+
+  <main class="pagina">
+    <section class="cartao hidden" id="painel-avisos" aria-live="polite">
+      <h2>Avisos</h2>
+      <div id="lista-avisos"></div>
+    </section>
+
+    <section class="cartao">
+      <h2>Abrir um chamado</h2>
+      <div id="mensagem" class="mensagem hidden" role="alert"></div>
+      <form id="form-chamado">
+        <label for="titulo">Título</label>
+        <input id="titulo" type="text" maxlength="150" placeholder="Ex.: Lâmpada queimada no corredor do 2º andar" required>
+
+        <label for="categoria">Categoria</label>
+        <select id="categoria" required></select>
+
+        <label for="local">Local (opcional)</label>
+        <input id="local" type="text" maxlength="120" placeholder="Ex.: Garagem, bloco B">
+
+        <label for="descricao">Descrição</label>
+        <textarea id="descricao" maxlength="2000" required></textarea>
+
+        <label for="imagem">Foto (opcional, JPG, PNG ou GIF até 5 MB)</label>
+        <input id="imagem" type="file" accept="image/jpeg,image/png,image/gif">
+
+        <label class="check"><input id="anonimo" type="checkbox"> Não mostrar meu nome ao síndico (chamado anônimo)</label>
+
+        <div class="acoes"><button type="submit" id="botao-enviar">Enviar chamado</button></div>
+      </form>
+    </section>
+
+    <section class="cartao">
+      <h2>Meus chamados</h2>
+      <div id="lista-chamados"></div>
+    </section>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/morador.js"></script>
+</body>
+</html>
