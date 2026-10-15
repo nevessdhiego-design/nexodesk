@@ -1,14 +1,17 @@
 package br.nexodesk.web;
 
+import br.nexodesk.config.LimitadorTentativasLogin;
 import br.nexodesk.servico.ApiException;
 import br.nexodesk.servico.UsuarioService;
 import br.nexodesk.web.Dtos.CadastroRequest;
 import br.nexodesk.web.Dtos.LoginRequest;
+import br.nexodesk.web.Dtos.SessaoResponse;
 import br.nexodesk.web.Dtos.UsuarioResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -30,12 +33,14 @@ public class AuthController {
     private final UsuarioService usuarios;
     private final AuthenticationManager gerenteAutenticacao;
     private final SecurityContextRepository repositorioContexto;
+    private final LimitadorTentativasLogin limitador;
 
     public AuthController(UsuarioService usuarios, AuthenticationManager gerenteAutenticacao,
-                          SecurityContextRepository repositorioContexto) {
+                          SecurityContextRepository repositorioContexto, LimitadorTentativasLogin limitador) {
         this.usuarios = usuarios;
         this.gerenteAutenticacao = gerenteAutenticacao;
         this.repositorioContexto = repositorioContexto;
+        this.limitador = limitador;
     }
 
     @PostMapping("/register")
@@ -47,14 +52,19 @@ public class AuthController {
     @PostMapping("/login")
     public UsuarioResponse entrar(@Valid @RequestBody LoginRequest dados,
                                   HttpServletRequest request, HttpServletResponse response) {
+        String email = dados.email().trim().toLowerCase();
+        String ip = request.getRemoteAddr();
+        limitador.verificar(ip, email);
         Authentication autenticacao;
         try {
             autenticacao = gerenteAutenticacao.authenticate(
-                    UsernamePasswordAuthenticationToken.unauthenticated(dados.email().trim().toLowerCase(), dados.senha()));
+                    UsernamePasswordAuthenticationToken.unauthenticated(email, dados.senha()));
         } catch (AuthenticationException e) {
+            limitador.registrarFalha(ip, email);
             // mesma mensagem para e-mail inexistente e senha errada (não revela qual dos dois)
             throw new ApiException(HttpStatus.UNAUTHORIZED, "E-mail ou senha incorretos.");
         }
+        limitador.registrarSucesso(ip, email);
         // evita fixação de sessão: troca o id de uma sessão já existente antes de autenticar
         if (request.getSession(false) != null) {
             request.changeSessionId();
@@ -64,6 +74,15 @@ public class AuthController {
         SecurityContextHolder.setContext(contexto);
         repositorioContexto.saveContext(contexto, request, response);
         return usuarios.eu(autenticacao.getName());
+    }
+
+    /** Público: diz se há sessão sem gerar erro 401 (usado pela tela de login). */
+    @GetMapping("/sessao")
+    public SessaoResponse sessao(Authentication autenticacao) {
+        if (autenticacao == null || autenticacao instanceof AnonymousAuthenticationToken) {
+            return new SessaoResponse(false, null);
+        }
+        return new SessaoResponse(true, usuarios.eu(autenticacao.getName()));
     }
 
     @GetMapping("/me")

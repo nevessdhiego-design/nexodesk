@@ -42,6 +42,23 @@ relatório da 1ª parcial.
 
 Precisa de **JDK 21** e **Python 3.12**. O Maven e as bibliotecas baixam sozinhos.
 
+### Um comando só
+
+```powershell
+.\iniciar-nexodesk.ps1                   # H2 embutido, nada para instalar
+.\iniciar-nexodesk.ps1 -Perfil demo      # com 2 moradores e 8 chamados de exemplo
+.\iniciar-nexodesk.ps1 -Perfil mysql     # MySQL (variáveis NEXODESK_DB_*, veja abaixo)
+```
+
+O script acha o Java e o Python, cria o ambiente virtual e gera o `.jar` na primeira vez, sobe o serviço
+Python (porta 8001) e a API (porta 8080) e encerra os dois com Ctrl+C. Se sobrar alguma dúvida de ambiente,
+use o passo a passo manual a seguir.
+
+**Perfil `demo`:** exige a variável `NEXODESK_DEMO_SENHA` (mínimo 8 caracteres), usada como senha dos moradores
+`ana.demo@nexodesk.local` e `bruno.demo@nexodesk.local`. Só cria dados se o banco ainda não tiver chamados.
+
+### Passo a passo manual
+
 1. Serviço Python (terminal 1):
    ```powershell
    cd servico-prioridade
@@ -73,7 +90,19 @@ $env:NEXODESK_DB_USUARIO = '...'
 $env:NEXODESK_DB_SENHA = '...'
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=mysql"
 ```
-O `schema.sql` roda sozinho na inicialização. **Não foi testado contra um MySQL real**, só contra o H2 em modo MySQL.
+O `schema.sql` roda sozinho na inicialização e o Hibernate confere (`validate`) se as entidades batem com as tabelas.
+**Testado no MySQL 8.4.9** (14/10/2026): a suíte completa passou e o sistema inteiro subiu pelo `iniciar-nexodesk.ps1 -Perfil mysql,demo`.
+
+Para rodar os testes Java contra o seu MySQL (use um banco **só para teste**, as tabelas são criadas nele):
+
+```powershell
+$env:NEXODESK_TEST_DB_URL = 'jdbc:mysql://localhost:3306/nexodesk_test?serverTimezone=America/Sao_Paulo'
+$env:NEXODESK_TEST_DB_USUARIO = '...'
+$env:NEXODESK_TEST_DB_SENHA = '...'
+.\mvnw.cmd clean test
+```
+
+Use `clean` ao mudar arquivos de configuração de teste: o Maven não apaga cópias antigas em `target/test-classes`.
 
 ## Testes
 
@@ -89,6 +118,7 @@ cd api-java;           .\mvnw.cmd test                              # API comple
 |---|---|---|
 | `POST /api/auth/register` | público | cria conta de **morador** |
 | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` | | sessão por cookie |
+| `GET /api/auth/sessao` | público | diz se há sessão (200 sempre; usado pela tela de login) |
 | `GET /api/categorias` | público | categorias do formulário |
 | `POST /api/chamados` (multipart) | morador | abre chamado (foto opcional) |
 | `GET /api/chamados/meus`, `GET /api/chamados/{id}`, `GET /api/chamados/{id}/imagem` | dono ou síndico | consulta |
@@ -100,6 +130,8 @@ cd api-java;           .\mvnw.cmd test                              # API comple
 ## Segurança: o que está feito
 
 - Senhas com bcrypt; mensagem de erro de login igual para e-mail inexistente e senha errada.
+- Bloqueio de força bruta: 5 senhas erradas para o mesmo e-mail e IP, ou 30 falhas de um IP, bloqueiam o login
+  por 15 minutos (429); o dono da conta, de outro IP, não é afetado. O contador fica em memória.
 - Cadastro público só cria morador; síndico nasce no primeiro start, sem senha fixa no código.
 - CSRF ativo (cookie `XSRF-TOKEN` + cabeçalho `X-XSRF-TOKEN`), cookie de sessão `HttpOnly` e `SameSite=Lax`,
   CSP restritiva (`default-src 'self'`), texto do usuário sempre via `textContent` (sem XSS).
@@ -110,7 +142,6 @@ cd api-java;           .\mvnw.cmd test                              # API comple
 
 ## Ainda não feito (decidir com o grupo)
 
-- Limite de tentativas de login (hoje não há bloqueio contra força bruta).
 - Notificação por e-mail (RF05 hoje é só dentro do sistema).
 - Gestão de vários condomínios, paginação da fila, recuperação de senha, painel desktop (PyQt5 do `aa`).
 - HTTPS e cookie `Secure` para publicar fora do localhost.

@@ -56,4 +56,6 @@ formCadastrar.addEventListener('submit', async (e) => {
 });
 
 // Quem já está logado vai direto para o painel.
-api('/api/auth/me').then(irParaPainel).catch(() => { /* não logado: fica no login */ });
+api('/api/auth/sessao')
+  .then((s) => { if (s.autenticado) irParaPainel(s.usuario); })
+  .catch(() => { /* API fora do ar: fica no login */ });

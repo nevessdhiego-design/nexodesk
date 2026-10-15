@@ -22,6 +22,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
@@ -29,6 +30,7 @@ import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequ
 /** Fluxo completo pela API: cadastro, login, chamado, fila do síndico, status e notificação. */
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 class FluxoChamadoTest {
 
     static final String SENHA = "Morador-Teste-123";
@@ -137,6 +139,47 @@ class FluxoChamadoTest {
                         .content("{\"email\":\"naoexiste@nexodesk.test\",\"senha\":\"qualquer-coisa\"}"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.erro").value("E-mail ou senha incorretos."));
+    }
+
+    @Test
+    void sessaoPublicaDizSeHaLoginSemGerar401() throws Exception {
+        mvc.perform(get("/api/auth/sessao"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.autenticado").value(false));
+        mvc.perform(get("/api/auth/sessao").session(moradorLogado()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.autenticado").value(true))
+                .andExpect(jsonPath("$.usuario.perfil").value("MORADOR"));
+    }
+
+    @Test
+    void cincoSenhasErradasBloqueiamOLoginMesmoComASenhaCerta() throws Exception {
+        String email = novoEmail();
+        cadastrar(email);
+        for (int i = 0; i < 5; i++) {
+            mvc.perform(post("/api/auth/login").with(csrf()).with(ip("10.0.0.7"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"email\":\"%s\",\"senha\":\"errada-errada-%d\"}".formatted(email, i)))
+                    .andExpect(status().isUnauthorized());
+        }
+        // 6ª tentativa, agora com a senha CERTA: continua bloqueada
+        mvc.perform(post("/api/auth/login").with(csrf()).with(ip("10.0.0.7"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, SENHA)))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.erro").value(org.hamcrest.Matchers.containsString("Tente novamente")));
+        // o dono, de outro IP, entra normalmente: o atacante não consegue trancar a conta da vítima
+        mvc.perform(post("/api/auth/login").with(csrf()).with(ip("10.0.0.8"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, SENHA)))
+                .andExpect(status().isOk());
+    }
+
+    static org.springframework.test.web.servlet.request.RequestPostProcessor ip(String endereco) {
+        return requisicao -> {
+            requisicao.setRemoteAddr(endereco);
+            return requisicao;
+        };
     }
 
     @Test

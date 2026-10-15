@@ -73,7 +73,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/index.html", "/morador.html", "/sindico.html",
                                 "/css/**", "/js/**", "/img/**", "/favicon.ico", "/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/categorias").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categorias", "/api/auth/sessao").permitAll()
                         .requestMatchers("/api/sindico/**").hasRole("SINDICO")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().denyAll())
