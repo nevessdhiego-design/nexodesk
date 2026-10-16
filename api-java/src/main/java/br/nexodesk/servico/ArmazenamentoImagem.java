@@ -37,18 +37,30 @@ public class ArmazenamentoImagem {
             return null;
         }
         try (InputStream in = arquivo.getInputStream()) {
-            byte[] cabecalho = in.readNBytes(12);
-            String extensao = detectarExtensao(cabecalho);
+            byte[] bytes = in.readAllBytes(); // no máximo 5 MB: o limite do multipart já barrou o resto
+            String extensao = detectarExtensao(java.util.Arrays.copyOf(bytes, Math.min(bytes.length, 12)));
             if (extensao == null) {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "Envie uma imagem JPG, PNG ou GIF válida.");
             }
+            // remove metadados (GPS!), endireita pela rotação do celular e reduz o tamanho
+            byte[] limpo = ProcessadorImagem.limpar(bytes, extensao);
             String nome = UUID.randomUUID() + "." + extensao;
-            try (InputStream completo = arquivo.getInputStream()) {
-                Files.copy(completo, raiz.resolve(nome));
-            }
+            Files.write(raiz.resolve(nome), limpo, java.nio.file.StandardOpenOption.CREATE_NEW);
             return nome;
         } catch (IOException e) {
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Não foi possível salvar a imagem.");
+        }
+    }
+
+    /** Apaga uma foto já salva (usado quando o chamado não chegou a ser gravado no banco). Nunca lança exceção. */
+    public void remover(String nome) {
+        if (nome == null || !NOME_VALIDO.matcher(nome).matches()) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(raiz.resolve(nome).normalize());
+        } catch (IOException | RuntimeException e) {
+            // arquivo órfão sobra, mas isso não deve derrubar quem chamou
         }
     }
 

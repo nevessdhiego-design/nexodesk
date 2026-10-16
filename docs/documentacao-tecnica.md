@@ -2,7 +2,7 @@
 
 Projeto A3, Projeto e Engenharia de Software. Versão do documento: 15/10/2026.
 Código: este repositório (passo a passo de execução em [`../README.md`](../README.md); do protótipo antigo
-para este, em [`../MIGRACAO_AA.md`](../MIGRACAO_AA.md)). Documentos irmãos: [`casos-de-prioridade.md`](casos-de-prioridade.md)
+para este, em [`migracao-do-aa.md`](migracao-do-aa.md)). Documentos irmãos: [`casos-de-prioridade.md`](casos-de-prioridade.md)
 , [`roteiro-demonstracao.md`](roteiro-demonstracao.md) e [`indicadores-medidos.md`](indicadores-medidos.md).
 
 > Tudo o que está marcado como **verificado** foi executado em 14 e 15/10/2026 (comandos na seção 8).
@@ -15,7 +15,7 @@ andamento. O sistema estima a **dificuldade** de resolver cada chamado e o **sí
 **do mais fácil para o mais difícil**. A cada mudança de status, o morador recebe um aviso.
 
 O sistema evoluiu do protótipo "Nexo" (PHP + PyQt5). O que foi mantido, trocado e descartado está em
-`MIGRACAO_AA.md`.
+[`migracao-do-aa.md`](migracao-do-aa.md).
 
 ## 2. Requisitos e onde estão implementados
 
@@ -65,7 +65,9 @@ pela categoria (`ClassificadorLocal`) e marca `classificacaoFallback = true`; ab
 
 ## 4. Modelo de dados
 
-Script: `api-java/src/main/resources/schema.sql` (idempotente; roda a cada inicialização).
+Migrações (Flyway): `api-java/src/main/resources/db/migration/` (V1 = esquema base; V2 = versão de concorrência do chamado e
+versão de sessão do usuário). Rodam sozinhas na inicialização; bancos criados antes do Flyway entram com baseline na versão 1.
+Regra de ouro: **migração publicada nunca é editada**, só se cria uma nova (um teste confere o V1).
 
 ```mermaid
 erDiagram
@@ -138,7 +140,8 @@ Pontos de projeto:
   dificuldade, então ordenar por ela equivale a FACIL, MEDIA, DIFICIL; no empate, o mais antigo vem primeiro.
 - `historico_status` guarda toda mudança (inclusive a abertura), formando a trilha de auditoria.
 - `anonimo` esconde nome e unidade do **síndico**; o morador continua dono do chamado e recebe os avisos.
-- Em desenvolvimento o Hibernate só **confere** (`ddl-auto=validate`) se as entidades batem com o `schema.sql`.
+- O Hibernate só **confere** (`ddl-auto=validate`) se as entidades batem com as migrações.
+- `chamados.versao` (controle de concorrência otimista) e `usuarios.versao_sessao` (invalida sessões ao trocar a senha ou desativar o usuário), da migração V2.
 
 ## 5. Regra de dificuldade (RF02)
 
@@ -213,7 +216,7 @@ Erros saem sempre como JSON `{"erro": "...", "campos": {...}}`, sem detalhes int
 
 Total: **63 testes Java e 12 Python, todos passando (15/10/2026).** A suíte Java passou **nos dois bancos**: H2 em
 memória (padrão) e **MySQL 8.4.9** real (variáveis `NEXODESK_TEST_DB_*`, ver README). Nos dois, o Hibernate roda com
-`ddl-auto=validate`, ou seja, recusa subir se as entidades não baterem com o `schema.sql`. Além deles, o fluxo completo foi executado com os dois
+`ddl-auto=validate`, ou seja, recusa subir se as entidades não baterem com as migrações. Além deles, o fluxo completo foi executado com os dois
 serviços no ar, por HTTP e pelo navegador (com o Python real, `classificacaoFallback = false`), e o script
 `iniciar-nexodesk.ps1` foi executado com o perfil `demo` (8 chamados classificados pelo Python).
 

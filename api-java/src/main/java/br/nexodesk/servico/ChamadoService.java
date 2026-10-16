@@ -29,6 +29,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 public class ChamadoService {
@@ -67,6 +69,17 @@ public class ChamadoService {
         String descricao = form.descricao().trim();
         // valida a imagem antes de gastar uma chamada ao serviço de prioridade
         String nomeImagem = imagens.salvar(form.imagem());
+        if (nomeImagem != null) {
+            // se a transação não confirmar (erro ao classificar ou gravar), a foto não fica órfã no disco
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status != STATUS_COMMITTED) {
+                        imagens.remover(nomeImagem);
+                    }
+                }
+            });
+        }
 
         ResultadoClassificacao r = classificador.classificar(form.categoria(), titulo, descricao);
 
@@ -144,6 +157,11 @@ public class ChamadoService {
         Usuario sindico = usuarios.buscarPorEmail(emailSindico);
         Chamado c = chamados.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Chamado não encontrado."));
+        // a tela do síndico estava desatualizada: outra pessoa já mexeu neste chamado
+        if (req.versao() != null && !req.versao().equals(c.getVersao())) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    "Este chamado foi alterado por outra pessoa. Atualize a lista e tente de novo.");
+        }
         StatusChamado anterior = c.getStatus();
         if (anterior == req.status()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "O chamado já está com esse status.");
@@ -263,7 +281,7 @@ public class ChamadoService {
                 c.getPontuacao(), justificativa, c.isClassificacaoFallback(),
                 ocultar ? "Anônimo" : c.getMorador().getNome(),
                 ocultar ? null : c.getMorador().getUnidade(),
-                c.getCriadoEm(), c.getAtualizadoEm(),
+                c.getCriadoEm(), c.getAtualizadoEm(), c.getVersao(),
                 avaliacao == null ? null : avaliacao.getNota(),
                 avaliacao == null ? null : avaliacao.getComentario(),
                 historico);

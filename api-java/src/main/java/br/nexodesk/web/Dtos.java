@@ -65,7 +65,9 @@ public final class Dtos {
 
     public record AlterarStatusRequest(
             @NotNull(message = "Informe o novo status.") StatusChamado status,
-            @Size(max = 500) String observacao) {
+            @Size(max = 500) String observacao,
+            /** Versão do chamado que a tela mostrava. Se outra pessoa já alterou, a API responde 409. Opcional. */
+            Long versao) {
     }
 
     // ---------- saída ----------
@@ -103,6 +105,7 @@ public final class Dtos {
             String moradorUnidade,
             LocalDateTime criadoEm,
             LocalDateTime atualizadoEm,
+            Long versao,
             Integer notaAvaliacao,
             String comentarioAvaliacao,
             List<HistoricoResponse> historico) {

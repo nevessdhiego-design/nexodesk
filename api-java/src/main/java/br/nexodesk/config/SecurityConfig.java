@@ -22,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -61,7 +62,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain filtros(HttpSecurity http, SecurityContextRepository repositorioContexto) throws Exception {
+    SecurityFilterChain filtros(HttpSecurity http, SecurityContextRepository repositorioContexto,
+                                UsuarioRepository usuarios) throws Exception {
         http
                 .securityContext(c -> c.securityContextRepository(repositorioContexto))
                 // CSRF: o cookie XSRF-TOKEN é lido pelo JS (app.js) e devolvido no cabeçalho X-XSRF-TOKEN.
@@ -69,6 +71,7 @@ public class SecurityConfig {
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                 .addFilterAfter(new FiltroCookieCsrf(), BasicAuthenticationFilter.class)
+                .addFilterAfter(new FiltroSessaoValida(usuarios), SecurityContextHolderFilter.class)
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/", "/index.html", "/morador.html", "/sindico.html", "/conta.html",
                                 "/css/**", "/js/**", "/img/**", "/favicon.ico", "/error").permitAll()

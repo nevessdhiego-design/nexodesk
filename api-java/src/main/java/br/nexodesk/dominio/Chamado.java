@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 
 @Entity
@@ -72,6 +73,11 @@ public class Chamado {
     @Column(name = "atualizado_em", nullable = false)
     private LocalDateTime atualizadoEm;
 
+    /** Controle de concorrência otimista: o Hibernate soma 1 a cada alteração e recusa gravar sobre versão antiga. */
+    @Version
+    @Column(nullable = false)
+    private Long versao;
+
     @PrePersist
     void aoCriar() {
         criadoEm = LocalDateTime.now();
@@ -110,4 +116,5 @@ public class Chamado {
     public void setMorador(Usuario morador) { this.morador = morador; }
     public LocalDateTime getCriadoEm() { return criadoEm; }
     public LocalDateTime getAtualizadoEm() { return atualizadoEm; }
+    public Long getVersao() { return versao; }
 }

@@ -46,6 +46,13 @@ public class TratadorErros {
         return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE).body(Map.of("erro", "A imagem deve ter no máximo 5 MB."));
     }
 
+    /** Duas gravações simultâneas no mesmo chamado: a segunda perde e recebe um aviso claro. */
+    @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException.class)
+    ResponseEntity<Map<String, Object>> aoConflitarGravacao(org.springframework.orm.ObjectOptimisticLockingFailureException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("erro",
+                "Este chamado foi alterado por outra pessoa. Atualize a lista e tente de novo."));
+    }
+
     @ExceptionHandler(Exception.class)
     ResponseEntity<Map<String, Object>> aoFalharInesperado(Exception e) throws Exception {
         // deixa o Spring Security tratar 401/403 e o MVC tratar 404/405

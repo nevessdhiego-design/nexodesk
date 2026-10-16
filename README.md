@@ -1,5 +1,7 @@
 # NexoDesk (código)
 
+[![CI](https://github.com/nevessdhiego-design/nexodesk/actions/workflows/ci.yml/badge.svg)](https://github.com/nevessdhiego-design/nexodesk/actions/workflows/ci.yml) (o selo só aparece para quem tem acesso ao repositório privado)
+
 Helpdesk para condomínios: o morador abre chamados, o sistema estima a **dificuldade** de cada um e o
 síndico atende da fila **do mais fácil ao mais difícil**, avisando o morador a cada mudança de status.
 
@@ -23,7 +25,7 @@ relatório da 1ª parcial.
 - **servico-prioridade/**: regras de dificuldade (função pura em `app/regras.py`, testada).
   Se estiver fora do ar, o Java classifica só pela categoria e marca `classificacaoFallback`;
   abrir chamado nunca fica bloqueado.
-- Banco: `api-java/src/main/resources/schema.sql` (H2 em modo MySQL e MySQL 8).
+- Banco: migrações do Flyway em `api-java/src/main/resources/db/migration/` (H2 em modo MySQL e MySQL 8).
 
 ## Requisitos x onde estão
 
@@ -104,7 +106,9 @@ $env:NEXODESK_DB_USUARIO = '...'
 $env:NEXODESK_DB_SENHA = '...'
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=mysql"
 ```
-O `schema.sql` roda sozinho na inicialização e o Hibernate confere (`validate`) se as entidades batem com as tabelas.
+As migrações do Flyway (`db/migration/V<n>__*.sql`) rodam sozinhas na inicialização e o Hibernate confere (`validate`)
+se as entidades batem com as tabelas. **Mudou o banco? Crie um arquivo novo `V<n+1>__descricao.sql`; nunca edite um que já
+foi publicado** (um teste guarda o V1). Bancos criados antes do Flyway entram com baseline na versão 1 sem perder dados.
 **Testado no MySQL 8.4.9** (14/10/2026): a suíte completa passou e o sistema inteiro subiu pelo `iniciar-nexodesk.ps1 -Perfil mysql,demo`.
 
 Para rodar os testes Java contra o seu MySQL (use um banco **só para teste**, as tabelas são criadas nele):
