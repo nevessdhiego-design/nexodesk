@@ -86,6 +86,7 @@ function cartaoChamado(c) {
       c.emergencia ? selo('EMERGÊNCIA', 'EMERGENCIA') : null,
       c.anonimo ? selo('Anônimo', 'neutro') : null),
     el('div', { class: 'meta', text: c.categoriaRotulo + (c.localOcorrencia ? ' · ' + c.localOcorrencia : '') + ' · aberto em ' + formatarData(c.criadoEm) }),
+    c.responsavelNome ? el('div', { class: 'responsavel', text: textoResponsavel(c) }) : null,
     blocoAvaliacao(c),
     blocoConversa(c.id),
     alternar,

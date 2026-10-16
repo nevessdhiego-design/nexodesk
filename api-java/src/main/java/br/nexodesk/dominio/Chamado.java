@@ -14,6 +14,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -71,6 +72,15 @@ public class Chamado {
     @JoinColumn(name = "morador_id", nullable = false)
     private Usuario morador;
 
+    /** Síndico ou zelador que cuida do chamado (atribuído pelo síndico). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsavel_id")
+    private Usuario responsavel;
+
+    /** Data prevista para o atendimento, informada pelo síndico. */
+    @Column
+    private LocalDate previsao;
+
     @Column(name = "criado_em", nullable = false)
     private LocalDateTime criadoEm;
 
@@ -120,6 +130,10 @@ public class Chamado {
     public void setClassificacaoFallback(boolean classificacaoFallback) { this.classificacaoFallback = classificacaoFallback; }
     public Usuario getMorador() { return morador; }
     public void setMorador(Usuario morador) { this.morador = morador; }
+    public Usuario getResponsavel() { return responsavel; }
+    public void setResponsavel(Usuario responsavel) { this.responsavel = responsavel; }
+    public LocalDate getPrevisao() { return previsao; }
+    public void setPrevisao(LocalDate previsao) { this.previsao = previsao; }
     public LocalDateTime getCriadoEm() { return criadoEm; }
     public LocalDateTime getAtualizadoEm() { return atualizadoEm; }
     public Long getVersao() { return versao; }

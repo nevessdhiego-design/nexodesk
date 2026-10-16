@@ -69,6 +69,13 @@ public final class Dtos {
             @Size(max = 1000, message = "A mensagem deve ter no máximo 1000 caracteres.") String texto) {
     }
 
+    /** responsavelId nulo remove o responsável. previsao nula remove a previsão. */
+    public record AtribuirResponsavelRequest(Long responsavelId, java.time.LocalDate previsao, Long versao) {
+    }
+
+    public record AlterarUsuarioRequest(br.nexodesk.dominio.Perfil perfil, Boolean ativo) {
+    }
+
     public record AlterarStatusRequest(
             @NotNull(message = "Informe o novo status.") StatusChamado status,
             @Size(max = 500) String observacao,
@@ -116,14 +123,24 @@ public final class Dtos {
             LocalDateTime criadoEm,
             LocalDateTime atualizadoEm,
             Long versao,
+            Long responsavelId,
+            String responsavelNome,
+            java.time.LocalDate previsao,
             Integer notaAvaliacao,
             String comentarioAvaliacao,
             List<HistoricoResponse> historico) {
     }
 
     /** {@code autor} já vem no formato certo para quem pergunta (ex.: "Anônimo" para o síndico em chamado anônimo). */
-    public record MensagemResponse(Long id, String autor, boolean doSindico, boolean minha, String texto,
+    public record MensagemResponse(Long id, String autor, boolean daEquipe, boolean minha, String texto,
                                    LocalDateTime criadoEm) {
+    }
+
+    public record UsuarioAdminResponse(Long id, String nome, String email, String unidade, String perfil,
+                                       boolean ativo, LocalDateTime criadoEm) {
+    }
+
+    public record EquipeResponse(Long id, String nome, String perfil) {
     }
 
     public record NotificacaoResponse(Long id, Long chamadoId, String mensagem, boolean lida,

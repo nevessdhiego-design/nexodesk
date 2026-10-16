@@ -31,7 +31,9 @@ class DadosDemonstracaoTest {
         assertThat(chamados.countByStatus(StatusChamado.RESOLVIDO)).isEqualTo(1);
         assertThat(chamados.countByStatus(StatusChamado.EM_ANDAMENTO)).isEqualTo(1);
         assertThat(chamados.countByStatus(StatusChamado.ABERTO)).isEqualTo(6);
-        assertThat(notificacoes.count()).isEqualTo(2);
+        // 2 avisos de andamento/resolução + 2 da atribuição do chamado da lixeira (morador e zelador)
+        assertThat(notificacoes.count()).isEqualTo(4);
+        assertThat(usuarios.existsByEmail("ze.demo@nexodesk.local")).isTrue();
     }
 
     @Test

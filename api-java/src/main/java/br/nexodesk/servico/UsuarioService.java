@@ -50,6 +50,15 @@ public class UsuarioService {
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Sessão inválida."));
     }
 
+    /** Alguém da equipe (síndico ou zelador) que esteja ativo; senão, 400. Usado ao escolher o responsável por um chamado. */
+    @Transactional(readOnly = true)
+    public Usuario buscarEquipeAtivaPorId(Long id) {
+        return usuarios.findById(id)
+                .filter(Usuario::isAtivo)
+                .filter(u -> u.getPerfil() != Perfil.MORADOR)
+                .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Escolha um síndico ou zelador ativo."));
+    }
+
     @Transactional(readOnly = true)
     public java.util.List<Usuario> sindicosAtivos() {
         return usuarios.findByPerfilAndAtivoTrue(Perfil.SINDICO);

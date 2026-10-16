@@ -71,12 +71,32 @@ async function sair() {
   window.location.href = '/index.html';
 }
 
+/** Cada perfil tem a sua tela inicial. */
+function paginaDoPerfil(perfil) {
+  if (perfil === 'SINDICO') return '/sindico.html';
+  if (perfil === 'ZELADOR') return '/zelador.html';
+  return '/morador.html';
+}
+
+/** "20/10/2026" a partir de "2026-10-20" (sem passar por fuso horário, para o dia não andar). */
+function formatarDia(iso) {
+  if (!iso) return '';
+  const [ano, mes, dia] = iso.split('-');
+  return dia + '/' + mes + '/' + ano;
+}
+
+/** "Responsável: Zé · previsão 20/10/2026", ou texto vazio se ninguém cuida ainda. */
+function textoResponsavel(c) {
+  if (!c.responsavelNome) return '';
+  return 'Responsável: ' + c.responsavelNome + (c.previsao ? ' · previsão ' + formatarDia(c.previsao) : '');
+}
+
 /** Garante usuário logado com o perfil esperado; senão manda para o login. */
 async function exigirPerfil(perfil) {
   try {
     const eu = await api('/api/auth/me');
     if (eu.perfil !== perfil) {
-      window.location.href = eu.perfil === 'SINDICO' ? '/sindico.html' : '/morador.html';
+      window.location.href = paginaDoPerfil(eu.perfil);
       return null;
     }
     return eu;

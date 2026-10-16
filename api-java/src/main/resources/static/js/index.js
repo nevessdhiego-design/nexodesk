@@ -15,7 +15,7 @@ abaEntrar.addEventListener('click', () => trocarAba(true));
 abaCadastrar.addEventListener('click', () => trocarAba(false));
 
 function irParaPainel(usuario) {
-  window.location.href = usuario.perfil === 'SINDICO' ? '/sindico.html' : '/morador.html';
+  window.location.href = paginaDoPerfil(usuario.perfil);
 }
 
 async function entrar(email, senha) {

@@ -13,10 +13,13 @@ import br.nexodesk.repositorio.ChamadoRepository;
 import br.nexodesk.repositorio.HistoricoStatusRepository;
 import br.nexodesk.repositorio.NotificacaoRepository;
 import br.nexodesk.web.Dtos.AlterarStatusRequest;
+import br.nexodesk.web.Dtos.AtribuirResponsavelRequest;
 import br.nexodesk.web.Dtos.ChamadoResponse;
 import br.nexodesk.web.Dtos.EstatisticasResponse;
 import br.nexodesk.web.Dtos.HistoricoResponse;
 import br.nexodesk.web.Dtos.NovoChamadoForm;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Map;
@@ -47,12 +50,13 @@ public class ChamadoService {
     private final AvaliacaoRepository avaliacoes;
     private final ApplicationEventPublisher eventos;
     private final PrioridadeFila prioridade;
+    private final Clock relogio;
 
     public ChamadoService(ChamadoRepository chamados, HistoricoStatusRepository historicos,
                           NotificacaoRepository notificacoes, UsuarioService usuarios,
                           ClassificadorDificuldade classificador, ArmazenamentoImagem imagens,
                           AvaliacaoRepository avaliacoes, ApplicationEventPublisher eventos,
-                          PrioridadeFila prioridade) {
+                          PrioridadeFila prioridade, Clock relogio) {
         this.chamados = chamados;
         this.historicos = historicos;
         this.notificacoes = notificacoes;
@@ -62,6 +66,7 @@ public class ChamadoService {
         this.avaliacoes = avaliacoes;
         this.eventos = eventos;
         this.prioridade = prioridade;
+        this.relogio = relogio;
     }
 
     /** RF01 + RF02: cadastra o chamado já classificado por dificuldade. */
@@ -132,29 +137,43 @@ public class ChamadoService {
      */
     @Transactional(readOnly = true)
     public List<ChamadoResponse> fila(String filtro) {
-        Set<StatusChamado> status;
-        if (filtro == null || filtro.isBlank() || filtro.equalsIgnoreCase("ativos")) {
-            status = PENDENTES;
-        } else if (filtro.equalsIgnoreCase("todos")) {
-            status = EnumSet.allOf(StatusChamado.class);
-        } else {
-            try {
-                status = EnumSet.of(StatusChamado.valueOf(filtro.toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Filtro de status inválido.");
-            }
-        }
-        List<Chamado> lista = new java.util.ArrayList<>(chamados.findByStatusIn(status));
+        List<Chamado> lista = new java.util.ArrayList<>(chamados.findByStatusIn(statusDoFiltro(filtro)));
         lista.sort(prioridade.ordem());
         Map<Long, Avaliacao> notas = avaliacoesDe(lista);
         return lista.stream().map(c -> paraResposta(c, true, List.of(), notas.get(c.getId()))).toList();
+    }
+
+    /** "Meus atendimentos" do zelador: só os chamados que o síndico atribuiu a ele, na mesma ordem da fila. */
+    @Transactional(readOnly = true)
+    public List<ChamadoResponse> atendimentos(String emailDoZelador, String filtro) {
+        Usuario zelador = usuarios.buscarPorEmail(emailDoZelador);
+        List<Chamado> lista = new java.util.ArrayList<>(
+                chamados.findByResponsavelAndStatusIn(zelador, statusDoFiltro(filtro)));
+        lista.sort(prioridade.ordem());
+        Map<Long, Avaliacao> notas = avaliacoesDe(lista);
+        return lista.stream().map(c -> paraResposta(c, true, List.of(), notas.get(c.getId()))).toList();
+    }
+
+    /** "ativos" (padrão: aberto + em andamento), "todos" ou um status. */
+    private static Set<StatusChamado> statusDoFiltro(String filtro) {
+        if (filtro == null || filtro.isBlank() || filtro.equalsIgnoreCase("ativos")) {
+            return PENDENTES;
+        }
+        if (filtro.equalsIgnoreCase("todos")) {
+            return EnumSet.allOf(StatusChamado.class);
+        }
+        try {
+            return EnumSet.of(StatusChamado.valueOf(filtro.toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Filtro de status inválido.");
+        }
     }
 
     @Transactional(readOnly = true)
     public ChamadoResponse detalhe(String email, Long id) {
         Usuario quem = usuarios.buscarPorEmail(email);
         Chamado c = buscarComAcesso(quem, id);
-        boolean visaoSindico = quem.getPerfil() == Perfil.SINDICO;
+        boolean visaoSindico = quem.getPerfil() != Perfil.MORADOR; // síndico e zelador: sem identidade em chamado anônimo
         List<HistoricoResponse> historico = historicos.findByChamadoOrderByCriadoEmAscIdAsc(c).stream()
                 .map(h -> new HistoricoResponse(
                         h.getStatusAnterior() == null ? null : h.getStatusAnterior().getRotulo(),
@@ -173,11 +192,13 @@ public class ChamadoService {
         Usuario sindico = usuarios.buscarPorEmail(emailSindico);
         Chamado c = chamados.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Chamado não encontrado."));
-        // a tela do síndico estava desatualizada: outra pessoa já mexeu neste chamado
-        if (req.versao() != null && !req.versao().equals(c.getVersao())) {
-            throw new ApiException(HttpStatus.CONFLICT,
-                    "Este chamado foi alterado por outra pessoa. Atualize a lista e tente de novo.");
+        if (sindico.getPerfil() == Perfil.MORADOR) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Só a equipe do condomínio muda o status.");
         }
+        if (sindico.getPerfil() == Perfil.ZELADOR && !ehResponsavel(c, sindico)) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Chamado não encontrado."); // o zelador só enxerga os dele
+        }
+        verificarVersao(c, req.versao());
         StatusChamado anterior = c.getStatus();
         if (anterior == req.status()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "O chamado já está com esse status.");
@@ -200,6 +221,69 @@ public class ChamadoService {
 
         Avaliacao nota = avaliacoes.buscarDosChamados(List.of(c)).stream().findFirst().orElse(null);
         return paraResposta(c, true, List.of(), nota);
+    }
+
+    /**
+     * O síndico escolhe quem cuida do chamado (síndico ou zelador ativo) e a previsão. Avisa o morador, o novo responsável
+     * e quem deixou de ser. Passar responsavelId nulo tira o responsável; previsao nula tira a previsão.
+     */
+    @Transactional
+    public ChamadoResponse atribuir(String emailSindico, Long id, AtribuirResponsavelRequest req) {
+        Usuario autor = usuarios.buscarPorEmail(emailSindico);
+        Chamado c = chamados.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Chamado não encontrado."));
+        verificarVersao(c, req.versao());
+        if (c.getStatus() == StatusChamado.RESOLVIDO) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Este chamado já foi resolvido.");
+        }
+        Usuario novo = req.responsavelId() == null ? null : usuarios.buscarEquipeAtivaPorId(req.responsavelId());
+        LocalDate hoje = LocalDate.now(relogio);
+        if (req.previsao() != null && (req.previsao().isBefore(hoje) || req.previsao().isAfter(hoje.plusYears(1)))) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "A previsão deve ser de hoje até um ano à frente.");
+        }
+
+        Usuario anterior = c.getResponsavel();
+        boolean mudouResponsavel = (novo == null ? anterior != null : anterior == null || !anterior.getId().equals(novo.getId()));
+        boolean mudouPrevisao = !java.util.Objects.equals(c.getPrevisao(), req.previsao());
+        c.setResponsavel(novo);
+        c.setPrevisao(req.previsao());
+        chamados.saveAndFlush(c);
+
+        Set<String> emails = new java.util.HashSet<>();
+        if (mudouResponsavel || mudouPrevisao) {
+            String data = req.previsao() == null ? "" : " Previsão: "
+                    + req.previsao().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ".";
+            if (novo != null || req.previsao() != null) {
+                avisar(c.getMorador(), c, truncar("Seu chamado #" + c.getId() + (novo == null ? ""
+                        : " agora tem responsável: " + novo.getNome() + ".") + data, 300));
+            }
+            emails.add(c.getMorador().getEmail());
+            if (novo != null && !novo.getId().equals(autor.getId()) && (mudouResponsavel || mudouPrevisao)) {
+                avisar(novo, c, truncar("O chamado #" + c.getId() + " \"" + truncar(c.getTitulo(), 60)
+                        + "\" foi atribuído a você." + data, 300));
+            }
+            if (novo != null) {
+                emails.add(novo.getEmail());
+            }
+            if (anterior != null && (novo == null || !anterior.getId().equals(novo.getId()))) {
+                if (!anterior.getId().equals(autor.getId())) {
+                    avisar(anterior, c, "O chamado #" + c.getId() + " deixou de ser seu.");
+                }
+                emails.add(anterior.getEmail());
+            }
+            usuarios.sindicosAtivos().forEach(sd -> emails.add(sd.getEmail()));
+            eventos.publishEvent(new ChamadoAtribuidoEvent(c.getId(), emails));
+        }
+        Avaliacao nota = avaliacoes.buscarDosChamados(List.of(c)).stream().findFirst().orElse(null);
+        return paraResposta(c, true, List.of(), nota);
+    }
+
+    private void avisar(Usuario destinatario, Chamado c, String mensagem) {
+        Notificacao n = new Notificacao();
+        n.setUsuario(destinatario);
+        n.setChamado(c);
+        n.setMensagem(mensagem);
+        notificacoes.save(n);
     }
 
     @Transactional(readOnly = true)
@@ -268,10 +352,24 @@ public class ChamadoService {
         Chamado c = chamados.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Chamado não encontrado."));
         boolean dono = c.getMorador().getId().equals(quem.getId());
-        if (!dono && quem.getPerfil() != Perfil.SINDICO) {
+        boolean sindico = quem.getPerfil() == Perfil.SINDICO;
+        boolean zeladorResponsavel = quem.getPerfil() == Perfil.ZELADOR && ehResponsavel(c, quem);
+        if (!dono && !sindico && !zeladorResponsavel) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Chamado não encontrado.");
         }
         return c;
+    }
+
+    private static boolean ehResponsavel(Chamado c, Usuario quem) {
+        return c.getResponsavel() != null && c.getResponsavel().getId().equals(quem.getId());
+    }
+
+    /** A tela estava desatualizada: outra pessoa já mexeu neste chamado. */
+    private static void verificarVersao(Chamado c, Long versaoVista) {
+        if (versaoVista != null && !versaoVista.equals(c.getVersao())) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    "Este chamado foi alterado por outra pessoa. Atualize a lista e tente de novo.");
+        }
     }
 
     private void registrarHistorico(Chamado c, StatusChamado anterior, StatusChamado novo,
@@ -313,6 +411,9 @@ public class ChamadoService {
                 ocultar ? "Anônimo" : c.getMorador().getNome(),
                 ocultar ? null : c.getMorador().getUnidade(),
                 c.getCriadoEm(), c.getAtualizadoEm(), c.getVersao(),
+                c.getResponsavel() == null ? null : c.getResponsavel().getId(),
+                c.getResponsavel() == null ? null : c.getResponsavel().getNome(),
+                c.getPrevisao(),
                 avaliacao == null ? null : avaliacao.getNota(),
                 avaliacao == null ? null : avaliacao.getComentario(),
                 historico);

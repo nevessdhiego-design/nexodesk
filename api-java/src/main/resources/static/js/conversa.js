@@ -18,7 +18,7 @@ function blocoConversa(chamadoId) {
   const resumo = el('summary', { text: 'Conversa' });
 
   function bolha(m) {
-    return el('div', { class: 'bolha ' + (m.minha ? 'minha' : 'outra') + (m.doSindico ? ' sindico' : '') },
+    return el('div', { class: 'bolha ' + (m.minha ? 'minha' : 'outra') + (m.daEquipe ? ' sindico' : '') },
       el('div', { class: 'autor', text: m.minha ? 'Você' : m.autor }),
       el('div', { class: 'texto', text: m.texto }),
       el('div', { class: 'hora muted', text: formatarData(m.criadoEm) }));
