@@ -41,6 +41,10 @@ public class Usuario {
     @Column(nullable = false)
     private boolean ativo = true;
 
+    /** Soma 1 quando a senha muda: as sessões abertas com a versão antiga deixam de valer (FiltroSessaoValida). */
+    @Column(name = "versao_sessao", nullable = false)
+    private int versaoSessao;
+
     @Column(name = "criado_em", nullable = false)
     private LocalDateTime criadoEm;
 
@@ -66,5 +70,7 @@ public class Usuario {
     public void setPerfil(Perfil perfil) { this.perfil = perfil; }
     public boolean isAtivo() { return ativo; }
     public void setAtivo(boolean ativo) { this.ativo = ativo; }
+    public int getVersaoSessao() { return versaoSessao; }
+    public void setVersaoSessao(int versaoSessao) { this.versaoSessao = versaoSessao; }
     public LocalDateTime getCriadoEm() { return criadoEm; }
 }

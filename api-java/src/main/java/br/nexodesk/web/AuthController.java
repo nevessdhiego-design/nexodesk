@@ -1,5 +1,6 @@
 package br.nexodesk.web;
 
+import br.nexodesk.config.FiltroSessaoValida;
 import br.nexodesk.config.LimitadorTentativasLogin;
 import br.nexodesk.servico.ApiException;
 import br.nexodesk.servico.UsuarioService;
@@ -76,6 +77,8 @@ public class AuthController {
         contexto.setAuthentication(autenticacao);
         SecurityContextHolder.setContext(contexto);
         repositorioContexto.saveContext(contexto, request, response);
+        // a sessão guarda a versão do login; trocar a senha ou desativar a conta a invalida (FiltroSessaoValida)
+        request.getSession().setAttribute(FiltroSessaoValida.ATRIBUTO_VERSAO, usuarios.versaoSessao(autenticacao.getName()));
         return usuarios.eu(autenticacao.getName());
     }
 
@@ -111,10 +114,13 @@ public class AuthController {
         String email = autenticacao.getName();
         String ip = request.getRemoteAddr();
         limitador.verificar(ip, email);
-        if (!usuarios.alterarSenha(email, dados)) {
+        Integer novaVersao = usuarios.alterarSenha(email, dados);
+        if (novaVersao == null) {
             limitador.registrarFalha(ip, email);
             throw new ApiException(HttpStatus.BAD_REQUEST, "Senha atual incorreta.");
         }
         limitador.registrarSucesso(ip, email);
+        // quem trocou a senha continua logado; as OUTRAS sessões (com a versão antiga) deixam de valer
+        request.getSession().setAttribute(FiltroSessaoValida.ATRIBUTO_VERSAO, novaVersao);
     }
 }

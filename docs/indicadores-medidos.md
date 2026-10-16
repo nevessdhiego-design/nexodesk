@@ -15,7 +15,7 @@ eu não tenho como medi-los a partir do código, então não os inventei.
 | Testes automáticos Python | **12**, 0 falhas | `cd servico-prioridade; .\.venv\Scripts\python.exe -m pytest -q` |
 | Casos de uso implementados | **6** (o relatório da 2ª parcial diz 5; ver nota abaixo) | seção 10.1 da documentação técnica |
 | Diagramas (em Mermaid, no repositório) | **6**: 4 UML (casos de uso, classes, 2 de sequência), o modelo entidade-relacionamento e a arquitetura | seções 3, 4 e 10 da documentação técnica |
-| Tabelas no banco | **5** (`usuarios`, `chamados`, `historico_status`, `notificacoes`, `avaliacoes`) | `grep -c "^CREATE TABLE" api-java/src/main/resources/schema.sql` |
+| Tabelas no banco | **5** (`usuarios`, `chamados`, `historico_status`, `notificacoes`, `avaliacoes`) | `grep -c "^CREATE TABLE" api-java/src/main/resources/db/migration/V*.sql` |
 | Endpoints REST | **18** mapeados (+ logout) | seção 6 da documentação técnica |
 | Categorias de chamado | **13** | `dominio/Categoria.java` |
 | Linhas de código Java (produção / testes) | **2.353 / 1.114** | `git ls-files` + contagem de linhas |

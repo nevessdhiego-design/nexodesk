@@ -455,6 +455,70 @@ class FluxoChamadoTest {
                 .andExpect(status().isTooManyRequests());
     }
 
+    // ---------- sessão com versão ----------
+
+    @Test
+    void trocarASenhaEncerraAsOutrasSessoesMasNaoAAtual() throws Exception {
+        String email = novoEmail();
+        cadastrar(email);
+        MockHttpSession atual = entrar(email, SENHA);
+        MockHttpSession outra = entrar(email, SENHA); // ex.: sessão aberta no celular, possivelmente roubada
+        mvc.perform(get("/api/auth/me").session(outra)).andExpect(status().isOk());
+
+        mvc.perform(post("/api/auth/senha").with(csrf()).session(atual).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"senhaAtual\":\"%s\",\"novaSenha\":\"Nova-Senha-Forte-5\"}".formatted(SENHA)))
+                .andExpect(status().isNoContent());
+
+        mvc.perform(get("/api/auth/me").session(atual)).andExpect(status().isOk());
+        mvc.perform(get("/api/auth/me").session(outra))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.erro").value("Sessão encerrada. Entre novamente."));
+    }
+
+    @Test
+    void usuarioDesativadoPerdeASessaoENaoConsegueEntrar() throws Exception {
+        String email = novoEmail();
+        cadastrar(email);
+        MockHttpSession sessao = entrar(email, SENHA);
+        mvc.perform(get("/api/chamados/meus").session(sessao)).andExpect(status().isOk());
+
+        var usuario = usuarios.findByEmail(email).orElseThrow();
+        usuario.setAtivo(false);
+        usuarios.save(usuario);
+
+        mvc.perform(get("/api/chamados/meus").session(sessao)).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, SENHA)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // ---------- conflito de versão ----------
+
+    @Test
+    void telaDesatualizadaDoSindicoRecebe409EmVezDeApagarAMudancaDoOutro() throws Exception {
+        MockHttpSession morador = moradorLogado();
+        MockHttpSession sindico = sindicoLogado();
+        int id = abrirChamado(morador, "Portão da garagem", "PORTARIA", false);
+
+        MvcResult lista = mvc.perform(get("/api/sindico/chamados?status=todos").session(sindico)).andReturn();
+        List<Integer> versoes = JsonPath.read(lista.getResponse().getContentAsString(), "$[?(@.id==%d)].versao".formatted(id));
+        int versaoVista = versoes.get(0);
+
+        // o síndico A atualiza com a versão que viu: funciona
+        mvc.perform(patch("/api/sindico/chamados/%d/status".formatted(id)).with(csrf()).session(sindico)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"EM_ANDAMENTO\",\"versao\":%d}".formatted(versaoVista)))
+                .andExpect(status().isOk());
+        // o síndico B ainda tem a tela antiga (mesma versão): recebe 409 e NADA é alterado
+        mvc.perform(patch("/api/sindico/chamados/%d/status".formatted(id)).with(csrf()).session(sindico)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"RESOLVIDO\",\"versao\":%d}".formatted(versaoVista)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.erro").value(org.hamcrest.Matchers.containsString("alterado por outra pessoa")));
+        mvc.perform(get("/api/chamados/%d".formatted(id)).session(morador))
+                .andExpect(jsonPath("$.status").value("EM_ANDAMENTO"));
+    }
+
     // ---------- exportação CSV ----------
 
     @Test
@@ -530,8 +594,18 @@ class FluxoChamadoTest {
 
     // ---------- upload de imagem ----------
 
-    static final byte[] PNG_MINIMO = new byte[]{
-            (byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0, 0, 0, 0, 0};
+    /** PNG de verdade (8x8): o servidor agora decodifica e recodifica a foto para tirar o EXIF. */
+    static final byte[] PNG_MINIMO = pngReal();
+
+    static byte[] pngReal() {
+        try {
+            java.io.ByteArrayOutputStream s = new java.io.ByteArrayOutputStream();
+            javax.imageio.ImageIO.write(new java.awt.image.BufferedImage(8, 8, java.awt.image.BufferedImage.TYPE_INT_RGB), "png", s);
+            return s.toByteArray();
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
     @Test
     void arquivoFalsoComExtensaoPngEhRecusado() throws Exception {

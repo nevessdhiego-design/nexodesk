@@ -19,13 +19,15 @@ function cartaoChamado(c, posicao) {
     try {
       await api('/api/sindico/chamados/' + c.id + '/status', {
         metodo: 'PATCH',
-        json: { status: seletor.value, observacao: observacao.value },
+        // envia a versão que a tela mostrava: se outra pessoa já mexeu neste chamado, a API responde 409
+        json: { status: seletor.value, observacao: observacao.value, versao: c.versao },
       });
       mostrarMensagem(caixa, 'Chamado #' + c.id + ' atualizado. O morador foi avisado.', 'ok');
       await carregar();
     } catch (erro) {
       mostrarMensagem(caixa, erro.message, 'erro');
       salvar.disabled = false;
+      if (erro.status === 409) await carregar().catch(() => {}); // mostra o estado atual do chamado
     }
   });
 

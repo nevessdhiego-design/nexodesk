@@ -87,10 +87,10 @@ public class DadosDemonstracao implements ApplicationRunner {
 
         // dois chamados já andaram, para a demonstração mostrar histórico e avisos
         servico.alterarStatus(emailSindico, lampada.id(),
-                new AlterarStatusRequest(StatusChamado.RESOLVIDO, "Lâmpada trocada hoje."));
+                new AlterarStatusRequest(StatusChamado.RESOLVIDO, "Lâmpada trocada hoje.", null));
         avaliacoes.avaliar(ana, lampada.id(), new AvaliacaoRequest(5, "Resolvido no mesmo dia, obrigada."));
         servico.alterarStatus(emailSindico, vazamento.id(),
-                new AlterarStatusRequest(StatusChamado.EM_ANDAMENTO, "Encanador agendado para amanhã."));
+                new AlterarStatusRequest(StatusChamado.EM_ANDAMENTO, "Encanador agendado para amanhã.", null));
 
         log.info("Perfil demo: 2 moradores (ana.demo@nexodesk.local, bruno.demo@nexodesk.local) e 8 chamados criados.");
     }

@@ -1,7 +1,10 @@
--- Esquema do NexoDesk. Funciona no H2 (modo MySQL, desenvolvimento) e no MySQL 8.
--- No MySQL crie o banco antes:
+-- V1: esquema base do NexoDesk (usuarios, chamados, historico_status, avaliacoes, notificacoes).
+-- Funciona no H2 (modo MySQL, desenvolvimento) e no MySQL 8. No MySQL crie o banco antes:
 --   CREATE DATABASE nexodesk CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
--- O script é idempotente (CREATE TABLE IF NOT EXISTS) e roda a cada inicialização.
+--
+-- IMPORTANTE: este arquivo NUNCA deve ser editado depois de publicado (o Flyway guarda o checksum e
+-- recusa subir). Toda mudanca no banco vira um arquivo novo: V2__descricao.sql, V3__..., e assim por diante.
+-- Bancos criados antes do Flyway (pelo antigo schema.sql) entram com baseline na versao 1.
 
 CREATE TABLE IF NOT EXISTS usuarios (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,

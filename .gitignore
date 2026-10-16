@@ -18,3 +18,6 @@ __pycache__/
 .idea/
 .vscode/
 *.iml
+
+# credenciais locais de demonstracao
+*.local.txt

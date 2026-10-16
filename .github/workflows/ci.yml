@@ -1,0 +1,90 @@
+name: CI
+
+# Roda os testes a cada push na main e em cada pull request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# Um push novo cancela a execução anterior do mesmo ramo.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  java:
+    name: Java (H2)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Testes da API (banco H2 em memória)
+        working-directory: api-java
+        run: chmod +x mvnw && ./mvnw -B clean test
+      - name: Relatórios dos testes (só se falhar)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-java-h2
+          path: api-java/target/surefire-reports
+
+  java-mysql:
+    name: Java (MySQL 8.4)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          # banco descartável do CI: sem senha, só acessível dentro do runner
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          MYSQL_DATABASE: nexodesk_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Testes da API contra o MySQL
+        working-directory: api-java
+        env:
+          NEXODESK_TEST_DB_URL: jdbc:mysql://127.0.0.1:3306/nexodesk_test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Sao_Paulo
+          NEXODESK_TEST_DB_USUARIO: root
+        run: chmod +x mvnw && ./mvnw -B clean test
+      - name: Relatórios dos testes (só se falhar)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-java-mysql
+          path: api-java/target/surefire-reports
+
+  python:
+    name: Python (regras de dificuldade)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: servico-prioridade/requirements.txt
+      - name: Instalar dependências
+        working-directory: servico-prioridade
+        run: python -m pip install -r requirements.txt
+      - name: Testes
+        working-directory: servico-prioridade
+        run: python -m pytest -q

@@ -65,19 +65,27 @@ public class UsuarioService {
         return paraResposta(usuarios.save(u));
     }
 
-    /** Troca a senha exigindo a atual. Devolve false se a senha atual estiver errada. */
+    /**
+     * Troca a senha exigindo a atual. Devolve a nova "versão de sessão" (todas as outras sessões abertas deixam
+     * de valer), ou null se a senha atual estiver errada.
+     */
     @Transactional
-    public boolean alterarSenha(String email, AlterarSenhaRequest dados) {
+    public Integer alterarSenha(String email, AlterarSenhaRequest dados) {
         Usuario u = buscarPorEmail(email);
         if (!codificador.matches(dados.senhaAtual(), u.getSenhaHash())) {
-            return false;
+            return null;
         }
         if (dados.senhaAtual().equals(dados.novaSenha())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "A nova senha deve ser diferente da atual.");
         }
         u.setSenhaHash(codificador.encode(dados.novaSenha()));
-        usuarios.save(u);
-        return true;
+        u.setVersaoSessao(u.getVersaoSessao() + 1);
+        return usuarios.save(u).getVersaoSessao();
+    }
+
+    @Transactional(readOnly = true)
+    public int versaoSessao(String email) {
+        return buscarPorEmail(email).getVersaoSessao();
     }
 
     public static UsuarioResponse paraResposta(Usuario u) {
