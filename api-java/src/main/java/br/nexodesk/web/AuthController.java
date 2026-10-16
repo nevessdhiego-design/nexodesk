@@ -3,11 +3,13 @@ package br.nexodesk.web;
 import br.nexodesk.config.FiltroSessaoValida;
 import br.nexodesk.config.LimitadorTentativasLogin;
 import br.nexodesk.servico.ApiException;
+import br.nexodesk.servico.ExclusaoDeContaService;
 import br.nexodesk.servico.PublicadorEventos;
 import br.nexodesk.servico.UsuarioService;
 import br.nexodesk.web.Dtos.AlterarSenhaRequest;
 import br.nexodesk.web.Dtos.AtualizarPerfilRequest;
 import br.nexodesk.web.Dtos.CadastroRequest;
+import br.nexodesk.web.Dtos.ExcluirContaRequest;
 import br.nexodesk.web.Dtos.LoginRequest;
 import br.nexodesk.web.Dtos.SessaoResponse;
 import br.nexodesk.web.Dtos.UsuarioResponse;
@@ -40,15 +42,17 @@ public class AuthController {
     private final SecurityContextRepository repositorioContexto;
     private final LimitadorTentativasLogin limitador;
     private final PublicadorEventos publicador;
+    private final ExclusaoDeContaService exclusao;
 
     public AuthController(UsuarioService usuarios, AuthenticationManager gerenteAutenticacao,
                           SecurityContextRepository repositorioContexto, LimitadorTentativasLogin limitador,
-                          PublicadorEventos publicador) {
+                          PublicadorEventos publicador, ExclusaoDeContaService exclusao) {
         this.usuarios = usuarios;
         this.gerenteAutenticacao = gerenteAutenticacao;
         this.repositorioContexto = repositorioContexto;
         this.limitador = limitador;
         this.publicador = publicador;
+        this.exclusao = exclusao;
     }
 
     @PostMapping("/register")
@@ -128,5 +132,28 @@ public class AuthController {
         request.getSession().setAttribute(FiltroSessaoValida.ATRIBUTO_VERSAO, novaVersao);
         // as outras sessões deixaram de valer: fecha os fluxos de tempo real delas (o navegador atual reconecta sozinho)
         publicador.encerrar(email);
+    }
+
+    /**
+     * "Excluir minha conta" (LGPD): apaga os dados pessoais da conta e mantém os chamados sem identificação. Exige a senha
+     * atual (errar conta como falha de login) e encerra a sessão. O único síndico ativo não pode sair sem passar o cargo.
+     */
+    @PostMapping("/excluir-conta")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void excluirConta(@Valid @RequestBody ExcluirContaRequest dados, Authentication autenticacao,
+                             HttpServletRequest request) {
+        String email = autenticacao.getName();
+        String ip = request.getRemoteAddr();
+        limitador.verificar(ip, email);
+        if (!exclusao.excluir(email, dados.senha())) {
+            limitador.registrarFalha(ip, email);
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Senha incorreta.");
+        }
+        limitador.registrarSucesso(ip, email);
+        publicador.encerrar(email);
+        SecurityContextHolder.clearContext();
+        if (request.getSession(false) != null) {
+            request.getSession(false).invalidate();
+        }
     }
 }

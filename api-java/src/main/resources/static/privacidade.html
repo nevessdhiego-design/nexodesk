@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NexoDesk - Privacidade</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/acessibilidade.css">
+  <script src="/js/acessibilidade.js"></script>
+</head>
+<body>
+  <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="marca">Nexo<span>Desk</span></div>
+    <div class="espaco"></div>
+    <a class="botao-link" href="/index.html">Voltar</a>
+  </header>
+
+  <main class="pagina" id="conteudo" tabindex="-1">
+    <section class="cartao">
+      <h1>Privacidade: o que guardamos e por quê</h1>
+      <p class="muted">Texto curto, em português simples. O NexoDesk é um projeto acadêmico: este texto descreve o que o sistema faz hoje, não foi revisado por advogado e não substitui orientação jurídica.</p>
+
+      <h2>Quais dados guardamos</h2>
+      <ul>
+        <li><strong>Da sua conta:</strong> nome, e-mail, senha (guardada só como código irreversível, nunca o texto), unidade (bloco e apartamento) e telefone, que é opcional.</li>
+        <li><strong>Dos seus chamados:</strong> título, descrição, categoria, local, a foto, se você enviar, o status e as mensagens trocadas. Na foto, a localização (GPS) e os demais dados escondidos da câmera são removidos antes de guardar.</li>
+        <li><strong>De uso:</strong> a data de cada mudança de status e os avisos que você recebe.</li>
+      </ul>
+
+      <h2>Para que usamos</h2>
+      <p>Só para o condomínio receber, priorizar, atender e acompanhar os chamados. Não usamos os dados para publicidade e não os entregamos a terceiros.</p>
+
+      <h2>Quem vê o quê</h2>
+      <ul>
+        <li><strong>Síndico:</strong> vê todos os chamados, os dados de quem os abriu e a lista de usuários (nome, e-mail, unidade e perfil, sem telefone).</li>
+        <li><strong>Zelador:</strong> vê só os chamados que o síndico atribuiu a ele.</li>
+        <li><strong>Outros moradores:</strong> não veem os seus chamados.</li>
+        <li><strong>Chamado anônimo:</strong> se você marcar &quot;não mostrar meu nome&quot;, o síndico e o zelador veem &quot;Anônimo&quot;, inclusive nas mensagens. Atenção: o que você escrever no texto do chamado continua visível a eles.</li>
+      </ul>
+
+      <h2>Seus direitos</h2>
+      <ul>
+        <li><strong>Corrigir:</strong> em <a href="/conta.html">Minha conta</a> você altera nome, unidade e telefone.</li>
+        <li><strong>Excluir:</strong> em Minha conta, o botão &quot;Excluir minha conta&quot; apaga seu nome, e-mail, telefone e unidade e encerra o acesso. Os chamados que você abriu ficam no histórico do condomínio, <strong>sem identificação</strong> (o texto que você escreveu neles permanece; evite colocar dados pessoais nele).</li>
+        <li><strong>Saber o que existe:</strong> peça ao síndico, que é quem administra o condomínio e os dados dele.</li>
+      </ul>
+
+      <h2>Quanto tempo guardamos</h2>
+      <p>Enquanto a conta existir. Depois da exclusão, só o histórico dos chamados, sem identificação. Esta versão acadêmica ainda não tem prazo automático para apagar chamados antigos.</p>
+
+      <h2>Como protegemos</h2>
+      <p>Senha com bcrypt, sessão com cookie protegido, bloqueio de tentativas de senha, páginas sem código de terceiros e proteção contra envio de formulário por site falso. Nenhum sistema é totalmente seguro: não coloque neste sistema senhas, números de documentos ou dados bancários.</p>
+
+      <h2>E-mail</h2>
+      <p>O envio de e-mail de aviso vem desligado por padrão. Se o síndico ligar, o e-mail leva só o número do chamado e o novo status, nunca a descrição.</p>
+    </section>
+  </main>
+</body>
+</html>
