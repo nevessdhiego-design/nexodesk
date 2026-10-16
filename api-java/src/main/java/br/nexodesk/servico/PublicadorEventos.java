@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -98,6 +100,17 @@ public class PublicadorEventos {
         if (lista != null) {
             lista.forEach(PublicadorEventos::fechar);
         }
+    }
+
+    /**
+     * Ao desligar a API, fecha todos os fluxos abertos. Sem isto o desligamento "graceful" do Tomcat conta cada fluxo
+     * como requisição em andamento e espera o prazo inteiro (30 s) antes de encerrar. O navegador reconecta sozinho
+     * quando a API volta.
+     */
+    @EventListener(ContextClosedEvent.class)
+    public void encerrarTodos() {
+        List<String> emails = new ArrayList<>(porUsuario.keySet());
+        emails.forEach(this::encerrar);
     }
 
     /** Batimento: comentário SSE a cada 25 s, para proxies não derrubarem a conexão parada e para descobrir conexões mortas. */
