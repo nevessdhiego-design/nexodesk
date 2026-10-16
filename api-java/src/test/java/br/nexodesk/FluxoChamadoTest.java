@@ -507,9 +507,10 @@ class FluxoChamadoTest {
         // hoje o médio vem antes do difícil
         assertThat(posicao(sindico, novoMedio)).isLessThan(posicao(sindico, antigoDificil));
 
-        // envelhece o difícil em 10 dias: bônus máximo de 3 pontos (8 vira 5) e passa o médio (6)
+        // envelhece o difícil em 10 dias (e 5 min de folga: o MySQL arredonda o horário para o segundo, e sem folga o dia 10 podia virar 9)
+        // bônus máximo de 3 pontos (8 vira 5) e passa o médio (6)
         jdbc.update("UPDATE chamados SET criado_em = ? WHERE id = ?",
-                java.sql.Timestamp.valueOf(java.time.LocalDateTime.now().minusDays(10)), antigoDificil);
+                java.sql.Timestamp.valueOf(java.time.LocalDateTime.now().minusDays(10).minusMinutes(5)), antigoDificil);
 
         assertThat(posicao(sindico, antigoDificil)).isLessThan(posicao(sindico, novoMedio));
         mvc.perform(get("/api/sindico/chamados").session(sindico))
