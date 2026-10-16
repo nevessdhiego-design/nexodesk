@@ -58,6 +58,7 @@ function cartaoChamado(c, posicao) {
       el('summary', { text: 'Por que essa dificuldade?' }),
       el('ul', {}, c.justificativa.map((j) => el('li', { text: j }))),
       c.classificacaoFallback ? el('p', { class: 'muted', text: 'Serviço de prioridade indisponível na hora: classificação aproximada, só pela categoria.' }) : null),
+    blocoConversa(c.id),
     el('div', { class: 'edicao' },
       el('div', {}, el('label', { for: 'status-' + c.id, text: 'Status' }), seletor),
       el('div', {}, el('label', { for: 'obs-' + c.id, text: 'Observação para o morador (opcional)' }), observacao),
@@ -94,10 +95,37 @@ async function carregar() {
 filtro.addEventListener('change', () => carregar().catch((e) => mostrarMensagem(caixa, e.message, 'erro')));
 document.getElementById('botao-sair').addEventListener('click', sair);
 
+const banner = document.getElementById('novidades');
+const tituloOriginal = document.title;
+window.addEventListener('focus', () => { document.title = tituloOriginal; });
+
+async function atualizarTudo() {
+  banner.classList.add('hidden');
+  await Promise.all([carregar(), recarregarAvisos()]);
+}
+document.getElementById('atualizar-agora').addEventListener('click', () => atualizarTudo().catch(() => {}));
+
+/** Chegou um aviso de tempo real. Não redesenha a fila por cima de quem está escrevendo uma observação ou mensagem. */
+function aoMudar(evento) {
+  if (evento && evento.tipo === 'emergencia' && document.hidden) {
+    document.title = '🚨 EMERGÊNCIA - ' + tituloOriginal;   // chama a atenção com a aba em segundo plano
+  }
+  if (evento && evento.tipo === 'mensagem') {
+    atualizarConversa(evento.chamadoId);
+    return recarregarAvisos();
+  }
+  if (estaEditando(lista)) {
+    banner.classList.remove('hidden');
+    return recarregarAvisos();
+  }
+  return atualizarTudo();
+}
+
 (async function iniciar() {
   const eu = await exigirPerfil('SINDICO');
   if (!eu) return;
   document.getElementById('usuario').textContent = eu.nome;
   recarregarAvisos = iniciarAvisos();
   await Promise.all([carregar(), recarregarAvisos()]);
+  iniciarTempoReal(aoMudar);
 })();

@@ -64,6 +64,11 @@ public final class Dtos {
             @Size(max = 500, message = "O comentário deve ter no máximo 500 caracteres.") String comentario) {
     }
 
+    public record MensagemRequest(
+            @NotBlank(message = "Escreva a mensagem.")
+            @Size(max = 1000, message = "A mensagem deve ter no máximo 1000 caracteres.") String texto) {
+    }
+
     public record AlterarStatusRequest(
             @NotNull(message = "Informe o novo status.") StatusChamado status,
             @Size(max = 500) String observacao,
@@ -114,6 +119,11 @@ public final class Dtos {
             Integer notaAvaliacao,
             String comentarioAvaliacao,
             List<HistoricoResponse> historico) {
+    }
+
+    /** {@code autor} já vem no formato certo para quem pergunta (ex.: "Anônimo" para o síndico em chamado anônimo). */
+    public record MensagemResponse(Long id, String autor, boolean doSindico, boolean minha, String texto,
+                                   LocalDateTime criadoEm) {
     }
 
     public record NotificacaoResponse(Long id, Long chamadoId, String mensagem, boolean lida,
