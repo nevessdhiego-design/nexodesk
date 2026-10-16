@@ -143,4 +143,17 @@ class PublicadorEventosTest {
         assertThat(publicador.conexoes("bruno@x.test")).isZero();
         assertThat(publicador.conexoes("ana@x.test")).isEqualTo(1);
     }
+
+    @Test
+    void aoDesligarAApiTodosOsFluxosSaoFechadosParaNaoTravarODesligamento() {
+        publicador.registrar("ana@x.test");
+        publicador.registrar("ana@x.test");
+        publicador.registrar("bruno@x.test");
+
+        publicador.encerrarTodos();
+
+        assertThat(criados).hasSize(3).allMatch(c -> c.completo);
+        assertThat(publicador.conexoes("ana@x.test")).isZero();
+        assertThat(publicador.conexoes("bruno@x.test")).isZero();
+    }
 }
