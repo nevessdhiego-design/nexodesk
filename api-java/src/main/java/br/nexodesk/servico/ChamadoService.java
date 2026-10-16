@@ -46,11 +46,13 @@ public class ChamadoService {
     private final ArmazenamentoImagem imagens;
     private final AvaliacaoRepository avaliacoes;
     private final ApplicationEventPublisher eventos;
+    private final PrioridadeFila prioridade;
 
     public ChamadoService(ChamadoRepository chamados, HistoricoStatusRepository historicos,
                           NotificacaoRepository notificacoes, UsuarioService usuarios,
                           ClassificadorDificuldade classificador, ArmazenamentoImagem imagens,
-                          AvaliacaoRepository avaliacoes, ApplicationEventPublisher eventos) {
+                          AvaliacaoRepository avaliacoes, ApplicationEventPublisher eventos,
+                          PrioridadeFila prioridade) {
         this.chamados = chamados;
         this.historicos = historicos;
         this.notificacoes = notificacoes;
@@ -59,6 +61,7 @@ public class ChamadoService {
         this.imagens = imagens;
         this.avaliacoes = avaliacoes;
         this.eventos = eventos;
+        this.prioridade = prioridade;
     }
 
     /** RF01 + RF02: cadastra o chamado já classificado por dificuldade. */
@@ -94,12 +97,21 @@ public class ChamadoService {
         c.setStatus(StatusChamado.ABERTO);
         c.setDificuldade(r.dificuldade());
         c.setPontuacao(r.pontuacao());
-        c.setJustificativa(truncar(String.join(SEPARADOR, r.justificativa()), 1000));
+        boolean marcadaPeloMorador = Boolean.TRUE.equals(form.emergencia());
+        c.setEmergencia(marcadaPeloMorador || r.emergencia());
+        List<String> justificativa = new java.util.ArrayList<>(r.justificativa());
+        if (marcadaPeloMorador) {
+            justificativa.add("emergência marcada pelo morador");
+        }
+        c.setJustificativa(truncar(String.join(SEPARADOR, justificativa), 1000));
         c.setClassificacaoFallback(r.fallback());
         c.setMorador(morador);
         c = chamados.save(c);
 
         registrarHistorico(c, null, StatusChamado.ABERTO, morador, "Chamado aberto.");
+        if (c.isEmergencia()) {
+            avisarSindicosDaEmergencia(c);
+        }
         return paraResposta(c, false, List.of(), null);
     }
 
@@ -112,7 +124,8 @@ public class ChamadoService {
     }
 
     /**
-     * RF03: fila do síndico, do mais fácil ao mais difícil.
+     * RF03: fila do síndico. Emergências primeiro; depois do mais fácil ao mais difícil, com bônus de idade
+     * para o chamado antigo não ser esquecido (veja {@link PrioridadeFila}).
      * filtro: "ativos" (padrão: aberto + em andamento), "todos" ou um status.
      */
     @Transactional(readOnly = true)
@@ -129,7 +142,8 @@ public class ChamadoService {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "Filtro de status inválido.");
             }
         }
-        List<Chamado> lista = chamados.findByStatusInOrderByPontuacaoAscCriadoEmAsc(status);
+        List<Chamado> lista = new java.util.ArrayList<>(chamados.findByStatusIn(status));
+        lista.sort(prioridade.ordem());
         Map<Long, Avaliacao> notas = avaliacoesDe(lista);
         return lista.stream().map(c -> paraResposta(c, true, List.of(), notas.get(c.getId()))).toList();
     }
@@ -169,7 +183,7 @@ public class ChamadoService {
         String observacao = req.observacao() == null || req.observacao().isBlank() ? null : req.observacao().trim();
 
         c.setStatus(req.status());
-        chamados.save(c);
+        chamados.saveAndFlush(c); // flush: a versão devolvida na resposta já é a nova
         registrarHistorico(c, anterior, req.status(), sindico, observacao);
 
         Notificacao n = new Notificacao();
@@ -196,7 +210,8 @@ public class ChamadoService {
                 pendentes(Dificuldade.MEDIA),
                 pendentes(Dificuldade.DIFICIL),
                 media(avaliacoes.mediaDasNotas()),
-                avaliacoes.count());
+                avaliacoes.count(),
+                chamados.countByEmergenciaTrueAndStatusIn(PENDENTES));
     }
 
     @Transactional(readOnly = true)
@@ -227,6 +242,19 @@ public class ChamadoService {
     /** Média com uma casa decimal (4,3333 vira 4,3), ou null se ninguém avaliou ainda. */
     private static Double media(Double valor) {
         return valor == null ? null : Math.round(valor * 10.0) / 10.0;
+    }
+
+    /** Aviso dentro do sistema para cada síndico ativo. Não leva o nome do morador (o chamado pode ser anônimo). */
+    private void avisarSindicosDaEmergencia(Chamado c) {
+        String mensagem = truncar("EMERGÊNCIA no chamado #" + c.getId() + " \"" + truncar(c.getTitulo(), 60) + "\" ("
+                + c.getCategoria().getRotulo() + "). Atenda primeiro.", 300);
+        for (Usuario sindico : usuarios.sindicosAtivos()) {
+            Notificacao n = new Notificacao();
+            n.setUsuario(sindico);
+            n.setChamado(c);
+            n.setMensagem(mensagem);
+            notificacoes.save(n);
+        }
     }
 
     private long pendentes(Dificuldade d) {
@@ -266,8 +294,8 @@ public class ChamadoService {
     }
 
     /** No chamado anônimo o síndico não recebe nome nem unidade do morador. */
-    private static ChamadoResponse paraResposta(Chamado c, boolean visaoSindico, List<HistoricoResponse> historico,
-                                                Avaliacao avaliacao) {
+    private ChamadoResponse paraResposta(Chamado c, boolean visaoSindico, List<HistoricoResponse> historico,
+                                         Avaliacao avaliacao) {
         boolean ocultar = visaoSindico && c.isAnonimo();
         List<String> justificativa = c.getJustificativa() == null
                 ? List.of()
@@ -279,6 +307,7 @@ public class ChamadoService {
                 c.getStatus().name(), c.getStatus().getRotulo(),
                 c.getDificuldade().name(), c.getDificuldade().getRotulo(),
                 c.getPontuacao(), justificativa, c.isClassificacaoFallback(),
+                c.isEmergencia(), prioridade.pontuacaoEfetiva(c), prioridade.diasEmEspera(c), prioridade.atrasado(c),
                 ocultar ? "Anônimo" : c.getMorador().getNome(),
                 ocultar ? null : c.getMorador().getUnidade(),
                 c.getCriadoEm(), c.getAtualizadoEm(), c.getVersao(),

@@ -65,3 +65,98 @@ Padrões nas 10 divergências (hipóteses para discutir, nada foi alterado):
 - Termos são procurados no texto sem entender o contexto (por exemplo, "não" não inverte o sentido).
 - Só 27 casos, todos escritos por uma pessoa. Para a banca, o ideal é o grupo trazer 5 a 10 casos reais de condomínios que conhecem.
 - Se a regra mudar, o `RegrasTest` do Java exige que as pontuações base de `dominio/Categoria.java` continuem iguais às do Python.
+
+---
+
+# Atualização da fase 2 (15/10/2026): refinamento, emergência e validação honesta
+
+## O que mudou na regra
+
+1. **Emergência separada da dificuldade.** A regra agora devolve também `emergencia`. Pessoa presa, choque, fio exposto,
+   gás, fogo, alagamento, risco de desabamento, assalto e emergência de saúde **furam a fila** do síndico, qualquer que seja
+   a dificuldade (uma lâmpada fácil com faíscas é urgente; uma infiltração difícil sem risco não é). Os padrões evitam
+   falso alarme: "portão preso", "carro preso na vaga", "taxa de gás" e "fogos de artifício" **não** disparam.
+2. **Termos novos** nascidos das divergências da tabela acima: pedidos de informação e sugestões (−2), peças pequenas
+   (botão, torneira: −2), gravidade do esgoto, necessidade de técnico (interfone, motor, sensor, poste), piscina.
+3. **Dois conjuntos de casos, de propósito:**
+   - **Ajuste** (os 27 casos acima): serviram para escolher os termos. Acertar 100% ali **não prova nada**.
+   - **Validação** (15 casos escritos **depois** de fixar os termos, que a regra nunca viu): é o número que vale.
+
+## Resultado
+
+| Conjunto | Antes (14/10) | Depois (15/10) |
+|---|---|---|
+| Ajuste (27 casos, usados para ajustar) | 17 de 27 (63%) | **27 de 27** (100%), esperado: foi ajustado nesses |
+| **Validação (15 casos nunca vistos)** | não existia | **11 de 15 (73%)** |
+
+A diferença entre 100% e 73% é o tamanho do "ajuste que decorou os casos". **Use o número da validação** em qualquer slide.
+Emergência: 12 de 12 frases de risco detectadas e 0 falsos alarmes nas 7 frases de controle (`tests/casos.py`).
+
+## Conjunto de validação (casos nunca vistos)
+
+| | Categoria | Título | Esperado | Obtido | Como a regra chegou lá |
+|---|---|---|---|---|---|
+| ❌ | ILUMINACAO | Luz de emergência da escada não acende | Média | Fácil (2) | categoria ILUMINACAO: base 2 |
+| ✅ | LIMPEZA | Caçamba de entulho cheia | Fácil | Fácil (2) | categoria LIMPEZA: base 2 |
+| ❌ | PORTARIA | Encomenda sem aviso | Fácil | Média (4) | categoria PORTARIA: base 3; termo 'porteiro': +1 |
+| ✅ | ESTACIONAMENTO | Moto na calçada | Fácil | Fácil (3) | categoria ESTACIONAMENTO: base 3 |
+| ✅ | BARULHO | Obra começou às 7h | Fácil | Fácil (3) | categoria BARULHO: base 3 |
+| ✅ | CONVIVENCIA | Vizinho joga lixo pela janela | Média | Média (4) | categoria CONVIVENCIA: base 4 |
+| ✅ | AREAS_COMUNS | Quadra com rede rasgada | Média | Média (4) | categoria AREAS_COMUNS: base 4 |
+| ✅ | SEGURANCA | Cerca elétrica desligada | Média | Média (5) | categoria SEGURANCA: base 5 |
+| ✅ | ELETRICA | Disjuntor desarmando | Média | Média (6) | categoria ELETRICA: base 6 |
+| ❌ | ELETRICA | Fio solto na piscina | Média + emergência | Difícil (8) + emergência | categoria ELETRICA: base 6; termo 'piscina': +2; emergência detectada: fio exposto |
+| ✅ | HIDRAULICA | Caixa d'água transbordando | Média | Média (6) | categoria HIDRAULICA: base 6 |
+| ✅ | HIDRAULICA | Falta de água | Difícil | Difícil (7) | categoria HIDRAULICA: base 6; termo 'bloco inteiro': +1 |
+| ❌ | ELEVADOR | Barulho estranho no elevador | Média | Difícil (8) | categoria ELEVADOR: base 8 |
+| ✅ | ESTRUTURA | Reboco caiu da fachada | Difícil | Difícil (9) | categoria ESTRUTURA: base 9 |
+| ✅ | OUTROS | Dúvida sobre a taxa | Fácil | Fácil (2) | categoria OUTROS: base 4; termo 'duvida': -2 |
+
+### O que os erros ensinam (limites reais de uma regra por palavras)
+
+- **"Luz de emergência da escada não acende"**: a categoria Iluminação tem base baixa e nada no texto indica equipamento especial.
+- **"Encomenda sem aviso"**: o termo `porteiro` (+1) foi criado para "portaria sem porteiro à noite" e aqui prejudica. É sinal de
+  ajuste excessivo a um caso.
+- **"Fio solto na piscina"**: o termo `piscina` (+2) foi pensado para a água verde da piscina; aqui soma pontos a um problema elétrico.
+  (A emergência foi detectada corretamente.)
+- **"Barulho estranho no elevador"**: qualquer chamado de Elevador começa em 8 (Difícil), mesmo quando o problema é pequeno.
+
+Esses erros **não foram corrigidos de propósito**: corrigi-los agora seria ajustar a regra ao conjunto de validação e o número deixaria
+de significar alguma coisa. Se o grupo quiser, a próxima rodada cria um **terceiro** conjunto, com casos reais de síndicos.
+
+## Ainda pendente
+
+- A coluna "Esperado" é proposta de quem escreveu. **Nenhum síndico real validou.** Isso precisa do grupo.
+- Se o serviço Python estiver fora do ar, o Java classifica só pela categoria e **não detecta emergência** (o morador ainda pode marcar à mão).
+
+## Conjunto de ajuste (27 casos) com o resultado atual
+
+| | Categoria | Título | Esperado | Obtido | Como a regra chegou lá |
+|---|---|---|---|---|---|
+| ✅ | ILUMINACAO | Lâmpada queimada no corredor | Fácil | Fácil (1) | categoria ILUMINACAO: base 2; termo 'lampada': -2; termo 'queimada': -2; termo 'trocar': -2 |
+| ✅ | ILUMINACAO | Poste do estacionamento apagado | Média | Média (4) | categoria ILUMINACAO: base 2; termo 'poste': +2 |
+| ✅ | ILUMINACAO | Luz do hall piscando | Fácil | Fácil (2) | categoria ILUMINACAO: base 2 |
+| ✅ | LIMPEZA | Lixeira transbordando | Fácil | Fácil (1) | categoria LIMPEZA: base 2; termo 'lixeira': -2 |
+| ✅ | LIMPEZA | Piscina com água verde | Média | Média (4) | categoria LIMPEZA: base 2; termo 'piscina': +2 |
+| ✅ | PORTARIA | Interfone sem funcionar | Média | Média (4) | categoria PORTARIA: base 3; termo 'interfone': +1 |
+| ✅ | PORTARIA | Portaria sem porteiro à noite | Média | Média (4) | categoria PORTARIA: base 3; termo 'porteiro': +1 |
+| ✅ | ESTACIONAMENTO | Carro na minha vaga | Fácil | Fácil (3) | categoria ESTACIONAMENTO: base 3 |
+| ✅ | ESTACIONAMENTO | Vaga demarcada apagada | Média | Média (4) | categoria ESTACIONAMENTO: base 3; termo 'pintura': +1 |
+| ✅ | BARULHO | Música alta depois das 22h | Fácil | Fácil (3) | categoria BARULHO: base 3 |
+| ✅ | BARULHO | Obra fora do horário | Fácil | Fácil (3) | categoria BARULHO: base 3 |
+| ✅ | CONVIVENCIA | Cachorro latindo o dia todo | Média | Média (5) | categoria CONVIVENCIA: base 4; termo 'todo o': +1 |
+| ✅ | AREAS_COMUNS | Churrasqueira quebrada | Média | Média (4) | categoria AREAS_COMUNS: base 4 |
+| ✅ | AREAS_COMUNS | Reserva do salão de festas | Fácil | Fácil (2) | categoria AREAS_COMUNS: base 4; termo 'como reservar': -2 |
+| ✅ | SEGURANCA | Portão da garagem não fecha | Média | Média (6) | categoria SEGURANCA: base 5; termo 'varios': +1 |
+| ✅ | SEGURANCA | Câmera do térreo sem imagem | Média | Média (5) | categoria SEGURANCA: base 5 |
+| ✅ | ELETRICA | Tomada do salão sem energia | Média | Média (6) | categoria ELETRICA: base 6 |
+| ✅ | ELETRICA | Choque na porta de metal | Difícil + emergência | Difícil (8) + emergência | categoria ELETRICA: base 6; termo 'choque': +2; emergência detectada: choque elétrico |
+| ✅ | HIDRAULICA | Torneira pingando | Fácil | Fácil (3) | categoria HIDRAULICA: base 6; termo 'torneira': -2; termo 'pinga': -1 |
+| ✅ | HIDRAULICA | Vazamento no teto da garagem | Média | Média (6) | categoria HIDRAULICA: base 6 |
+| ✅ | HIDRAULICA | Entupimento na coluna de esgoto | Difícil | Difícil (9) | categoria HIDRAULICA: base 6; termo 'esgoto': +1; termo 'coluna': +1; termo 'voltando': +1 |
+| ✅ | ELEVADOR | Elevador parado | Difícil | Difícil (10) | categoria ELEVADOR: base 8; termo 'parado': +2 |
+| ✅ | ELEVADOR | Botão do elevador não acende | Média | Média (6) | categoria ELEVADOR: base 8; termo 'botao': -2 |
+| ✅ | ELEVADOR | Pessoa presa no elevador | Difícil + emergência | Difícil (10) + emergência | categoria ELEVADOR: base 8; termo 'presa': +2; emergência detectada: pessoa presa |
+| ✅ | ESTRUTURA | Rachadura na parede do hall | Difícil | Difícil (10) | categoria ESTRUTURA: base 9; termo 'rachadura': +2 |
+| ✅ | ESTRUTURA | Infiltração na laje | Difícil | Difícil (10) | categoria ESTRUTURA: base 9; termo 'infiltracao': +2 |
+| ✅ | OUTROS | Sugestão de horta comunitária | Fácil | Fácil (1) | categoria OUTROS: base 4; termo 'gostaria de propor': -2; termo 'sugestao': -2; termo 'propor': -2 |

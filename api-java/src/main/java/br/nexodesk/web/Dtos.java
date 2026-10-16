@@ -41,6 +41,7 @@ public final class Dtos {
             @NotNull(message = "Escolha a categoria.") Categoria categoria,
             @Size(max = 120) String localOcorrencia,
             Boolean anonimo, // objeto (não boolean): campo ausente vira null em vez de erro de conversão
+            Boolean emergencia, // o morador marca "é uma emergência"; o Python também pode detectar sozinho
             MultipartFile imagem) {
     }
 
@@ -101,6 +102,10 @@ public final class Dtos {
             int pontuacao,
             List<String> justificativa,
             boolean classificacaoFallback,
+            boolean emergencia,
+            int pontuacaoEfetiva,
+            int diasEmEspera,
+            boolean atrasado,
             String moradorNome,
             String moradorUnidade,
             LocalDateTime criadoEm,
@@ -120,6 +125,6 @@ public final class Dtos {
 
     public record EstatisticasResponse(long abertos, long emAndamento, long resolvidos,
                                        long pendentesFaceis, long pendentesMedios, long pendentesDificeis,
-                                       Double mediaAvaliacoes, long totalAvaliacoes) {
+                                       Double mediaAvaliacoes, long totalAvaliacoes, long emergenciasAbertas) {
     }
 }

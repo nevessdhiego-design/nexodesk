@@ -59,6 +59,10 @@ public class Chamado {
     @Column(length = 1000)
     private String justificativa;
 
+    /** Risco à vida, à saúde ou à segurança: fura a fila do síndico. Marcada pelo morador ou detectada pelo Python. */
+    @Column(nullable = false)
+    private boolean emergencia;
+
     /** true quando o serviço Python estava fora do ar e a classificação foi só pela categoria. */
     @Column(name = "classificacao_fallback", nullable = false)
     private boolean classificacaoFallback;
@@ -110,6 +114,8 @@ public class Chamado {
     public void setPontuacao(int pontuacao) { this.pontuacao = pontuacao; }
     public String getJustificativa() { return justificativa; }
     public void setJustificativa(String justificativa) { this.justificativa = justificativa; }
+    public boolean isEmergencia() { return emergencia; }
+    public void setEmergencia(boolean emergencia) { this.emergencia = emergencia; }
     public boolean isClassificacaoFallback() { return classificacaoFallback; }
     public void setClassificacaoFallback(boolean classificacaoFallback) { this.classificacaoFallback = classificacaoFallback; }
     public Usuario getMorador() { return morador; }

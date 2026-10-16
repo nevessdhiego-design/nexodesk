@@ -37,7 +37,7 @@ class ExportadorCsvTest {
     @Test
     void cabecalhoTemBomEUmaLinhaPorChamado() {
         String csv = ExportadorCsv.gerar(java.util.List.of());
-        assertThat(csv).startsWith("﻿Fila;ID;Título;").endsWith("\r\n");
+        assertThat(csv).startsWith("﻿Fila;ID;Emergência;Título;").contains(";Dias em espera;").endsWith("\r\n");
         assertThat(csv.split("\r\n")).hasSize(1);
     }
 }

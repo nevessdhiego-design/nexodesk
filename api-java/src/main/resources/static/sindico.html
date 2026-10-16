@@ -15,15 +15,23 @@
     <div class="espaco"></div>
     <span class="usuario" id="usuario"></span>
     <a class="botao-link" href="/conta.html">Minha conta</a>
+    <button type="button" class="secundario sino" id="botao-sino" aria-label="Notificações">
+      Avisos <span class="contador hidden" id="contador"></span>
+    </button>
     <button type="button" class="secundario" id="botao-sair">Sair</button>
   </header>
 
   <main class="pagina" id="conteudo" tabindex="-1">
+    <section class="cartao hidden" id="painel-avisos" aria-live="polite">
+      <h2>Avisos</h2>
+      <div id="lista-avisos"></div>
+    </section>
+
     <section class="estatisticas" id="estatisticas" aria-label="Resumo"></section>
 
     <section class="cartao">
       <h2>Fila de chamados</h2>
-      <p class="muted">Ordenados do mais fácil ao mais difícil de resolver. Em empate, o mais antigo primeiro.</p>
+      <p class="muted"><strong>Emergências primeiro</strong>; depois do mais fácil ao mais difícil de resolver. Chamado difícil que espera muito sobe na fila (1 ponto a cada 2 dias, até 3), para ninguém ser esquecido.</p>
       <label for="filtro">Mostrar</label>
       <select id="filtro">
         <option value="ativos">Pendentes (abertos e em andamento)</option>
@@ -39,6 +47,7 @@
   </main>
 
   <script src="/js/app.js"></script>
+  <script src="/js/avisos.js"></script>
   <script src="/js/sindico.js"></script>
 </body>
 </html>

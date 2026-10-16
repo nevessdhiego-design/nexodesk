@@ -19,7 +19,7 @@ public final class ExportadorCsv {
 
     static final String BOM = "﻿";
     private static final DateTimeFormatter DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-    private static final String CABECALHO = "Fila;ID;Título;Categoria;Local;Status;Dificuldade;Pontuação;"
+    private static final String CABECALHO = "Fila;ID;Emergência;Título;Categoria;Local;Status;Dificuldade;Pontuação;Dias em espera;"
             + "Morador;Unidade;Aberto em;Descrição;Nota da avaliação;Comentário da avaliação";
 
     private ExportadorCsv() {
@@ -32,12 +32,14 @@ public final class ExportadorCsv {
             StringJoiner linha = new StringJoiner(";");
             linha.add(String.valueOf(posicao++));
             linha.add(String.valueOf(c.id()));
+            linha.add(c.emergencia() ? "SIM" : "");
             linha.add(campo(c.titulo()));
             linha.add(campo(c.categoriaRotulo()));
             linha.add(campo(c.localOcorrencia()));
             linha.add(campo(c.statusRotulo()));
             linha.add(campo(c.dificuldadeRotulo()));
             linha.add(String.valueOf(c.pontuacao()));
+            linha.add(String.valueOf(c.diasEmEspera()));
             linha.add(campo(c.moradorNome()));
             linha.add(campo(c.moradorUnidade()));
             linha.add(campo(c.criadoEm() == null ? null : DATA.format(c.criadoEm())));

@@ -51,6 +51,11 @@ public class UsuarioService {
     }
 
     @Transactional(readOnly = true)
+    public java.util.List<Usuario> sindicosAtivos() {
+        return usuarios.findByPerfilAndAtivoTrue(Perfil.SINDICO);
+    }
+
+    @Transactional(readOnly = true)
     public UsuarioResponse eu(String email) {
         return paraResposta(buscarPorEmail(email));
     }
