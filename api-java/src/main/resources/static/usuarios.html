@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NexoDesk - Usuários</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/acessibilidade.css">
+  <script src="/js/acessibilidade.js"></script>
+</head>
+<body>
+  <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="marca">Nexo<span>Desk</span></div>
+    <div class="espaco"></div>
+    <span class="usuario" id="usuario"></span>
+    <a class="botao-link" href="/sindico.html">Painel</a>
+    <a class="botao-link" href="/conta.html">Minha conta</a>
+    <button type="button" class="secundario" id="botao-sair">Sair</button>
+  </header>
+
+  <main class="pagina" id="conteudo" tabindex="-1">
+    <section class="cartao">
+      <h2>Usuários do condomínio</h2>
+      <p class="muted">Quem se cadastra entra como <strong>morador</strong>. Aqui você promove alguém a <strong>zelador</strong> (vê e atualiza só os chamados atribuídos a ele) ou a <strong>síndico</strong> (acesso total), e desativa quem não deve mais entrar. Mudar o perfil ou desativar encerra as sessões abertas da pessoa. Você não altera a sua própria conta aqui, e o condomínio sempre mantém pelo menos um síndico ativo.</p>
+      <div id="mensagem" class="mensagem hidden" role="alert"></div>
+      <label for="busca">Buscar por nome ou e-mail</label>
+      <input id="busca" type="text" maxlength="120" autocomplete="off">
+      <p class="muted" id="contagem" role="status"></p>
+      <div class="tabela-rolavel">
+        <table class="usuarios">
+          <caption class="somente-leitor">Lista de usuários, com perfil e situação</caption>
+          <thead>
+            <tr>
+              <th scope="col">Nome</th>
+              <th scope="col">E-mail</th>
+              <th scope="col">Unidade</th>
+              <th scope="col">Perfil</th>
+              <th scope="col">Situação</th>
+              <th scope="col">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="lista-usuarios"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/usuarios.js"></script>
+</body>
+</html>

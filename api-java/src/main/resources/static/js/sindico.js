@@ -2,12 +2,55 @@ const caixa = document.getElementById('mensagem');
 const lista = document.getElementById('lista-chamados');
 const filtro = document.getElementById('filtro');
 let recarregarAvisos = () => Promise.resolve();
+let equipe = [];   // síndicos e zeladores ativos: quem pode cuidar de um chamado
 
 const STATUS = [
   { valor: 'ABERTO', rotulo: 'Aberto' },
   { valor: 'EM_ANDAMENTO', rotulo: 'Em andamento' },
   { valor: 'RESOLVIDO', rotulo: 'Resolvido' },
 ];
+
+/** Hoje no formato AAAA-MM-DD, no fuso do navegador (limite mínimo do campo de previsão). */
+function hojeIso() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+/** Quem cuida do chamado e para quando. Só aparece enquanto o chamado não foi resolvido. */
+function blocoResponsavel(c) {
+  if (c.status === 'RESOLVIDO') {
+    return c.responsavelNome ? el('p', { class: 'responsavel', text: textoResponsavel(c) }) : null;
+  }
+  const quem = el('select', { id: 'resp-' + c.id },
+    el('option', { value: '', text: 'Sem responsável' }),
+    equipe.map((p) => el('option', {
+      value: String(p.id),
+      text: p.nome + (p.perfil === 'ZELADOR' ? ' (zelador)' : ' (síndico)'),
+      selected: p.id === c.responsavelId,
+    })));
+  const quando = el('input', { type: 'date', id: 'prev-' + c.id, min: hojeIso(), value: c.previsao || null });
+  const atribuir = el('button', { type: 'button', text: 'Salvar responsável' });
+  atribuir.addEventListener('click', async () => {
+    limparMensagem(caixa);
+    atribuir.disabled = true;
+    try {
+      await api('/api/sindico/chamados/' + c.id + '/responsavel', {
+        metodo: 'PATCH',
+        json: { responsavelId: quem.value ? Number(quem.value) : null, previsao: quando.value || null, versao: c.versao },
+      });
+      mostrarMensagem(caixa, 'Chamado #' + c.id + ': responsável atualizado. As pessoas envolvidas foram avisadas.', 'ok');
+      await carregar();
+    } catch (erro) {
+      mostrarMensagem(caixa, erro.message, 'erro');
+      atribuir.disabled = false;
+      if (erro.status === 409) await carregar().catch(() => {});
+    }
+  });
+  return el('div', { class: 'edicao responsavel-edicao' },
+    el('div', {}, el('label', { for: 'resp-' + c.id, text: 'Responsável' }), quem),
+    el('div', {}, el('label', { for: 'prev-' + c.id, text: 'Previsão (opcional)' }), quando),
+    atribuir);
+}
 
 function cartaoChamado(c, posicao) {
   const seletor = el('select', { id: 'status-' + c.id }, STATUS.map((s) => el('option', { value: s.valor, text: s.rotulo, selected: s.valor === c.status })));
@@ -59,6 +102,7 @@ function cartaoChamado(c, posicao) {
       el('ul', {}, c.justificativa.map((j) => el('li', { text: j }))),
       c.classificacaoFallback ? el('p', { class: 'muted', text: 'Serviço de prioridade indisponível na hora: classificação aproximada, só pela categoria.' }) : null),
     blocoConversa(c.id),
+    blocoResponsavel(c),
     el('div', { class: 'edicao' },
       el('div', {}, el('label', { for: 'status-' + c.id, text: 'Status' }), seletor),
       el('div', {}, el('label', { for: 'obs-' + c.id, text: 'Observação para o morador (opcional)' }), observacao),
@@ -83,10 +127,12 @@ async function carregarEstatisticas() {
 async function carregar() {
   // o link de exportação segue o filtro escolhido na tela
   document.getElementById('exportar').href = '/api/sindico/chamados/exportar.csv?status=' + encodeURIComponent(filtro.value);
-  const [chamados] = await Promise.all([
+  const [chamados, pessoas] = await Promise.all([
     api('/api/sindico/chamados?status=' + encodeURIComponent(filtro.value)),
+    api('/api/sindico/equipe'),
     carregarEstatisticas(),
   ]);
+  equipe = pessoas;
   lista.replaceChildren(...(chamados.length
     ? chamados.map((c, i) => cartaoChamado(c, i + 1))
     : [el('p', { class: 'vazio', text: 'Nenhum chamado neste filtro.' })]));

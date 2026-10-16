@@ -9,6 +9,7 @@ import br.nexodesk.repositorio.UsuarioRepository;
 import br.nexodesk.servico.AvaliacaoService;
 import br.nexodesk.servico.ChamadoService;
 import br.nexodesk.web.Dtos.AlterarStatusRequest;
+import br.nexodesk.web.Dtos.AtribuirResponsavelRequest;
 import br.nexodesk.web.Dtos.AvaliacaoRequest;
 import br.nexodesk.web.Dtos.ChamadoResponse;
 import br.nexodesk.web.Dtos.NovoChamadoForm;
@@ -92,6 +93,12 @@ public class DadosDemonstracao implements ApplicationRunner {
         envelhecer(lixeira.id(), 9);
         envelhecer(infiltracao.id(), 6);
 
+        // um zelador de exemplo cuida do chamado da lixeira, com previsão para daqui a 2 dias
+        String zelador = equipe("Zé (zelador de demonstração)", "ze.demo@nexodesk.local", Perfil.ZELADOR);
+        Long idZelador = usuarios.findByEmail(zelador).orElseThrow().getId();
+        servico.atribuir(emailSindico, lixeira.id(),
+                new AtribuirResponsavelRequest(idZelador, java.time.LocalDate.now().plusDays(2), null));
+
         // dois chamados já andaram, para a demonstração mostrar histórico e avisos
         servico.alterarStatus(emailSindico, lampada.id(),
                 new AlterarStatusRequest(StatusChamado.RESOLVIDO, "Lâmpada trocada hoje.", null));
@@ -99,13 +106,25 @@ public class DadosDemonstracao implements ApplicationRunner {
         servico.alterarStatus(emailSindico, vazamento.id(),
                 new AlterarStatusRequest(StatusChamado.EM_ANDAMENTO, "Encanador agendado para amanhã.", null));
 
-        log.info("Perfil demo: 2 moradores (ana.demo@nexodesk.local, bruno.demo@nexodesk.local) e 8 chamados criados.");
+        log.info("Perfil demo: 2 moradores (ana.demo@nexodesk.local, bruno.demo@nexodesk.local), 1 zelador (ze.demo@nexodesk.local) e 8 chamados criados.");
     }
 
     /** Só para a demonstração: faz de conta que o chamado foi aberto há alguns dias. */
     private void envelhecer(Long id, int dias) {
         jdbc.update("UPDATE chamados SET criado_em = ? WHERE id = ?",
                 java.sql.Timestamp.valueOf(java.time.LocalDateTime.now().minusDays(dias)), id);
+    }
+
+    private String equipe(String nome, String email, Perfil perfil) {
+        if (!usuarios.existsByEmail(email)) {
+            Usuario u = new Usuario();
+            u.setNome(nome);
+            u.setEmail(email);
+            u.setSenhaHash(codificador.encode(senhaDemo));
+            u.setPerfil(perfil);
+            usuarios.save(u);
+        }
+        return email;
     }
 
     private String morador(String nome, String email, String unidade) {

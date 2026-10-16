@@ -11,7 +11,9 @@ import br.nexodesk.web.Dtos.MensagemResponse;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
@@ -19,11 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Conversa dentro do chamado. Quem pode ler e escrever: o morador dono do chamado e o síndico (a mesma regra de acesso
- * do chamado: para os outros ele "não existe", 404).
+ * Conversa dentro do chamado. Quem pode ler e escrever: o morador dono, o síndico e o zelador responsável (a mesma regra
+ * de acesso do chamado: para os outros ele "não existe", 404).
  *
- * <p>Privacidade: se o chamado é anônimo, o síndico vê as mensagens do morador como "Anônimo" e os avisos que o
- * síndico recebe não trazem o nome de ninguém.
+ * <p>Privacidade: se o chamado é anônimo, a equipe (síndico e zelador) vê as mensagens do morador como "Anônimo" e os
+ * avisos que a equipe recebe não trazem o nome de ninguém.
  */
 @Service
 public class MensagemService {
@@ -76,28 +78,33 @@ public class MensagemService {
         m.setTexto(texto);
         m = mensagens.save(m);
 
-        avisarOutraParte(c, autor, texto);
+        avisarOsOutros(c, autor, texto);
         return paraResposta(m, c, autor);
     }
 
     // ---------- internos ----------
 
-    /** Se o morador escreveu, avisa os síndicos; se o síndico escreveu, avisa o morador dono. */
-    private void avisarOutraParte(Chamado c, Usuario autor, String texto) {
-        boolean autorEhSindico = autor.getPerfil() == Perfil.SINDICO;
-        List<Usuario> destinatarios = autorEhSindico
-                ? List.of(c.getMorador())
-                : usuarios.sindicosAtivos();
-        String trecho = texto.length() <= TAMANHO_TRECHO_AVISO ? texto : texto.substring(0, TAMANHO_TRECHO_AVISO - 1) + "…";
-        String mensagem = autorEhSindico
-                ? "O síndico respondeu no chamado #" + c.getId() + ": \"" + trecho + "\""
-                : "Nova mensagem no chamado #" + c.getId() + ": \"" + trecho + "\"";
+    /**
+     * Avisa todo mundo que participa do chamado, menos quem escreveu: o dono, os síndicos e o responsável.
+     * O morador lê "O síndico respondeu..." ou "O zelador respondeu..."; a equipe lê "Nova mensagem...".
+     */
+    private void avisarOsOutros(Chamado c, Usuario autor, String texto) {
+        Map<Long, Usuario> destinatarios = new LinkedHashMap<>();
+        destinatarios.put(c.getMorador().getId(), c.getMorador());
+        usuarios.sindicosAtivos().forEach(s -> destinatarios.put(s.getId(), s));
+        if (c.getResponsavel() != null && c.getResponsavel().isAtivo()) {
+            destinatarios.put(c.getResponsavel().getId(), c.getResponsavel());
+        }
+        destinatarios.remove(autor.getId());
 
+        String trecho = texto.length() <= TAMANHO_TRECHO_AVISO ? texto : texto.substring(0, TAMANHO_TRECHO_AVISO - 1) + "…";
+        String resposta = autor.getPerfil() == Perfil.SINDICO ? "O síndico respondeu" : "O zelador respondeu";
         Set<String> emails = new HashSet<>();
-        for (Usuario d : destinatarios) {
-            if (d.getId().equals(autor.getId())) {
-                continue; // não avisa a própria pessoa
-            }
+        for (Usuario d : destinatarios.values()) {
+            boolean ehOMoradorDono = d.getId().equals(c.getMorador().getId());
+            boolean autorEhEquipe = autor.getPerfil() != Perfil.MORADOR;
+            String mensagem = (ehOMoradorDono && autorEhEquipe ? resposta : "Nova mensagem")
+                    + " no chamado #" + c.getId() + ": \"" + trecho + "\"";
             Notificacao n = new Notificacao();
             n.setUsuario(d);
             n.setChamado(c);
@@ -113,9 +120,12 @@ public class MensagemService {
     private static MensagemResponse paraResposta(Mensagem m, Chamado c, Usuario quem) {
         Usuario autor = m.getAutor();
         boolean doSindico = autor.getPerfil() == Perfil.SINDICO;
-        boolean ocultar = !doSindico && c.isAnonimo() && quem.getPerfil() == Perfil.SINDICO;
-        String nome = doSindico ? autor.getNome() + " (síndico)" : ocultar ? "Anônimo" : autor.getNome();
-        return new MensagemResponse(m.getId(), nome, doSindico, autor.getId().equals(quem.getId()),
+        boolean autorEhEquipe = autor.getPerfil() != Perfil.MORADOR;
+        boolean ocultar = !autorEhEquipe && c.isAnonimo() && quem.getPerfil() != Perfil.MORADOR;
+        String nome = autorEhEquipe
+                ? autor.getNome() + (doSindico ? " (síndico)" : " (zelador)")
+                : ocultar ? "Anônimo" : autor.getNome();
+        return new MensagemResponse(m.getId(), nome, autorEhEquipe, autor.getId().equals(quem.getId()),
                 m.getTexto(), m.getCriadoEm());
     }
 }

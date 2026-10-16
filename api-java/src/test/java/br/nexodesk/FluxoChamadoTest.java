@@ -556,10 +556,10 @@ class FluxoChamadoTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.autor").value("Morador Teste"))
                 .andExpect(jsonPath("$.minha").value(true))
-                .andExpect(jsonPath("$.doSindico").value(false));
+                .andExpect(jsonPath("$.daEquipe").value(false));
         mvc.perform(post(url).with(csrf()).session(sindico).contentType(MediaType.APPLICATION_JSON).content(json("Vou amanhã cedo.")))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.doSindico").value(true));
+                .andExpect(jsonPath("$.daEquipe").value(true));
 
         // os dois lados veem a mesma conversa, na ordem, cada um com o seu "minha"
         mvc.perform(get(url).session(morador))

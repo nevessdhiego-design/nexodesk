@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NexoDesk - Meus atendimentos</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/acessibilidade.css">
+  <script src="/js/acessibilidade.js"></script>
+</head>
+<body>
+  <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="marca">Nexo<span>Desk</span></div>
+    <div class="espaco"></div>
+    <span class="usuario" id="usuario"></span>
+    <a class="botao-link" href="/conta.html">Minha conta</a>
+    <button type="button" class="secundario sino" id="botao-sino" aria-label="Notificações">
+      Avisos <span class="contador hidden" id="contador"></span>
+    </button>
+    <button type="button" class="secundario" id="botao-sair">Sair</button>
+  </header>
+
+  <main class="pagina" id="conteudo" tabindex="-1">
+    <section class="cartao hidden" id="painel-avisos" aria-live="polite">
+      <h2>Avisos</h2>
+      <div id="lista-avisos"></div>
+    </section>
+
+    <section class="cartao">
+      <h2>Meus atendimentos</h2>
+      <p class="muted">Aqui aparecem só os chamados que o síndico atribuiu a você, com emergências primeiro. Você muda o status e fala com o morador pela conversa do chamado.</p>
+      <label for="filtro">Mostrar</label>
+      <select id="filtro">
+        <option value="ativos">Pendentes (abertos e em andamento)</option>
+        <option value="todos">Todos</option>
+        <option value="RESOLVIDO">Só resolvidos</option>
+      </select>
+      <div id="mensagem" class="mensagem hidden" role="alert"></div>
+      <div id="novidades" class="mensagem ok hidden" role="status">
+        Há novidades. <button type="button" class="link" id="atualizar-agora">Atualizar agora</button>
+      </div>
+      <div id="lista-chamados"></div>
+    </section>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/avisos.js"></script>
+  <script src="/js/tempo-real.js"></script>
+  <script src="/js/conversa.js"></script>
+  <script src="/js/zelador.js"></script>
+</body>
+</html>

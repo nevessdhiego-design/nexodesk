@@ -2,6 +2,11 @@ package br.nexodesk.web;
 
 import br.nexodesk.servico.ChamadoService;
 import br.nexodesk.servico.ExportadorCsv;
+import br.nexodesk.servico.UsuarioAdminService;
+import br.nexodesk.web.Dtos.AlterarUsuarioRequest;
+import br.nexodesk.web.Dtos.AtribuirResponsavelRequest;
+import br.nexodesk.web.Dtos.EquipeResponse;
+import br.nexodesk.web.Dtos.UsuarioAdminResponse;
 import br.nexodesk.web.Dtos.AlterarStatusRequest;
 import br.nexodesk.web.Dtos.ChamadoResponse;
 import br.nexodesk.web.Dtos.EstatisticasResponse;
@@ -26,9 +31,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class SindicoController {
 
     private final ChamadoService chamados;
+    private final UsuarioAdminService usuarios;
 
-    public SindicoController(ChamadoService chamados) {
+    public SindicoController(ChamadoService chamados, UsuarioAdminService usuarios) {
         this.chamados = chamados;
+        this.usuarios = usuarios;
     }
 
     /** Fila do mais fácil ao mais difícil. ?status=ativos (padrão) | todos | ABERTO | EM_ANDAMENTO | RESOLVIDO */
@@ -52,6 +59,31 @@ public class SindicoController {
     public ChamadoResponse alterarStatus(@PathVariable Long id, @Valid @RequestBody AlterarStatusRequest req,
                                          Authentication autenticacao) {
         return chamados.alterarStatus(autenticacao.getName(), id, req);
+    }
+
+    /** Atribui o chamado a um síndico ou zelador e informa a previsão (ou tira os dois). */
+    @PatchMapping("/chamados/{id}/responsavel")
+    public ChamadoResponse atribuir(@PathVariable Long id, @RequestBody AtribuirResponsavelRequest req,
+                                    Authentication autenticacao) {
+        return chamados.atribuir(autenticacao.getName(), id, req);
+    }
+
+    /** Síndicos e zeladores ativos: quem pode ser responsável por um chamado. */
+    @GetMapping("/equipe")
+    public List<EquipeResponse> equipe() {
+        return usuarios.equipe();
+    }
+
+    @GetMapping("/usuarios")
+    public List<UsuarioAdminResponse> listarUsuarios() {
+        return usuarios.listar();
+    }
+
+    /** Promove, rebaixa, desativa ou reativa um usuário (regras em UsuarioAdminService). */
+    @PatchMapping("/usuarios/{id}")
+    public UsuarioAdminResponse alterarUsuario(@PathVariable Long id, @RequestBody AlterarUsuarioRequest req,
+                                               Authentication autenticacao) {
+        return usuarios.alterar(autenticacao.getName(), id, req);
     }
 
     @GetMapping("/estatisticas")

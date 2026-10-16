@@ -19,8 +19,9 @@ public final class ExportadorCsv {
 
     static final String BOM = "﻿";
     private static final DateTimeFormatter DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final DateTimeFormatter DATA_CURTA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String CABECALHO = "Fila;ID;Emergência;Título;Categoria;Local;Status;Dificuldade;Pontuação;Dias em espera;"
-            + "Morador;Unidade;Aberto em;Descrição;Nota da avaliação;Comentário da avaliação";
+            + "Morador;Unidade;Aberto em;Descrição;Nota da avaliação;Comentário da avaliação;Responsável;Previsão";
 
     private ExportadorCsv() {
     }
@@ -46,6 +47,8 @@ public final class ExportadorCsv {
             linha.add(campo(c.descricao()));
             linha.add(c.notaAvaliacao() == null ? "" : String.valueOf(c.notaAvaliacao()));
             linha.add(campo(c.comentarioAvaliacao()));
+            linha.add(campo(c.responsavelNome()));
+            linha.add(c.previsao() == null ? "" : DATA_CURTA.format(c.previsao()));
             sb.append(linha).append("\r\n");
         }
         return sb.toString();

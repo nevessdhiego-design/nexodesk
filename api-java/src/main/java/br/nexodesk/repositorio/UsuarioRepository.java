@@ -17,6 +17,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     java.util.List<Usuario> findByPerfilAndAtivoTrue(Perfil perfil);
 
+    java.util.List<Usuario> findAllByOrderByNomeAsc();
+
+    java.util.List<Usuario> findByPerfilInAndAtivoTrueOrderByNomeAsc(java.util.Collection<Perfil> perfis);
+
+    long countByPerfilAndAtivoTrue(Perfil perfil);
+
     /** Só o que o filtro de sessão precisa (não carrega o usuário inteiro a cada requisição). */
     interface SituacaoDaSessao {
         boolean getAtivo();
