@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 from .regras import PONTUACAO_BASE, classificar
 
-app = FastAPI(title="NexoDesk - Serviço de Prioridade", version="1.0.0")
+app = FastAPI(title="NexoDesk - Serviço de Prioridade", version="1.1.0")
 
 
 class PedidoClassificacao(BaseModel):
@@ -21,6 +21,7 @@ class PedidoClassificacao(BaseModel):
 class ResultadoClassificacao(BaseModel):
     dificuldade: str
     pontuacao: int
+    emergencia: bool
     justificativa: list[str]
 
 

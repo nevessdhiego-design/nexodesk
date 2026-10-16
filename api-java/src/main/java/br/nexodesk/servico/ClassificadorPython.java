@@ -19,7 +19,8 @@ public class ClassificadorPython implements ClassificadorDificuldade {
 
     private static final Logger log = LoggerFactory.getLogger(ClassificadorPython.class);
 
-    record RespostaPython(String dificuldade, int pontuacao, List<String> justificativa) {
+    /** emergencia é Boolean (não boolean): uma versão antiga do serviço Python não envia o campo e isso não pode quebrar. */
+    record RespostaPython(String dificuldade, int pontuacao, Boolean emergencia, List<String> justificativa) {
     }
 
     private final RestClient cliente;
@@ -50,7 +51,7 @@ public class ClassificadorPython implements ClassificadorDificuldade {
                 throw new IllegalStateException("resposta inválida do serviço de prioridade");
             }
             return new ResultadoClassificacao(Dificuldade.valueOf(r.dificuldade()), r.pontuacao(),
-                    r.justificativa(), false);
+                    Boolean.TRUE.equals(r.emergencia()), r.justificativa(), false);
         } catch (Exception e) {
             log.warn("Serviço de prioridade indisponível ({}); usando classificação só pela categoria.",
                     e.getClass().getSimpleName());

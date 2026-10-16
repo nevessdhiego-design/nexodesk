@@ -14,13 +14,11 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
     @EntityGraph(attributePaths = "morador")
     List<Chamado> findByMoradorOrderByCriadoEmDesc(Usuario morador);
 
-    /**
-     * Fila do síndico (RF03): do mais fácil ao mais difícil. A pontuação cresce junto
-     * com a dificuldade, então ordenar por ela equivale a FACIL, MEDIA, DIFICIL.
-     * Dentro da mesma pontuação, o chamado mais antigo vem primeiro.
-     */
+    /** A ordem da fila é decidida em {@code PrioridadeFila} (emergência, pontuação efetiva e idade). */
     @EntityGraph(attributePaths = "morador")
-    List<Chamado> findByStatusInOrderByPontuacaoAscCriadoEmAsc(Collection<StatusChamado> status);
+    List<Chamado> findByStatusIn(Collection<StatusChamado> status);
+
+    long countByEmergenciaTrueAndStatusIn(Collection<StatusChamado> status);
 
     long countByStatus(StatusChamado status);
 

@@ -47,6 +47,30 @@ class ClassificadorPythonTest {
         assertThat(r.justificativa()).hasSize(2);
     }
 
+    @Test
+    void repassaAEmergenciaDetectadaPeloPython() throws IOException {
+        String url = subir(200, "{\"dificuldade\":\"DIFICIL\",\"pontuacao\":10,\"emergencia\":true,\"justificativa\":[\"emergência detectada: pessoa presa\"]}");
+        ResultadoClassificacao r = new ClassificadorPython(url, 1000).classificar(Categoria.ELEVADOR, "t", "d");
+        assertThat(r.emergencia()).isTrue();
+        assertThat(r.fallback()).isFalse();
+    }
+
+    @Test
+    void respostaSemOCampoEmergenciaVaiComoFalso() throws IOException {
+        String url = subir(200, "{\"dificuldade\":\"FACIL\",\"pontuacao\":2,\"justificativa\":[]}");
+        ResultadoClassificacao r = new ClassificadorPython(url, 1000).classificar(Categoria.OUTROS, "t", "d");
+        assertThat(r.emergencia()).isFalse();
+        assertThat(r.fallback()).as("campo ausente não pode derrubar para o modo de reserva").isFalse();
+        assertThat(r.pontuacao()).isEqualTo(2);
+    }
+
+    @Test
+    void modoDeReservaNaoInventaEmergencia() {
+        ResultadoClassificacao r = new ClassificadorLocal().classificar(Categoria.ELEVADOR, "gente presa", "gente presa no elevador");
+        assertThat(r.emergencia()).as("sem o Python não há detecção automática; o morador marca à mão").isFalse();
+        assertThat(r.fallback()).isTrue();
+    }
+
     /** Regressão: o uvicorn real recusa o Upgrade h2c do cliente padrão do JDK (erro 422). */
     @Test
     void enviaJsonEmHttp11SemPedirUpgradeParaHttp2() throws IOException {

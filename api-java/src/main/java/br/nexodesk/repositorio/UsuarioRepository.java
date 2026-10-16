@@ -15,6 +15,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     boolean existsByPerfil(Perfil perfil);
 
+    java.util.List<Usuario> findByPerfilAndAtivoTrue(Perfil perfil);
+
     /** Só o que o filtro de sessão precisa (não carrega o usuário inteiro a cada requisição). */
     interface SituacaoDaSessao {
         boolean getAtivo();

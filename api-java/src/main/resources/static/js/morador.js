@@ -1,8 +1,6 @@
 const caixa = document.getElementById('mensagem');
 const listaChamados = document.getElementById('lista-chamados');
-const listaAvisos = document.getElementById('lista-avisos');
-const painelAvisos = document.getElementById('painel-avisos');
-const contador = document.getElementById('contador');
+let recarregarAvisos = () => Promise.resolve();
 
 const ROTULOS_NOTA = { 5: 'Ótimo', 4: 'Bom', 3: 'Regular', 2: 'Ruim', 1: 'Péssimo' };
 
@@ -80,11 +78,12 @@ function cartaoChamado(c) {
     alternar.textContent = 'Ocultar detalhes';
   });
 
-  return el('article', { class: 'chamado' },
+  return el('article', { class: 'chamado' + (c.emergencia ? ' emergencia' : '') },
     el('div', { class: 'linha' },
       el('span', { class: 'titulo', text: '#' + c.id + ' ' + c.titulo }),
       selo(c.statusRotulo, c.status),
       selo('Dificuldade: ' + c.dificuldadeRotulo, c.dificuldade),
+      c.emergencia ? selo('EMERGÊNCIA', 'EMERGENCIA') : null,
       c.anonimo ? selo('Anônimo', 'neutro') : null),
     el('div', { class: 'meta', text: c.categoriaRotulo + (c.localOcorrencia ? ' · ' + c.localOcorrencia : '') + ' · aberto em ' + formatarData(c.criadoEm) }),
     blocoAvaliacao(c),
@@ -100,30 +99,6 @@ async function carregarChamados() {
       : [el('p', { class: 'vazio', text: 'Você ainda não abriu nenhum chamado.' })]));
 }
 
-async function carregarAvisos() {
-  const dados = await api('/api/notificacoes');
-  contador.textContent = dados.naoLidas;
-  contador.classList.toggle('hidden', dados.naoLidas === 0);
-  listaAvisos.replaceChildren(
-    ...(dados.itens.length
-      ? dados.itens.map((n) => {
-        const bloco = el('div', { class: 'notificacao' + (n.lida ? '' : ' nova') },
-          el('div', { text: n.mensagem }),
-          el('div', { class: 'muted', text: formatarData(n.criadoEm) }));
-        if (!n.lida) {
-          const marcar = el('button', { type: 'button', class: 'link', text: 'Marcar como lido' });
-          marcar.addEventListener('click', async () => {
-            await api('/api/notificacoes/' + n.id + '/lida', { metodo: 'POST' });
-            await carregarAvisos();
-          });
-          bloco.append(marcar);
-        }
-        return bloco;
-      })
-      : [el('p', { class: 'vazio', text: 'Nenhum aviso por enquanto.' })]));
-}
-
-document.getElementById('botao-sino').addEventListener('click', () => painelAvisos.classList.toggle('hidden'));
 document.getElementById('botao-sair').addEventListener('click', sair);
 
 document.getElementById('form-chamado').addEventListener('submit', async (e) => {
@@ -137,12 +112,14 @@ document.getElementById('form-chamado').addEventListener('submit', async (e) => 
   form.append('localOcorrencia', document.getElementById('local').value);
   form.append('descricao', document.getElementById('descricao').value);
   form.append('anonimo', document.getElementById('anonimo').checked);
+  form.append('emergencia', document.getElementById('emergencia').checked);
   const arquivo = document.getElementById('imagem').files[0];
   if (arquivo) form.append('imagem', arquivo);
   try {
     const criado = await api('/api/chamados', { metodo: 'POST', form });
     e.target.reset();
-    mostrarMensagem(caixa, 'Chamado #' + criado.id + ' enviado. Dificuldade estimada: ' + criado.dificuldadeRotulo + '.', 'ok');
+    mostrarMensagem(caixa, 'Chamado #' + criado.id + ' enviado. Dificuldade estimada: ' + criado.dificuldadeRotulo + '.'
+      + (criado.emergencia ? ' Marcado como EMERGÊNCIA: o síndico foi avisado e ele passa na frente da fila. Se há risco imediato, ligue também 192, 193 ou 190.' : ''), 'ok');
     await carregarChamados();
   } catch (erro) {
     mostrarMensagem(caixa, erro.message, 'erro');
@@ -159,5 +136,6 @@ document.getElementById('form-chamado').addEventListener('submit', async (e) => 
   const seletor = document.getElementById('categoria');
   seletor.append(el('option', { value: '', text: 'Selecione…' }),
     ...categorias.map((c) => el('option', { value: c.codigo, text: c.rotulo })));
-  await Promise.all([carregarChamados(), carregarAvisos()]);
+  recarregarAvisos = iniciarAvisos();
+  await Promise.all([carregarChamados(), recarregarAvisos()]);
 })();

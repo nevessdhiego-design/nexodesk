@@ -455,6 +455,88 @@ class FluxoChamadoTest {
                 .andExpect(status().isTooManyRequests());
     }
 
+    // ---------- emergência e envelhecimento na fila ----------
+
+    @Autowired
+    org.springframework.jdbc.core.JdbcTemplate jdbc;
+
+    @Test
+    void emergenciaMarcadaFuraAFilaMesmoSendoDificilENotificaOSindico() throws Exception {
+        MockHttpSession morador = moradorLogado();
+        MockHttpSession sindico = sindicoLogado();
+        int facil = abrirChamado(morador, "Lâmpada queimada", "ILUMINACAO", false);
+        MvcResult r = mvc.perform(formChamado("Pessoa presa no elevador", "ELEVADOR", true)
+                        .param("emergencia", "true").session(morador))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.emergencia").value(true))
+                .andExpect(jsonPath("$.dificuldade").value("DIFICIL"))
+                .andReturn();
+        int emergencia = JsonPath.read(r.getResponse().getContentAsString(), "$.id");
+
+        MvcResult fila = mvc.perform(get("/api/sindico/chamados").session(sindico)).andExpect(status().isOk()).andReturn();
+        List<Integer> ids = new ArrayList<>(JsonPath.read(fila.getResponse().getContentAsString(), "$[*].id"));
+        assertThat(ids.indexOf(emergencia)).as("emergência antes do fácil").isLessThan(ids.indexOf(facil));
+        // todas as emergências pendentes vêm antes de qualquer chamado comum
+        List<Boolean> flags = JsonPath.read(fila.getResponse().getContentAsString(), "$[*].emergencia");
+        assertThat(flags.indexOf(false)).isGreaterThanOrEqualTo(flags.lastIndexOf(true));
+
+        // o síndico recebe um aviso; ele NÃO traz o nome do morador (o chamado é anônimo)
+        mvc.perform(get("/api/notificacoes").session(sindico))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.itens[?(@.chamadoId==%d)].mensagem".formatted(emergencia))
+                        .value(org.hamcrest.Matchers.hasItem(org.hamcrest.Matchers.allOf(
+                                org.hamcrest.Matchers.containsString("EMERGÊNCIA no chamado #" + emergencia),
+                                org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Morador Teste"))))));
+    }
+
+    @Test
+    void chamadoComumNaoGeraAvisoDeEmergencia() throws Exception {
+        MockHttpSession morador = moradorLogado();
+        MockHttpSession sindico = sindicoLogado();
+        int id = abrirChamado(morador, "Torneira pingando", "HIDRAULICA", false);
+        mvc.perform(get("/api/notificacoes").session(sindico))
+                .andExpect(jsonPath("$.itens[?(@.chamadoId==%d)]".formatted(id)).isEmpty());
+    }
+
+    @Test
+    void chamadoDificilAntigoSobeNaFilaSemMudarADificuldade() throws Exception {
+        MockHttpSession morador = moradorLogado();
+        MockHttpSession sindico = sindicoLogado();
+        int antigoDificil = abrirChamado(morador, "Elevador parado", "ELEVADOR", false);   // 8 pontos
+        int novoMedio = abrirChamado(morador, "Cano pingando", "HIDRAULICA", false);       // 6 pontos
+        // hoje o médio vem antes do difícil
+        assertThat(posicao(sindico, novoMedio)).isLessThan(posicao(sindico, antigoDificil));
+
+        // envelhece o difícil em 10 dias: bônus máximo de 3 pontos (8 vira 5) e passa o médio (6)
+        jdbc.update("UPDATE chamados SET criado_em = ? WHERE id = ?",
+                java.sql.Timestamp.valueOf(java.time.LocalDateTime.now().minusDays(10)), antigoDificil);
+
+        assertThat(posicao(sindico, antigoDificil)).isLessThan(posicao(sindico, novoMedio));
+        mvc.perform(get("/api/sindico/chamados").session(sindico))
+                .andExpect(jsonPath("$[?(@.id==%d)].dificuldade".formatted(antigoDificil)).value(org.hamcrest.Matchers.contains("DIFICIL")))
+                .andExpect(jsonPath("$[?(@.id==%d)].pontuacao".formatted(antigoDificil)).value(org.hamcrest.Matchers.contains(8)))
+                .andExpect(jsonPath("$[?(@.id==%d)].pontuacaoEfetiva".formatted(antigoDificil)).value(org.hamcrest.Matchers.contains(5)))
+                .andExpect(jsonPath("$[?(@.id==%d)].diasEmEspera".formatted(antigoDificil)).value(org.hamcrest.Matchers.contains(10)))
+                .andExpect(jsonPath("$[?(@.id==%d)].atrasado".formatted(antigoDificil)).value(org.hamcrest.Matchers.contains(true)));
+    }
+
+    int posicao(MockHttpSession sindico, int id) throws Exception {
+        MvcResult r = mvc.perform(get("/api/sindico/chamados").session(sindico)).andReturn();
+        List<Integer> ids = JsonPath.read(r.getResponse().getContentAsString(), "$[*].id");
+        assertThat(ids).contains(id);
+        return ids.indexOf(id);
+    }
+
+    @Test
+    void estatisticasContamEmergenciasPendentes() throws Exception {
+        MockHttpSession morador = moradorLogado();
+        MockHttpSession sindico = sindicoLogado();
+        mvc.perform(formChamado("Fio solto", "ELETRICA", false).param("emergencia", "true").session(morador))
+                .andExpect(status().isCreated());
+        mvc.perform(get("/api/sindico/estatisticas").session(sindico))
+                .andExpect(jsonPath("$.emergenciasAbertas").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)));
+    }
+
     // ---------- sessão com versão ----------
 
     @Test

@@ -1,6 +1,7 @@
 const caixa = document.getElementById('mensagem');
 const lista = document.getElementById('lista-chamados');
 const filtro = document.getElementById('filtro');
+let recarregarAvisos = () => Promise.resolve();
 
 const STATUS = [
   { valor: 'ABERTO', rotulo: 'Aberto' },
@@ -31,16 +32,20 @@ function cartaoChamado(c, posicao) {
     }
   });
 
-  return el('article', { class: 'chamado' },
+  return el('article', { class: 'chamado' + (c.emergencia ? ' emergencia' : '') },
     el('div', { class: 'linha' },
       el('span', { class: 'fila-num', text: posicao + 'º' }),
       el('span', { class: 'titulo', text: '#' + c.id + ' ' + c.titulo }),
+      c.emergencia ? selo('EMERGÊNCIA', 'EMERGENCIA') : null,
       selo(c.statusRotulo, c.status),
-      selo(c.dificuldadeRotulo + ' (' + c.pontuacao + '/10)', c.dificuldade)),
+      selo(c.dificuldadeRotulo + ' (' + c.pontuacao + '/10)', c.dificuldade),
+      c.atrasado ? selo('Atrasado', 'ATRASADO') : null),
     el('div', { class: 'meta', text: c.categoriaRotulo
       + (c.localOcorrencia ? ' · ' + c.localOcorrencia : '')
       + ' · ' + c.moradorNome + (c.moradorUnidade ? ' (' + c.moradorUnidade + ')' : '')
-      + ' · ' + formatarData(c.criadoEm) }),
+      + ' · ' + formatarData(c.criadoEm)
+      + (c.status !== 'RESOLVIDO' && c.diasEmEspera > 0 ? ' · há ' + c.diasEmEspera + (c.diasEmEspera === 1 ? ' dia' : ' dias')
+        + (c.pontuacaoEfetiva < c.pontuacao ? ' (subiu na fila: peso ' + c.pontuacaoEfetiva + ' em vez de ' + c.pontuacao + ')' : '') : '') }),
     el('p', { class: 'descricao', text: c.descricao }),
     c.notaAvaliacao !== null && c.notaAvaliacao !== undefined
       ? el('div', { class: 'avaliacao' },
@@ -62,6 +67,7 @@ function cartaoChamado(c, posicao) {
 async function carregarEstatisticas() {
   const e = await api('/api/sindico/estatisticas');
   const itens = [
+    ['Emergências pendentes', e.emergenciasAbertas],
     ['Abertos', e.abertos], ['Em andamento', e.emAndamento], ['Resolvidos', e.resolvidos],
     ['Pendentes fáceis', e.pendentesFaceis], ['Pendentes médios', e.pendentesMedios], ['Pendentes difíceis', e.pendentesDificeis],
     ['Avaliação média', e.mediaAvaliacoes === null || e.mediaAvaliacoes === undefined
@@ -92,5 +98,6 @@ document.getElementById('botao-sair').addEventListener('click', sair);
   const eu = await exigirPerfil('SINDICO');
   if (!eu) return;
   document.getElementById('usuario').textContent = eu.nome;
-  await carregar();
+  recarregarAvisos = iniciarAvisos();
+  await Promise.all([carregar(), recarregarAvisos()]);
 })();

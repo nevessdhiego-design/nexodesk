@@ -16,6 +16,7 @@ public class ClassificadorLocal implements ClassificadorDificuldade {
         return new ResultadoClassificacao(
                 Dificuldade.dePontuacao(pontuacao),
                 pontuacao,
+                false, // sem o serviço Python não há detecção automática de emergência; o morador ainda pode marcar à mão
                 List.of("serviço de prioridade indisponível; classificado só pela categoria "
                         + categoria.name() + ": base " + pontuacao),
                 true);
