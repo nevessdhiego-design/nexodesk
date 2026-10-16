@@ -51,6 +51,17 @@
         <div class="acoes"><button type="submit">Trocar senha</button></div>
       </form>
     </section>
+
+    <section class="cartao">
+      <h2>Privacidade e exclusão da conta</h2>
+      <p class="muted">Veja <a href="/privacidade.html">quais dados guardamos</a>. Ao excluir a conta, seu nome, e-mail, telefone e unidade são apagados e você deixa de entrar. Os chamados que você abriu continuam no histórico do condomínio, <strong>sem identificação</strong>. Isso não pode ser desfeito.</p>
+      <div id="mensagem-exclusao" class="mensagem hidden" role="alert"></div>
+      <form id="form-exclusao">
+        <label for="senha-exclusao">Sua senha, para confirmar</label>
+        <input id="senha-exclusao" type="password" autocomplete="current-password" required>
+        <div class="acoes"><button type="submit" class="perigo">Excluir minha conta</button></div>
+      </form>
+    </section>
   </main>
 
   <script src="/js/app.js"></script>

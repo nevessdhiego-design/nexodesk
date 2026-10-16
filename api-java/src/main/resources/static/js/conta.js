@@ -40,6 +40,19 @@ document.getElementById('form-senha').addEventListener('submit', async (e) => {
   }
 });
 
+document.getElementById('form-exclusao').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const caixaExclusao = document.getElementById('mensagem-exclusao');
+  limparMensagem(caixaExclusao);
+  if (!window.confirm('Excluir a sua conta? Seus dados pessoais serão apagados e isso não pode ser desfeito.')) return;
+  try {
+    await api('/api/auth/excluir-conta', { metodo: 'POST', json: { senha: document.getElementById('senha-exclusao').value } });
+    window.location.href = '/index.html';
+  } catch (erro) {
+    mostrarMensagem(caixaExclusao, erro.message, 'erro');
+  }
+});
+
 (async function iniciar() {
   let eu;
   try {

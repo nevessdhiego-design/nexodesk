@@ -64,6 +64,10 @@ public final class Dtos {
             @Size(max = 500, message = "O comentário deve ter no máximo 500 caracteres.") String comentario) {
     }
 
+    /** Confirmação da exclusão de conta: a senha atual, para ninguém apagar a conta de outra pessoa numa sessão esquecida. */
+    public record ExcluirContaRequest(@NotBlank(message = "Informe a sua senha para confirmar.") String senha) {
+    }
+
     public record MensagemRequest(
             @NotBlank(message = "Escreva a mensagem.")
             @Size(max = 1000, message = "A mensagem deve ter no máximo 1000 caracteres.") String texto) {
