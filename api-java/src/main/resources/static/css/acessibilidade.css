@@ -61,6 +61,9 @@ html.a11y-escuro .selo.EMERGENCIA { background: #c0392b; color: #fff; border-col
 html.a11y-escuro .selo.ATRASADO { background: #3a3220; color: #f0d078; border-color: #6b5a2a; }
 html.a11y-escuro .notificacao.emergencia { background: #3a2222; }
 html.a11y-escuro .notificacao { background: #2c2d33; }
+html.a11y-escuro .bolha.outra { background: #2c2d33; }
+html.a11y-escuro .bolha.minha { background: #1f3a36; border-color: #3c6b63; }
+html.a11y-escuro .bolha.sindico:not(.minha) { background: #26323f; border-color: #3d5068; }
 html.a11y-escuro .notificacao.nova { background: #1f3a36; }
 html.a11y-escuro .abas button { background: #2c2d33; color: var(--text); }
 html.a11y-escuro .abas button.ativa { background: var(--accent); color: #fff; }

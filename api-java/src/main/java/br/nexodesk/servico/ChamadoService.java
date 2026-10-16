@@ -112,6 +112,8 @@ public class ChamadoService {
         if (c.isEmergencia()) {
             avisarSindicosDaEmergencia(c);
         }
+        // tempo real: os síndicos veem o chamado novo (ou a emergência) sem recarregar a página
+        eventos.publishEvent(new ChamadoAbertoEvent(c.getId(), c.isEmergencia()));
         return paraResposta(c, false, List.of(), null);
     }
 
@@ -262,7 +264,7 @@ public class ChamadoService {
     }
 
     /** Morador só vê o que é dele; para os outros o chamado "não existe" (404, não 403). */
-    private Chamado buscarComAcesso(Usuario quem, Long id) {
+    public Chamado buscarComAcesso(Usuario quem, Long id) {
         Chamado c = chamados.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Chamado não encontrado."));
         boolean dono = c.getMorador().getId().equals(quem.getId());

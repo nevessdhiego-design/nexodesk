@@ -537,6 +537,119 @@ class FluxoChamadoTest {
                 .andExpect(jsonPath("$.emergenciasAbertas").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)));
     }
 
+    // ---------- conversa dentro do chamado ----------
+
+    String json(String texto) {
+        return "{\"texto\":\"%s\"}".formatted(texto);
+    }
+
+    @Test
+    void moradorESindicoConversamNoChamadoEUmAvisaOOutro() throws Exception {
+        MockHttpSession morador = moradorLogado();
+        MockHttpSession sindico = sindicoLogado();
+        int id = abrirChamado(morador, "Vazamento no banheiro social", "HIDRAULICA", false);
+        String url = "/api/chamados/%d/mensagens".formatted(id);
+
+        mvc.perform(get(url).session(sindico)).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+
+        mvc.perform(post(url).with(csrf()).session(morador).contentType(MediaType.APPLICATION_JSON).content(json("Pode vir hoje?")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.autor").value("Morador Teste"))
+                .andExpect(jsonPath("$.minha").value(true))
+                .andExpect(jsonPath("$.doSindico").value(false));
+        mvc.perform(post(url).with(csrf()).session(sindico).contentType(MediaType.APPLICATION_JSON).content(json("Vou amanhã cedo.")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.doSindico").value(true));
+
+        // os dois lados veem a mesma conversa, na ordem, cada um com o seu "minha"
+        mvc.perform(get(url).session(morador))
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].texto").value("Pode vir hoje?"))
+                .andExpect(jsonPath("$[0].minha").value(true))
+                .andExpect(jsonPath("$[1].texto").value("Vou amanhã cedo."))
+                .andExpect(jsonPath("$[1].minha").value(false));
+        mvc.perform(get(url).session(sindico))
+                .andExpect(jsonPath("$[0].minha").value(false))
+                .andExpect(jsonPath("$[1].minha").value(true));
+
+        // avisos: o síndico recebe "nova mensagem"; o morador recebe "o síndico respondeu"
+        mvc.perform(get("/api/notificacoes").session(sindico))
+                .andExpect(jsonPath("$.itens[?(@.chamadoId==%d)].mensagem".formatted(id))
+                        .value(org.hamcrest.Matchers.hasItem(org.hamcrest.Matchers.containsString("Nova mensagem no chamado #" + id))));
+        mvc.perform(get("/api/notificacoes").session(morador))
+                .andExpect(jsonPath("$.itens[?(@.chamadoId==%d)].mensagem".formatted(id))
+                        .value(org.hamcrest.Matchers.hasItem(org.hamcrest.Matchers.containsString("O síndico respondeu no chamado #" + id))));
+    }
+
+    @Test
+    void emChamadoAnonimoOSindicoNaoDescobreQuemEscreve() throws Exception {
+        MockHttpSession morador = moradorLogado();
+        MockHttpSession sindico = sindicoLogado();
+        int id = abrirChamado(morador, "Vizinho com som alto", "BARULHO", true);
+        String url = "/api/chamados/%d/mensagens".formatted(id);
+        mvc.perform(post(url).with(csrf()).session(morador).contentType(MediaType.APPLICATION_JSON).content(json("É o apartamento de cima.")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.autor").value("Morador Teste")); // o próprio morador se vê
+
+        mvc.perform(get(url).session(sindico))
+                .andExpect(jsonPath("$[0].autor").value("Anônimo"))
+                .andExpect(jsonPath("$[0].texto").value("É o apartamento de cima."));
+        // o aviso que o síndico recebe não traz o nome
+        mvc.perform(get("/api/notificacoes").session(sindico))
+                .andExpect(jsonPath("$.itens[?(@.chamadoId==%d)].mensagem".formatted(id))
+                        .value(org.hamcrest.Matchers.hasItem(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Morador Teste")))));
+    }
+
+    @Test
+    void forasteiroNemLeNemEscreveNaConversaAlheia() throws Exception {
+        int id = abrirChamado(moradorLogado(), "Chamado privado", "OUTROS", false);
+        MockHttpSession intruso = moradorLogado();
+        String url = "/api/chamados/%d/mensagens".formatted(id);
+        mvc.perform(get(url).session(intruso)).andExpect(status().isNotFound());
+        mvc.perform(post(url).with(csrf()).session(intruso).contentType(MediaType.APPLICATION_JSON).content(json("oi")))
+                .andExpect(status().isNotFound());
+        mvc.perform(get(url)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void mensagemVaziaOuGrandeDemaisEhRecusada() throws Exception {
+        MockHttpSession morador = moradorLogado();
+        int id = abrirChamado(morador, "Teste", "OUTROS", false);
+        String url = "/api/chamados/%d/mensagens".formatted(id);
+        mvc.perform(post(url).with(csrf()).session(morador).contentType(MediaType.APPLICATION_JSON).content(json("   ")))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post(url).with(csrf()).session(morador).contentType(MediaType.APPLICATION_JSON).content(json("x".repeat(1001))))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post(url).with(csrf()).session(morador).contentType(MediaType.APPLICATION_JSON).content(json("x".repeat(1000))))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void textoComHtmlFicaComoTextoPuroNaApi() throws Exception {
+        MockHttpSession morador = moradorLogado();
+        int id = abrirChamado(morador, "Teste XSS", "OUTROS", false);
+        String url = "/api/chamados/%d/mensagens".formatted(id);
+        mvc.perform(post(url).with(csrf()).session(morador).contentType(MediaType.APPLICATION_JSON)
+                        .content(json("<img src=x onerror=alert(1)>")))
+                .andExpect(status().isCreated());
+        mvc.perform(get(url).session(morador))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].texto").value("<img src=x onerror=alert(1)>"));
+    }
+
+    @Test
+    void depoisDeDezMensagensPorMinutoAOnzeEhFreada() throws Exception {
+        MockHttpSession morador = moradorLogado();
+        int id = abrirChamado(morador, "Spam", "OUTROS", false);
+        String url = "/api/chamados/%d/mensagens".formatted(id);
+        for (int i = 1; i <= 10; i++) {
+            mvc.perform(post(url).with(csrf()).session(morador).contentType(MediaType.APPLICATION_JSON).content(json("mensagem " + i)))
+                    .andExpect(status().isCreated());
+        }
+        mvc.perform(post(url).with(csrf()).session(morador).contentType(MediaType.APPLICATION_JSON).content(json("mensagem 11")))
+                .andExpect(status().isTooManyRequests());
+    }
+
     // ---------- sessão com versão ----------
 
     @Test

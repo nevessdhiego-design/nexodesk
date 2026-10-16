@@ -87,6 +87,7 @@ function cartaoChamado(c) {
       c.anonimo ? selo('Anônimo', 'neutro') : null),
     el('div', { class: 'meta', text: c.categoriaRotulo + (c.localOcorrencia ? ' · ' + c.localOcorrencia : '') + ' · aberto em ' + formatarData(c.criadoEm) }),
     blocoAvaliacao(c),
+    blocoConversa(c.id),
     alternar,
     detalhes);
 }
@@ -100,6 +101,26 @@ async function carregarChamados() {
 }
 
 document.getElementById('botao-sair').addEventListener('click', sair);
+
+const banner = document.getElementById('novidades');
+async function atualizarTudo() {
+  banner.classList.add('hidden');
+  await Promise.all([carregarChamados(), recarregarAvisos()]);
+}
+document.getElementById('atualizar-agora').addEventListener('click', () => atualizarTudo().catch(() => {}));
+
+/** Chegou um aviso de tempo real. Não redesenha a lista por cima de quem está digitando. */
+function aoMudar(evento) {
+  if (evento && evento.tipo === 'mensagem') {
+    atualizarConversa(evento.chamadoId);   // só a conversa aberta, sem redesenhar nada
+    return recarregarAvisos();
+  }
+  if (estaEditando(listaChamados)) {
+    banner.classList.remove('hidden');
+    return recarregarAvisos();
+  }
+  return atualizarTudo();
+}
 
 document.getElementById('form-chamado').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -138,4 +159,5 @@ document.getElementById('form-chamado').addEventListener('submit', async (e) => 
     ...categorias.map((c) => el('option', { value: c.codigo, text: c.rotulo })));
   recarregarAvisos = iniciarAvisos();
   await Promise.all([carregarChamados(), recarregarAvisos()]);
+  iniciarTempoReal(aoMudar);
 })();

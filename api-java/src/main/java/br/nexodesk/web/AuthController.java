@@ -3,6 +3,7 @@ package br.nexodesk.web;
 import br.nexodesk.config.FiltroSessaoValida;
 import br.nexodesk.config.LimitadorTentativasLogin;
 import br.nexodesk.servico.ApiException;
+import br.nexodesk.servico.PublicadorEventos;
 import br.nexodesk.servico.UsuarioService;
 import br.nexodesk.web.Dtos.AlterarSenhaRequest;
 import br.nexodesk.web.Dtos.AtualizarPerfilRequest;
@@ -38,13 +39,16 @@ public class AuthController {
     private final AuthenticationManager gerenteAutenticacao;
     private final SecurityContextRepository repositorioContexto;
     private final LimitadorTentativasLogin limitador;
+    private final PublicadorEventos publicador;
 
     public AuthController(UsuarioService usuarios, AuthenticationManager gerenteAutenticacao,
-                          SecurityContextRepository repositorioContexto, LimitadorTentativasLogin limitador) {
+                          SecurityContextRepository repositorioContexto, LimitadorTentativasLogin limitador,
+                          PublicadorEventos publicador) {
         this.usuarios = usuarios;
         this.gerenteAutenticacao = gerenteAutenticacao;
         this.repositorioContexto = repositorioContexto;
         this.limitador = limitador;
+        this.publicador = publicador;
     }
 
     @PostMapping("/register")
@@ -122,5 +126,7 @@ public class AuthController {
         limitador.registrarSucesso(ip, email);
         // quem trocou a senha continua logado; as OUTRAS sessões (com a versão antiga) deixam de valer
         request.getSession().setAttribute(FiltroSessaoValida.ATRIBUTO_VERSAO, novaVersao);
+        // as outras sessões deixaram de valer: fecha os fluxos de tempo real delas (o navegador atual reconecta sozinho)
+        publicador.encerrar(email);
     }
 }
