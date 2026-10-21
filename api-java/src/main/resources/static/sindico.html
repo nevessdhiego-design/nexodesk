@@ -42,6 +42,11 @@
         <option value="EM_ANDAMENTO">Só em andamento</option>
         <option value="RESOLVIDO">Só resolvidos</option>
       </select>
+      <label for="busca">Buscar na lista (título, descrição, morador ou local)</label>
+      <input id="busca" type="text" maxlength="120" autocomplete="off">
+      <label for="filtro-categoria">Categoria</label>
+      <select id="filtro-categoria"><option value="">Todas as categorias</option></select>
+      <p class="muted" id="contagem" role="status"></p>
       <p><a class="botao-link escuro" id="exportar" href="/api/sindico/chamados/exportar.csv" download>Exportar esta lista (CSV)</a></p>
       <div id="mensagem" class="mensagem hidden" role="alert"></div>
       <div id="novidades" class="mensagem ok hidden" role="status">
