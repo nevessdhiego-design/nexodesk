@@ -24,7 +24,7 @@ eu não tenho como medi-los a partir do código, então não os inventei. **Nada
 | Linhas de código Java (produção / testes) | **3.834 / 3.143** | `git ls-files` + contagem de linhas |
 | Linhas Python (produção / testes) | **176 / 235** | idem |
 | Telas (HTML, CSS, JS) | **20 arquivos, 1.860 linhas**; 7 páginas | `api-java/src/main/resources/static` |
-| Commits no repositório | **14**; os 9 mais recentes ainda **sem push**, o GitHub tem só até `604591e` (conferir com `git status -sb`) | `git rev-list --count HEAD`; `git status -sb` |
+| Commits no repositório | mais de uma dezena; os de 15 a 20/10 ainda **sem push**, o GitHub tem só até `604591e` (conferir com `git status -sb`) | `git rev-list --count HEAD`; `git status -sb` |
 | Casos da regra de dificuldade | ajuste: **27 de 27** (100%, foi ajustada neles: não prova nada); **validação: 11 de 15 (73%)** em casos que ela nunca viu. **Cite os 73%** | `docs/casos-de-prioridade.md` |
 | Contraste de cores (WCAG AA, 4,5:1) | 0 falhas no síndico (37 chamados), morador e usuários, em tema claro, escuro e alto contraste (script de medição, não leitor de tela) | seção 9 da documentação técnica |
 
