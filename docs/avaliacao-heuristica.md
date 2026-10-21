@@ -38,7 +38,7 @@ validação por um síndico real.** Se um síndico real discordar de muitas linh
 |---|---|---|---|---|---|
 | 1 | Prevenção de erros | ~~Mudar para "Resolvido" era um clique sem confirmação~~ **corrigido em 20/10**: pergunta antes de resolver (conferido no navegador) | `sindico.js`, `zelador.js` | 3 | feito |
 | 2 | Ajuda e recuperação | **Não existe "esqueci minha senha"**: quem perde a senha depende do síndico ou do banco | login | 3 | fluxo de recuperação (precisa de e-mail real) ou redefinição pelo síndico |
-| 3 | Visibilidade do estado | Lista do síndico sem busca e sem paginação: com dezenas de chamados rola muito | `sindico.html` | 3 | filtro por texto/categoria e paginação |
+| 3 | Visibilidade do estado | Lista do síndico sem busca: com dezenas de chamados rola muito. **Busca por texto e filtro de categoria feitos em 20/10** (conferido no navegador, sem diferenciar maiúsculas e acentos, mantendo a posição real na fila). **Paginação continua pendente** | `sindico.html` | 3 | paginação |
 | 4 | Reconhecimento | A caixa "é uma emergência" fica no fim do formulário, depois da foto e do anonimato | `morador.html` | 2 | levar para perto do título ou destacar |
 | 5 | Controle e liberdade | Chamado aberto não pode ser editado nem cancelado pelo morador | `morador.js` | 2 | permitir cancelar enquanto "Aberto" |
 | 6 | Visibilidade do estado | Depois de enviar um chamado, o morador vê só uma mensagem no alto; a lista fica abaixo do formulário, fora da tela em celular | `morador.html` | 2 | rolar até o novo chamado |

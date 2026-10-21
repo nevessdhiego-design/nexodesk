@@ -2,7 +2,10 @@ const caixa = document.getElementById('mensagem');
 const lista = document.getElementById('lista-chamados');
 const filtro = document.getElementById('filtro');
 let recarregarAvisos = () => Promise.resolve();
-let equipe = [];   // síndicos e zeladores ativos: quem pode cuidar de um chamado
+let equipe = [];
+let chamadosNaTela = [];   // a fila inteira do filtro de status; a busca por texto e categoria age só na tela
+const busca = document.getElementById('busca');
+const filtroCategoria = document.getElementById('filtro-categoria');   // síndicos e zeladores ativos: quem pode cuidar de um chamado
 
 const STATUS = [
   { valor: 'ABERTO', rotulo: 'Aberto' },
@@ -135,10 +138,39 @@ async function carregar() {
     carregarEstatisticas(),
   ]);
   equipe = pessoas;
-  lista.replaceChildren(...(chamados.length
-    ? chamados.map((c, i) => cartaoChamado(c, i + 1))
-    : [el('p', { class: 'vazio', text: 'Nenhum chamado neste filtro.' })]));
+  chamadosNaTela = chamados;
+  atualizarCategorias();
+  desenharLista();
 }
+
+/** As categorias do select vêm dos chamados que estão na lista (mantém a escolhida, se ainda existir). */
+function atualizarCategorias() {
+  const escolhida = filtroCategoria.value;
+  const rotulos = [...new Set(chamadosNaTela.map((c) => c.categoriaRotulo))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  filtroCategoria.replaceChildren(el('option', { value: '', text: 'Todas as categorias' }),
+    ...rotulos.map((r) => el('option', { value: r, text: r, selected: r === escolhida })));
+}
+
+function semAcento(texto) {
+  return (texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+/** Desenha a lista aplicando busca e categoria. O número ao lado de cada chamado continua sendo a posição REAL na fila. */
+function desenharLista() {
+  const termo = semAcento(busca.value.trim());
+  const categoria = filtroCategoria.value;
+  const visiveis = chamadosNaTela
+    .map((c, i) => ({ c, posicao: i + 1 }))
+    .filter(({ c }) => (!categoria || c.categoriaRotulo === categoria)
+      && (!termo || semAcento([c.titulo, c.descricao, c.moradorNome, c.localOcorrencia].join(' ')).includes(termo)));
+  lista.replaceChildren(...(visiveis.length
+    ? visiveis.map(({ c, posicao }) => cartaoChamado(c, posicao))
+    : [el('p', { class: 'vazio', text: chamadosNaTela.length ? 'Nenhum chamado combina com a busca.' : 'Nenhum chamado neste filtro.' })]));
+  document.getElementById('contagem').textContent = visiveis.length + ' de ' + chamadosNaTela.length + ' chamados';
+}
+
+busca.addEventListener('input', desenharLista);
+filtroCategoria.addEventListener('change', desenharLista);
 
 filtro.addEventListener('change', () => carregar().catch((e) => mostrarMensagem(caixa, e.message, 'erro')));
 document.getElementById('botao-sair').addEventListener('click', sair);
