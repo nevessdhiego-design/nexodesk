@@ -32,6 +32,7 @@ html.a11y-contraste a, html.a11y-contraste button.link { text-decoration: underl
 html.a11y-contraste .cartao, html.a11y-contraste .chamado, html.a11y-contraste .estatistica { border-width: 2px; }
 html.a11y-contraste input, html.a11y-contraste select, html.a11y-contraste textarea { border: 2px solid #000; }
 html.a11y-contraste .topo { background: #000; }
+html.a11y-contraste .topo .marca span { color: #fff; }
 html.a11y-contraste button:not(.secundario):not(.link):not(.abas button):hover { background: #333; }
 html.a11y-contraste .selo { border: 2px solid #000; background: #fff; color: #000; }
 html.a11y-contraste .selo.EMERGENCIA { background: #000; color: #fff; }
@@ -50,6 +51,8 @@ html.a11y-escuro {
   color-scheme: dark;
 }
 html.a11y-escuro .topo { background: #101113; }
+html.a11y-escuro .fila-num, html.a11y-escuro button.link, html.a11y-escuro .chamado summary, html.a11y-escuro .conversa summary { color: var(--highlight); }
+html.a11y-escuro .estrelas { color: #f0cd7a; }
 html.a11y-escuro h2, html.a11y-escuro h3 { color: #9fd4cc; }
 html.a11y-escuro input, html.a11y-escuro select, html.a11y-escuro textarea {
   background: #1a1b1e;

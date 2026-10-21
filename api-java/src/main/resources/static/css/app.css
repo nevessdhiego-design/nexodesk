@@ -9,8 +9,8 @@
   --text: #232226;
   --muted: #5d6670;
   --border: #dde3e6;
-  --ok: #2f7d4f;
-  --warn: #b7791f;
+  --ok: #276b42;
+  --warn: #8a5a0b;
   --danger: #b83232;
 }
 
@@ -100,7 +100,7 @@ a.botao-link.escuro { background: var(--accent); border-color: transparent; }
 a.botao-link.escuro:hover { background: var(--highlight); }
 .avaliacao { margin-top: .75rem; padding: .75rem; border: 1px dashed var(--border); border-radius: 8px; }
 .avaliacao h3 { margin: 0 0 .25rem; }
-.estrelas { color: #b7791f; font-weight: 700; letter-spacing: .1em; }
+.estrelas { color: #8a5a0b; font-weight: 700; letter-spacing: .1em; }
 button.secundario { background: transparent; color: #fff; border: 1px solid rgba(255, 255, 255, .5); }
 button.secundario:hover { background: rgba(255, 255, 255, .12); }
 button.link { background: none; color: var(--accent); padding: 0; font-weight: 600; text-decoration: underline; }
@@ -147,7 +147,7 @@ button.link { background: none; color: var(--accent); padding: 0; font-weight: 6
 .chamado summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .9rem; }
 .chamado img.foto { max-width: 100%; max-height: 260px; border-radius: 8px; margin-top: .5rem; border: 1px solid var(--border); }
 .chamado ul { margin: .4rem 0 0; padding-left: 1.2rem; font-size: .88rem; color: var(--muted); }
-.fila-num { font-weight: 800; color: var(--highlight); min-width: 1.6rem; }
+.fila-num { font-weight: 800; color: var(--accent); min-width: 1.6rem; }
 .edicao { display: grid; grid-template-columns: 200px 1fr auto; gap: .5rem; margin-top: .75rem; align-items: end; }
 .edicao label { margin-top: 0; }
 .vazio { text-align: center; color: var(--muted); padding: 1.5rem 0; }
