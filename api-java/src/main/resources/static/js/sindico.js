@@ -4,6 +4,8 @@ const filtro = document.getElementById('filtro');
 let recarregarAvisos = () => Promise.resolve();
 let equipe = [];
 let chamadosNaTela = [];   // a fila inteira do filtro de status; a busca por texto e categoria age só na tela
+const TAMANHO_PAGINA = 20;   // quantos chamados aparecem por vez; "Mostrar mais" libera os próximos
+let limiteVisivel = TAMANHO_PAGINA;
 const busca = document.getElementById('busca');
 const filtroCategoria = document.getElementById('filtro-categoria');   // síndicos e zeladores ativos: quem pode cuidar de um chamado
 
@@ -163,16 +165,24 @@ function desenharLista() {
     .map((c, i) => ({ c, posicao: i + 1 }))
     .filter(({ c }) => (!categoria || c.categoriaRotulo === categoria)
       && (!termo || semAcento([c.titulo, c.descricao, c.moradorNome, c.localOcorrencia].join(' ')).includes(termo)));
+  const naPagina = visiveis.slice(0, limiteVisivel);
+  const mostrarMais = visiveis.length > naPagina.length
+    ? el('button', { type: 'button', class: 'secundario-escuro', text: 'Mostrar mais ' + Math.min(TAMANHO_PAGINA, visiveis.length - naPagina.length) + ' chamados' })
+    : null;
+  if (mostrarMais) mostrarMais.addEventListener('click', () => { limiteVisivel += TAMANHO_PAGINA; desenharLista(); });
   lista.replaceChildren(...(visiveis.length
-    ? visiveis.map(({ c, posicao }) => cartaoChamado(c, posicao))
-    : [el('p', { class: 'vazio', text: chamadosNaTela.length ? 'Nenhum chamado combina com a busca.' : 'Nenhum chamado neste filtro.' })]));
-  document.getElementById('contagem').textContent = visiveis.length + ' de ' + chamadosNaTela.length + ' chamados';
+    ? naPagina.map(({ c, posicao }) => cartaoChamado(c, posicao))
+    : [el('p', { class: 'vazio', text: chamadosNaTela.length ? 'Nenhum chamado combina com a busca.' : 'Nenhum chamado neste filtro.' })]),
+    ...(mostrarMais ? [el('div', { class: 'acoes' }, mostrarMais)] : []));
+  document.getElementById('contagem').textContent = naPagina.length + ' de ' + visiveis.length + ' chamados exibidos'
+    + (visiveis.length !== chamadosNaTela.length ? ' (' + chamadosNaTela.length + ' no filtro de status)' : '');
 }
 
-busca.addEventListener('input', desenharLista);
-filtroCategoria.addEventListener('change', desenharLista);
+// mudar a busca, a categoria ou o filtro de status volta para a primeira página
+busca.addEventListener('input', () => { limiteVisivel = TAMANHO_PAGINA; desenharLista(); });
+filtroCategoria.addEventListener('change', () => { limiteVisivel = TAMANHO_PAGINA; desenharLista(); });
 
-filtro.addEventListener('change', () => carregar().catch((e) => mostrarMensagem(caixa, e.message, 'erro')));
+filtro.addEventListener('change', () => { limiteVisivel = TAMANHO_PAGINA; carregar().catch((e) => mostrarMensagem(caixa, e.message, 'erro')); });
 document.getElementById('botao-sair').addEventListener('click', sair);
 
 const banner = document.getElementById('novidades');

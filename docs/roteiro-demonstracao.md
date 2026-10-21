@@ -26,7 +26,7 @@ os slides (problema, concorrentes, arquitetura, resultados, equipe) ficam em vol
 | 3:20 | Zelador | Janela do Zé: **"Meus atendimentos"** mostra só o chamado dele; mudar para **Em andamento** com "Técnico a caminho" | O zelador não vê chamado de outras pessoas. RF04: todo status fica no histórico. |
 | 3:45 | Morador | Janela da Ana: o status mudou **sozinho**; aparece "Responsável: Zé" e a previsão; depois, chamado resolvido: **avaliar** (nota de 1 a 5) | RF05: avisada sem precisar perguntar; fecha o ciclo e o síndico vê a média no painel. |
 | 4:15 | Síndico | Tela **Usuários** (promover/desativar) e a página **Privacidade** | O síndico gerencia quem entra; o morador pode excluir a própria conta (os chamados ficam sem identificação). |
-| 4:30 | PO | Slide de encerramento: números medidos e **o que não fizemos** | 147 testes Java e 20 Python passando, MySQL real testado; regra de dificuldade com 73% de acerto em casos que ela nunca viu. **Não fizemos:** teste de usabilidade com pessoas, e-mail com provedor real, teste de carga. |
+| 4:30 | PO | Slide de encerramento: números medidos e **o que não fizemos** | 149 testes Java e 20 Python passando, MySQL real testado; regra de dificuldade com 73% de acerto em casos que ela nunca viu. **Não fizemos:** teste de usabilidade com pessoas, e-mail com provedor real, teste de carga. |
 
 ## Perguntas que a banca pode fazer (e a resposta curta e verdadeira)
 

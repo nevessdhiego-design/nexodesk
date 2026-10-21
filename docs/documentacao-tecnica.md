@@ -44,7 +44,8 @@ usuários). Só o síndico cria outros perfis, promovendo uma conta existente.
 | **Emergência fura a fila**: o morador marca, ou o Python detecta ("preso", "choque", "gás", "incêndio"...); selo vermelho e aviso imediato ao síndico | `regras.py` (`detectar_emergencia`), coluna `chamados.emergencia`, `PrioridadeFila` | verificado |
 | **Bônus de idade** (anti-esquecimento): pontuação efetiva = pontuação − mínimo(3, dias ÷ 2); a dificuldade mostrada não muda; "atrasado" a partir de 7 dias | `PrioridadeFila`, `PrioridadeFilaTest` | verificado |
 | **Conversa dentro do chamado** (morador, síndico, responsável); anonimato preservado; limite de 10 mensagens por minuto | `MensagemService`, `conversa.js`, tabela `mensagens` | verificado |
-| **Gestão de usuários** (promover a zelador ou síndico, desativar, reativar; nunca a própria conta nem o último síndico) | `UsuarioAdminService`, `usuarios.html` | verificado |
+| **Gestão de usuários** (promover a zelador ou síndico, desativar, reativar, redefinir senha; nunca a própria conta nem o último síndico) | `UsuarioAdminService`, `usuarios.html` | verificado |
+| **Busca e paginação da fila** do síndico (texto, categoria, 20 por vez; a posição exibida é a real na fila) | `sindico.js` | verificado no navegador com 37 chamados |
 | **Responsável e previsão** do chamado; o zelador vê e atualiza só os dele | `ChamadoService.atribuir`, `ZeladorController`, `zelador.html`, migração V5 | verificado |
 | **Privacidade (LGPD mínima)**: página de política e "excluir minha conta" (anonimiza os dados pessoais; os chamados ficam sem identificação) | `privacidade.html`, `ExclusaoDeContaService` | verificado |
 | **Foto sem localização**: remove EXIF/GPS e recodifica | `ProcessadorImagem` | verificado |
@@ -240,6 +241,7 @@ A tabela de pontuação base existe também em `dominio/Categoria.java` (modo de
 | `PATCH /api/sindico/chamados/{id}/responsavel` | síndico | atribui responsável e previsão (ou remove) |
 | `GET /api/sindico/equipe` | síndico | síndicos e zeladores ativos (quem pode ser responsável) |
 | `GET /api/sindico/usuarios`, `PATCH /api/sindico/usuarios/{id}` | síndico | gestão de usuários: perfil e situação |
+| `POST /api/sindico/usuarios/{id}/redefinir-senha` | síndico | "esqueci minha senha" sem e-mail: gera uma senha temporária de 12 caracteres, mostrada uma vez; só para morador ou zelador ativo; derruba as sessões da pessoa |
 | `GET /api/sindico/estatisticas` | síndico | contagens por status e dificuldade, emergências pendentes |
 | `GET /api/zelador/chamados?status=ativos\|todos\|RESOLVIDO` | zelador | "meus atendimentos" |
 | `PATCH /api/zelador/chamados/{id}/status` | zelador | muda o status, só dos chamados dele (os outros dão 404) |
@@ -280,7 +282,7 @@ Erros saem sempre como JSON `{"erro": "...", "campos": {...}}`, sem detalhes int
 | Suíte | Testes | Cobre |
 |---|---|---|
 | Java `FluxoChamadoTest` | 43 | cadastro, login, bloqueio por tentativas, sessão, CSRF, abertura e classificação, fila, emergência, envelhecimento, anonimato, status + aviso, conversa, avaliação, minha conta, troca de senha e sessões, concorrência (409), CSV, e-mail, isolamento, upload |
-| Java `EquipeEResponsavelTest` | 16 | promover, rebaixar e desativar; atribuir responsável e previsão (avisos, limites, 409); área do zelador (só os chamados dele, anonimato, 403 nas rotas dos outros perfis) |
+| Java `EquipeEResponsavelTest` | 18 | promover, rebaixar e desativar; redefinir a senha de morador ou zelador (síndico não, nem a própria conta); atribuir responsável e previsão (avisos, limites, 409); área do zelador (só os chamados dele, anonimato, 403 nas rotas dos outros perfis) |
 | Java `ExclusaoDeContaTest` | 5 | excluir a conta: dados anonimizados, chamado mantido sem identificação, sessões caem, senha errada, CSRF, regra do último síndico |
 | Java `TempoRealHttpTest` | 5 | fluxo SSE sobre HTTP real: sem sessão é recusado, o síndico vê chamado novo e emergência sem recarregar, o morador vê o status mudar e mais ninguém recebe, mensagem avisa só a outra parte, trocar a senha fecha o fluxo das outras sessões |
 | Java `PublicadorEventosTest` | 10 | limite de conexões por usuário, batimento, conexão morta, encerramento no desligamento |
@@ -297,9 +299,8 @@ Erros saem sempre como JSON `{"erro": "...", "campos": {...}}`, sem detalhes int
 | Java `CookieSeguroProdTest`, `ImagemOrfaTest`, `RegrasTest` | 2, 1, 3 | cookie `Secure` no `prod`; foto apagada se o banco recusa; pontuação base Java = Python |
 | Python `test_regras.py` e `test_casos.py` | 20 | regras de dificuldade, emergência (com alarme falso), endpoint `/classificar`, os 27 casos de ajuste e os 15 de validação |
 
-Total: **147 testes Java e 20 Python, todos passando (20/10/2026).** A suíte Java passou **nos dois bancos**: H2 em
-memória (padrão, ~65 s) e **MySQL 8.4.9** real, a partir de banco vazio (Flyway V1 a V5; variáveis `NEXODESK_TEST_DB_*`, ver README;
-rodado com 146 testes, antes do teste de `h1`, que só lê arquivos). Nos dois, o Hibernate roda com `ddl-auto=validate`, ou seja,
+Total: **149 testes Java e 20 Python, todos passando (20/10/2026).** A suíte Java passou **nos dois bancos**: H2 em
+memória (padrão, ~65 s) e **MySQL 8.4.9** real, a partir de banco vazio (Flyway V1 a V5; variáveis `NEXODESK_TEST_DB_*`, ver README). Nos dois, o Hibernate roda com `ddl-auto=validate`, ou seja,
 recusa subir se as entidades não baterem com as migrações. Além deles, foram executados por HTTP e pelo navegador: o fluxo
 completo com os dois serviços no ar, o perfil `demo`, o zelador (login, lista, mudança de status) e o tempo real com **dois
 clientes** (o síndico, por script, muda um status e a tela aberta do morador atualiza sozinha, sem recarregar).
@@ -331,7 +332,7 @@ Defeito real achado e corrigido nesta fase: ao desligar a API com navegadores co
   texto digitado em chamados e mensagens permanece depois da exclusão; não há prazo automático para apagar chamados antigos; o
   "li a política" do cadastro é uma confirmação na tela, não é registrada no banco.
 - **Integração contínua:** o arquivo `.github/workflows/ci.yml` foi escrito e validado, mas só roda de verdade depois do push.
-- Um único condomínio; sem paginação da fila; sem recuperação de senha; sem HTTPS (necessário para publicar fora do `localhost`;
+- Um único condomínio; recuperação de senha só pelo síndico (a senha temporária é entregue pessoalmente; não há e-mail de recuperação); sem HTTPS (necessário para publicar fora do `localhost`;
   o perfil `prod` já liga o cookie `Secure` e a leitura dos cabeçalhos do proxy; o HSTS vem do Spring Security quando a conexão é HTTPS).
 - Auditoria de acessibilidade feita por **script** (contraste e estrutura) e revisão manual; **não** foi testado com leitor de tela
   de verdade (NVDA, VoiceOver) nem com o axe/Lighthouse.

@@ -6,6 +6,7 @@ import br.nexodesk.servico.UsuarioAdminService;
 import br.nexodesk.web.Dtos.AlterarUsuarioRequest;
 import br.nexodesk.web.Dtos.AtribuirResponsavelRequest;
 import br.nexodesk.web.Dtos.EquipeResponse;
+import br.nexodesk.web.Dtos.SenhaTemporariaResponse;
 import br.nexodesk.web.Dtos.UsuarioAdminResponse;
 import br.nexodesk.web.Dtos.AlterarStatusRequest;
 import br.nexodesk.web.Dtos.ChamadoResponse;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -84,6 +86,12 @@ public class SindicoController {
     public UsuarioAdminResponse alterarUsuario(@PathVariable Long id, @RequestBody AlterarUsuarioRequest req,
                                                Authentication autenticacao) {
         return usuarios.alterar(autenticacao.getName(), id, req);
+    }
+
+    /** "Esqueci minha senha": gera uma senha temporária (aparece uma vez) para morador ou zelador. */
+    @PostMapping("/usuarios/{id}/redefinir-senha")
+    public SenhaTemporariaResponse redefinirSenha(@PathVariable Long id, Authentication autenticacao) {
+        return usuarios.redefinirSenha(autenticacao.getName(), id);
     }
 
     @GetMapping("/estatisticas")

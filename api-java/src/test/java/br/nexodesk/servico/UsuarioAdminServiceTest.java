@@ -25,7 +25,8 @@ class UsuarioAdminServiceTest {
     UsuarioRepository usuarios = mock(UsuarioRepository.class);
     ChamadoRepository chamados = mock(ChamadoRepository.class);
     PublicadorEventos publicador = mock(PublicadorEventos.class);
-    UsuarioAdminService servico = new UsuarioAdminService(usuarios, chamados, publicador);
+    UsuarioAdminService servico = new UsuarioAdminService(usuarios, chamados, publicador,
+            new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder(4));
 
     Usuario autor = pessoa(1L, "a@nexodesk.test", Perfil.SINDICO);
 

@@ -415,4 +415,57 @@ class EquipeEResponsavelTest {
         assertThat(ids).contains((int) idDe(zeladorEmail), (int) idDe(SINDICO_EMAIL))
                 .doesNotContain((int) idDe(moradorEmail));
     }
+
+    // ---------- "esqueci minha senha" (redefinição pelo síndico) ----------
+
+    @Test
+    void sindicoRedefineASenhaDeUmMoradorEASessaoAntigaCai() throws Exception {
+        MockHttpSession sindico = sindico();
+        String email = cadastrarMorador();
+        MockHttpSession antiga = entrar(email, SENHA);
+
+        String json = mvc.perform(post("/api/sindico/usuarios/%d/redefinir-senha".formatted(idDe(email)))
+                        .with(csrf()).session(sindico))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.senhaTemporaria").isString())
+                .andReturn().getResponse().getContentAsString();
+        String temporaria = JsonPath.read(json, "$.senhaTemporaria");
+        assertThat(temporaria).hasSize(12).isNotEqualTo(SENHA);
+
+        mvc.perform(get("/api/chamados/meus").session(antiga)).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, SENHA)))
+                .andExpect(status().isUnauthorized());
+        entrar(email, temporaria);
+        assertThat(usuarios.findByEmail(email).orElseThrow().getSenhaHash()).doesNotContain(temporaria);
+    }
+
+    @Test
+    void redefinirSenhaTemRegrasDeProtecao() throws Exception {
+        MockHttpSession sindico = sindico();
+        String moradorEmail = cadastrarMorador();
+        // a propria conta: usar "Minha conta"
+        mvc.perform(post("/api/sindico/usuarios/%d/redefinir-senha".formatted(idDe(SINDICO_EMAIL))).with(csrf()).session(sindico))
+                .andExpect(status().isBadRequest());
+        // outro sindico: proibido (ninguem toma a conta de um sindico)
+        String outroSindico = cadastrarMorador();
+        mudarPerfil(sindico, outroSindico, "SINDICO");
+        mvc.perform(post("/api/sindico/usuarios/%d/redefinir-senha".formatted(idDe(outroSindico))).with(csrf()).session(sindico))
+                .andExpect(status().isForbidden());
+        // conta desativada: reativar antes
+        String inativo = cadastrarMorador();
+        mvc.perform(patch("/api/sindico/usuarios/%d".formatted(idDe(inativo))).with(csrf()).session(sindico)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"ativo\":false}"))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/sindico/usuarios/%d/redefinir-senha".formatted(idDe(inativo))).with(csrf()).session(sindico))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/sindico/usuarios/999999/redefinir-senha").with(csrf()).session(sindico))
+                .andExpect(status().isNotFound());
+        // morador nao redefine a senha de ninguem; sem token CSRF tambem nao
+        MockHttpSession morador = entrar(moradorEmail, SENHA);
+        mvc.perform(post("/api/sindico/usuarios/%d/redefinir-senha".formatted(idDe(inativo))).with(csrf()).session(morador))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/sindico/usuarios/%d/redefinir-senha".formatted(idDe(moradorEmail))).session(sindico))
+                .andExpect(status().isForbidden());
+    }
 }
