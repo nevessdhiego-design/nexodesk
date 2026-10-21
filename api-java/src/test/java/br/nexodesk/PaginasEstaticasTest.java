@@ -105,4 +105,21 @@ class PaginasEstaticasTest {
             }
         }
     }
+
+    /** Leitor de tela navega por títulos: cada página precisa de um (e só um) h1, e os níveis não podem pular. */
+    @Test
+    void todaTelaTemUmUnicoH1ETitulosSemPularNivel() throws IOException {
+        Pattern titulo = Pattern.compile("<h([1-6])\\b");
+        for (Path p : arquivos(".html")) {
+            String html = ler(p);
+            assertThat(Pattern.compile("<h1\\b").matcher(html).results().count()).as("%s: quantidade de h1", p.getFileName()).isEqualTo(1);
+            int anterior = 0;
+            var m = titulo.matcher(html);
+            while (m.find()) {
+                int nivel = Integer.parseInt(m.group(1));
+                assertThat(anterior == 0 || nivel <= anterior + 1).as("%s: h%d logo depois de h%d", p.getFileName(), nivel, anterior).isTrue();
+                anterior = nivel;
+            }
+        }
+    }
 }
