@@ -36,7 +36,7 @@ validação por um síndico real.** Se um síndico real discordar de muitas linh
 
 | # | Heurística | Problema provável | Onde | Gravidade (1 a 4) | Sugestão |
 |---|---|---|---|---|---|
-| 1 | Prevenção de erros | Mudar um chamado para "Resolvido" é um clique sem confirmação; o morador é avisado na hora | `sindico.js`, `zelador.js` | 3 | pedir confirmação ao marcar Resolvido |
+| 1 | Prevenção de erros | ~~Mudar para "Resolvido" era um clique sem confirmação~~ **corrigido em 20/10**: pergunta antes de resolver (conferido no navegador) | `sindico.js`, `zelador.js` | 3 | feito |
 | 2 | Ajuda e recuperação | **Não existe "esqueci minha senha"**: quem perde a senha depende do síndico ou do banco | login | 3 | fluxo de recuperação (precisa de e-mail real) ou redefinição pelo síndico |
 | 3 | Visibilidade do estado | Lista do síndico sem busca e sem paginação: com dezenas de chamados rola muito | `sindico.html` | 3 | filtro por texto/categoria e paginação |
 | 4 | Reconhecimento | A caixa "é uma emergência" fica no fim do formulário, depois da foto e do anonimato | `morador.html` | 2 | levar para perto do título ou destacar |

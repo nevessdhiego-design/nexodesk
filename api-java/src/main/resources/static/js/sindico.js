@@ -59,6 +59,8 @@ function cartaoChamado(c, posicao) {
 
   salvar.addEventListener('click', async () => {
     limparMensagem(caixa);
+    if (seletor.value === 'RESOLVIDO' && c.status !== 'RESOLVIDO'
+        && !window.confirm('Marcar o chamado #' + c.id + ' como resolvido? O morador será avisado agora e poderá avaliar o atendimento.')) return;
     salvar.disabled = true;
     try {
       await api('/api/sindico/chamados/' + c.id + '/status', {
