@@ -134,7 +134,7 @@ Use `clean` ao mudar arquivos de configuração de teste: o Maven não apaga có
 
 ```powershell
 cd servico-prioridade; .\.venv\Scripts\python.exe -m pytest -q     # 20 testes: regras, emergência, casos e endpoint
-cd api-java;           .\mvnw.cmd test                              # 147 testes (~1 min): API, migrações, tempo real, telas
+cd api-java;           .\mvnw.cmd test                              # 149 testes (~1 min): API, migrações, tempo real, telas
 ```
 `RegrasTest` compara as pontuações base do Java com as do `regras.py` e falha se divergirem.
 
@@ -156,6 +156,7 @@ cd api-java;           .\mvnw.cmd test                              # 147 testes
 | `PATCH /api/sindico/chamados/{id}/status` | síndico | muda status, avisa o morador (sistema e e-mail) |
 | `PATCH /api/sindico/chamados/{id}/responsavel` | síndico | atribui responsável e previsão |
 | `GET /api/sindico/equipe`, `GET /api/sindico/usuarios`, `PATCH /api/sindico/usuarios/{id}` | síndico | equipe e gestão de usuários |
+| `POST /api/sindico/usuarios/{id}/redefinir-senha` | síndico | senha temporária para morador ou zelador (aparece uma vez) |
 | `GET /api/sindico/estatisticas` | síndico | contagens |
 | `GET /api/zelador/chamados`, `PATCH /api/zelador/chamados/{id}/status` | zelador | meus atendimentos e status dos chamados dele |
 | `GET /api/notificacoes`, `POST /api/notificacoes/{id}/lida` | logado | avisos |
@@ -181,7 +182,7 @@ cd api-java;           .\mvnw.cmd test                              # 147 testes
 - **Teste de usabilidade com pessoas** (roteiro pronto em `docs/teste-usabilidade/`; nenhum teste aplicado).
 - E-mail testado com um provedor real (hoje só contra servidor SMTP falso).
 - Tempo real com várias instâncias da API (precisaria de um barramento, como Redis).
-- Gestão de vários condomínios, paginação da fila, recuperação de senha, painel desktop (PyQt5 do `aa`) e o que mais estiver em
+- Gestão de vários condomínios, recuperação de senha por e-mail (hoje só o síndico redefine), painel desktop (PyQt5 do `aa`) e o que mais estiver em
   [`docs/ideias-futuras.md`](docs/ideias-futuras.md).
 - HTTPS real para publicar fora do localhost (o perfil `prod` já liga cookie `Secure` e leitura de cabeçalhos de proxy).
 - Revisão jurídica da página de privacidade.

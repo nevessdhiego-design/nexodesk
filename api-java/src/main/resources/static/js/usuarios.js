@@ -52,13 +52,30 @@ function linha(u) {
     alterar(u, { ativo: !u.ativo }, u.nome + (u.ativo ? ' foi desativado.' : ' foi reativado.'));
   });
 
+  // "esqueci minha senha": só para morador e zelador ativos; a senha temporária aparece uma vez, no aviso do alto
+  const redefinir = el('button', {
+    type: 'button', class: 'secundario-escuro', text: 'Redefinir senha',
+    disabled: ehEu || u.perfil === 'SINDICO' || !u.ativo, 'aria-label': 'Redefinir a senha de ' + u.nome,
+  });
+  redefinir.addEventListener('click', async () => {
+    if (!window.confirm('Gerar uma senha temporária para ' + u.nome + '? A senha atual deixa de valer e as sessões abertas dela são encerradas.')) return;
+    limparMensagem(caixa);
+    try {
+      const r = await api('/api/sindico/usuarios/' + u.id + '/redefinir-senha', { metodo: 'POST' });
+      mostrarMensagem(caixa, 'Senha temporária de ' + r.nome + ': ' + r.senhaTemporaria
+        + '. Anote e entregue pessoalmente: ela aparece só desta vez. Peça para trocar em "Minha conta" no primeiro acesso.', 'ok');
+    } catch (erro) {
+      mostrarMensagem(caixa, erro.message, 'erro');
+    }
+  });
+
   return el('tr', { class: u.ativo ? '' : 'inativo' },
     el('td', { class: 'nome', text: u.nome + (ehEu ? ' (você)' : '') }),
     el('td', { class: 'email', text: u.email }),
     el('td', { text: u.unidade || '—' }),
     el('td', {}, perfil),
     el('td', {}, selo(u.ativo ? 'Ativo' : 'Desativado', u.ativo ? 'RESOLVIDO' : 'neutro')),
-    el('td', {}, el('div', { class: 'acoes-linha' }, salvar, alternarAtivo)));
+    el('td', {}, el('div', { class: 'acoes-linha' }, salvar, alternarAtivo, redefinir)));
 }
 
 function desenhar() {

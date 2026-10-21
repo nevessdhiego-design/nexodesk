@@ -208,6 +208,7 @@ table.usuarios td.email { overflow-wrap: anywhere; min-width: 180px; }
 table.usuarios select { min-width: 130px; }
 table.usuarios tr.inativo td { color: var(--muted); background: #f6f7f8; }
 table.usuarios .acoes-linha { display: flex; gap: .4rem; flex-wrap: wrap; }
+button.secundario-escuro { background: var(--secondary); }
 button.perigo { background: var(--danger); }
 button.perigo:hover { background: #8f2525; }
 

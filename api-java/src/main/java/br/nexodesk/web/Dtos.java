@@ -144,6 +144,10 @@ public final class Dtos {
                                        boolean ativo, LocalDateTime criadoEm) {
     }
 
+    /** A senha temporária só aparece nesta resposta. */
+    public record SenhaTemporariaResponse(String nome, String senhaTemporaria) {
+    }
+
     public record EquipeResponse(Long id, String nome, String perfil) {
     }
 

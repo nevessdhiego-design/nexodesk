@@ -11,7 +11,7 @@ eu não tenho como medi-los a partir do código, então não os inventei. **Nada
 |---|---|---|
 | Requisitos funcionais implementados e testados | **5 de 5** (RF01 a RF05; RF05 por aviso no sistema, e-mail só testado contra servidor falso) | tabela da seção 2 de `documentacao-tecnica.md` |
 | Requisitos não funcionais atendidos | **3 de 3**, mais o "tempo real" que os slides de 20/08 prometiam (RNF01 medido na seção 2 abaixo) | idem |
-| Testes automáticos Java | **147**, 0 falhas no H2; **146**, 0 falhas no MySQL 8.4.9 real, a partir de banco vazio (o 147º, de `h1`, só lê arquivos) | `cd api-java; .\mvnw.cmd clean test` |
+| Testes automáticos Java | **149**, 0 falhas no H2 **e** no MySQL 8.4.9 real, a partir de banco vazio | `cd api-java; .\mvnw.cmd clean test` |
 | Testes automáticos Python | **20**, 0 falhas | `cd servico-prioridade; .\.venv\Scripts\python.exe -m pytest -q` |
 | Tempo da suíte Java (H2) | **~65 s** (era ~3,5 min antes de corrigir o desligamento com SSE aberto) | idem |
 | Casos de uso implementados | **10** (o relatório da 2ª parcial diz 5; ver nota abaixo) | seção 10.1 da documentação técnica |
@@ -78,7 +78,7 @@ O relatório da 2ª parcial traz estes valores; confirmem com o Kanban antes de 
 
 ```powershell
 git clone <url do repositório>; cd nexodesk-app
-cd api-java;           .\mvnw.cmd clean test           # 147 testes, ~1 min
+cd api-java;           .\mvnw.cmd clean test           # 149 testes, ~1 min
 cd ..\servico-prioridade; python -m venv .venv; .\.venv\Scripts\python.exe -m pip install -r requirements.txt
                        .\.venv\Scripts\python.exe -m pytest -q   # 20 testes
 cd ..;                 .\iniciar-nexodesk.ps1 -Perfil demo        # sistema inteiro com dados de exemplo
