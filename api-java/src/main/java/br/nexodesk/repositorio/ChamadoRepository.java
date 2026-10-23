@@ -34,6 +34,15 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
     @Query("select c.responsavel.id, count(c) from Chamado c where c.responsavel is not null and c.status <> :resolvido group by c.responsavel.id")
     List<Object[]> cargaPorResponsavel(@Param("resolvido") StatusChamado resolvido);
 
+    /** Chamados não resolvidos cujo prazo já passou e ainda sem aviso de prazo vencido. */
+    @EntityGraph(attributePaths = {"morador", "responsavel"})
+    List<Chamado> findByStatusNotAndPrazoLimiteBeforeAndAlertaPrazoEnviadoFalse(StatusChamado status, java.time.LocalDateTime agora);
+
+    /** Marca o aviso como enviado SEM mexer na versão do chamado (a tela de quem está editando não deve receber 409 por isso). */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update Chamado c set c.alertaPrazoEnviado = true where c.id = :id")
+    int marcarAlertaDePrazo(@Param("id") Long id);
+
     long countByEmergenciaTrueAndStatusIn(Collection<StatusChamado> status);
 
     long countByStatus(StatusChamado status);
