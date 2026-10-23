@@ -4,6 +4,9 @@ import br.nexodesk.config.FiltroSessaoValida;
 import br.nexodesk.config.LimitadorTentativasLogin;
 import br.nexodesk.servico.ApiException;
 import br.nexodesk.servico.ExclusaoDeContaService;
+import br.nexodesk.servico.RecuperacaoSenhaService;
+import br.nexodesk.web.Dtos.EsqueciSenhaRequest;
+import br.nexodesk.web.Dtos.RedefinirSenhaRequest;
 import br.nexodesk.servico.PublicadorEventos;
 import br.nexodesk.servico.UsuarioService;
 import br.nexodesk.web.Dtos.AlterarSenhaRequest;
@@ -43,16 +46,19 @@ public class AuthController {
     private final LimitadorTentativasLogin limitador;
     private final PublicadorEventos publicador;
     private final ExclusaoDeContaService exclusao;
+    private final RecuperacaoSenhaService recuperacao;
 
     public AuthController(UsuarioService usuarios, AuthenticationManager gerenteAutenticacao,
                           SecurityContextRepository repositorioContexto, LimitadorTentativasLogin limitador,
-                          PublicadorEventos publicador, ExclusaoDeContaService exclusao) {
+                          PublicadorEventos publicador, ExclusaoDeContaService exclusao,
+                          RecuperacaoSenhaService recuperacao) {
         this.usuarios = usuarios;
         this.gerenteAutenticacao = gerenteAutenticacao;
         this.repositorioContexto = repositorioContexto;
         this.limitador = limitador;
         this.publicador = publicador;
         this.exclusao = exclusao;
+        this.recuperacao = recuperacao;
     }
 
     @PostMapping("/register")
@@ -154,6 +160,35 @@ public class AuthController {
         SecurityContextHolder.clearContext();
         if (request.getSession(false) != null) {
             request.getSession(false).invalidate();
+        }
+    }
+
+    /**
+     * "Esqueci minha senha": a resposta é sempre a mesma, exista ou não a conta. O freio conta cada pedido (5 por e-mail e IP
+     * a cada 15 min) para ninguém usar o sistema para encher a caixa de e-mail de outra pessoa.
+     */
+    @PostMapping("/esqueci-senha")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public java.util.Map<String, String> esqueciSenha(@Valid @RequestBody EsqueciSenhaRequest dados, HttpServletRequest request) {
+        String ip = request.getRemoteAddr();
+        String chave = "recuperacao:" + dados.email().trim().toLowerCase();
+        limitador.verificar(ip, chave);
+        limitador.registrarFalha(ip, chave);
+        recuperacao.solicitar(dados.email());
+        return java.util.Map.of("mensagem", "Se existir uma conta com esse e-mail, enviamos um link para redefinir a senha. Ele vale por 30 minutos.");
+    }
+
+    /** Usa o token do link: quem erra o token também conta no freio (não dá para adivinhar tokens sem limite). */
+    @PostMapping("/redefinir-senha")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void redefinirSenha(@Valid @RequestBody RedefinirSenhaRequest dados, HttpServletRequest request) {
+        String ip = request.getRemoteAddr();
+        limitador.verificar(ip, "token");
+        try {
+            recuperacao.redefinir(dados.token(), dados.novaSenha());
+        } catch (ApiException e) {
+            limitador.registrarFalha(ip, "token");
+            throw e;
         }
     }
 }

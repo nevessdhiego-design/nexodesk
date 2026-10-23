@@ -57,6 +57,16 @@ public final class Dtos {
             @Size(min = 8, max = 72, message = "A nova senha deve ter de 8 a 72 caracteres.") String novaSenha) {
     }
 
+    public record EsqueciSenhaRequest(
+            @NotBlank(message = "Informe o e-mail.") @Email(message = "Informe um e-mail válido.") String email) {
+    }
+
+    public record RedefinirSenhaRequest(
+            @NotBlank(message = "O link está incompleto. Abra de novo o link do e-mail.") String token,
+            @NotBlank(message = "Informe a nova senha.")
+            @Size(min = 8, max = 72, message = "A nova senha deve ter de 8 a 72 caracteres.") String novaSenha) {
+    }
+
     public record AvaliacaoRequest(
             @NotNull(message = "Informe a nota de 1 a 5.")
             @Min(value = 1, message = "A nota deve ser de 1 a 5.")

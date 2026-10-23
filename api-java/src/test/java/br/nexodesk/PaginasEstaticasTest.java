@@ -30,9 +30,9 @@ class PaginasEstaticasTest {
     }
 
     @Test
-    void existemAsOitoTelas() throws IOException {
+    void existemAsDezTelas() throws IOException {
         assertThat(arquivos(".html")).extracting(p -> p.getFileName().toString())
-                .containsExactlyInAnyOrder("index.html", "morador.html", "sindico.html", "funcionario.html", "usuarios.html", "relatorios.html", "conta.html", "privacidade.html");
+                .containsExactlyInAnyOrder("index.html", "morador.html", "sindico.html", "funcionario.html", "usuarios.html", "relatorios.html", "esqueci-senha.html", "redefinir-senha.html", "conta.html", "privacidade.html");
     }
 
     @Test
