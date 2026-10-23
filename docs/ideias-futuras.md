@@ -18,6 +18,9 @@ Origem das ideias: os PDFs de ideação em `PROJETOS/nexodesk/docs/ideacao/` e a
 | **Integração com WhatsApp** | pesquisa de mercado | Exige conta comercial e custos; o e-mail já cobre o aviso | API oficial do WhatsApp Business |
 | **Criptografia "de ponta a ponta"** | slide de ideação | Não existe e não é necessária aqui; o sistema usa HTTPS (em produção), bcrypt e isolamento de dados. **Não prometer isso nos slides.** | n/a |
 | **Aplicativo móvel nativo / PWA instalável** | ideação ("acesso mobile") | O site já é responsivo (testado em 375 px); PWA é um bom próximo passo barato | `manifest.json` e service worker compatíveis com a CSP |
+| **Atribuição automática** (o sistema escolher o responsável sozinho) | pedido de 22/10: o síndico decide, o sistema só indica | Hoje o painel marca "Indicado" e mostra a carga; automatizar exigiria regras de folga, plantão e férias | calendário de escala da equipe |
+| **Fonte própria e tema de marca** | fase 3 | A CSP exige arquivos locais e baixar fontes ficou para depois; a aparência usa a fonte do sistema | arquivo de fonte aberta guardado em `static/fonts/` |
+| **Checklist editável pelo síndico** | fase 3 | Os modelos de etapas estão em código | tela para criar e editar modelos por categoria |
 | **Unificar a tabela de categorias** (Java e Python) | revisão técnica | Hoje há duas cópias protegidas por teste (`RegrasTest`); funciona, só não é elegante | uma única fonte (arquivo JSON lido pelos dois) |
 
 > Regra para novas ideias: precisa responder a uma dor medida (teste de usabilidade, entrevista) ou a um requisito do relatório.
