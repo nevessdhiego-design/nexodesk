@@ -1,7 +1,7 @@
 # Roteiro da demonstração do NexoDesk (5 minutos)
 
 Formato do projeto A3: apresentação por squad, até 5 minutos. Este roteiro cobre o sistema funcionando;
-os slides (problema, concorrentes, arquitetura, resultados, equipe) ficam em volta dele. Versão de 20/10/2026 (fase 2).
+os slides (problema, concorrentes, arquitetura, resultados, equipe) ficam em volta dele. Versão de 22/10/2026 (fase 3). As contas de exemplo e o passo a passo de "sujeira no pátio" estão em [`contas-demonstracao.md`](contas-demonstracao.md).
 
 ## Antes de começar (feito 10 minutos antes, não na frente da banca)
 
@@ -22,11 +22,11 @@ os slides (problema, concorrentes, arquitetura, resultados, equipe) ficam em vol
 | 1:30 | Síndico | Janela do síndico, **sem recarregar a página**: o chamado aparece no **topo da fila**, com selo vermelho EMERGÊNCIA, e o sino recebe o aviso | Tempo real: o síndico é avisado na hora. O Python reconheceu a emergência pelo texto. |
 | 2:00 | Síndico | Abrir **"Por que essa dificuldade?"** | A decisão é explicável: categoria com pontuação base, mais termos do texto. Emergência fura a fila; os demais vão do mais fácil ao mais difícil, e o difícil que espera sobe (1 ponto a cada 2 dias, até 3) para ninguém ser esquecido. |
 | 2:30 | Síndico e Morador | Abrir **Conversa** no chamado: o síndico pergunta "O elevador está parado entre andares?" e a Ana responde | Comunicação de mão dupla dentro do chamado, também em tempo real. No chamado anônimo, o síndico vê "Anônimo". |
-| 3:00 | Síndico | **Atribuir responsável**: o Zé, previsão para amanhã; ir à janela do Zé | O síndico delega; o morador e o zelador são avisados. |
-| 3:20 | Zelador | Janela do Zé: **"Meus atendimentos"** mostra só o chamado dele; mudar para **Em andamento** com "Técnico a caminho" | O zelador não vê chamado de outras pessoas. RF04: todo status fica no histórico. |
+| 3:00 | Síndico | **Atribuir responsável** num chamado de limpeza (ex.: "Sujeira no chão do pátio"): o seletor mostra **Indicado** para Marta (faxineira) e Zé (zelador), com a carga de cada um; escolher o Zé e a previsão de amanhã; ir à janela do Zé | O sistema **sugere** pela função e pela carga, mas **quem decide é o síndico**. O morador e o funcionário são avisados. |
+| 3:20 | Funcionário | Janela do Zé: **"Meus atendimentos"** mostra só o chamado dele, com o **checklist** do serviço; marcar duas etapas, mudar para **Em andamento** e, se der tempo, anexar a **foto do depois** | O funcionário não vê chamado de outras pessoas. O morador acompanha as etapas e vê o antes e o depois. RF04: todo status fica no histórico. |
 | 3:45 | Morador | Janela da Ana: o status mudou **sozinho**; aparece "Responsável: Zé" e a previsão; depois, chamado resolvido: **avaliar** (nota de 1 a 5) | RF05: avisada sem precisar perguntar; fecha o ciclo e o síndico vê a média no painel. |
 | 4:15 | Síndico | Tela **Usuários** (promover/desativar) e a página **Privacidade** | O síndico gerencia quem entra; o morador pode excluir a própria conta (os chamados ficam sem identificação). |
-| 4:30 | PO | Slide de encerramento: números medidos e **o que não fizemos** | 149 testes Java e 20 Python passando, MySQL real testado; regra de dificuldade com 73% de acerto em casos que ela nunca viu. **Não fizemos:** teste de usabilidade com pessoas, e-mail com provedor real, teste de carga. |
+| 4:30 | PO | Slide de encerramento: números medidos e **o que não fizemos** | 172 testes Java e 20 Python passando, MySQL real testado; regra de dificuldade com 73% de acerto em casos que ela nunca viu. **Não fizemos:** teste de usabilidade com pessoas, e-mail com provedor real, teste de carga. |
 
 ## Perguntas que a banca pode fazer (e a resposta curta e verdadeira)
 
@@ -35,6 +35,9 @@ os slides (problema, concorrentes, arquitetura, resultados, equipe) ficam em vol
   ela nunca tinha visto: **acertou 11 de 15 (73%)**. Os casos, inclusive os que erram, estão em `docs/casos-de-prioridade.md`.
 - **"Por que emergência passa na frente do mais fácil?"** Porque "pessoa presa no elevador" por último é inaceitável. E o chamado
   difícil que espera muito sobe na fila (bônus de idade), senão poderia nunca ser atendido.
+- **"O sistema chama os bombeiros ou a polícia?"** **Não.** Ele mostra os telefones (190, 192, 193 e 199), avisa o síndico e a equipe de segurança do prédio e registra o chamado como emergência. Quem liga é a pessoa.
+- **"Quem decide quem atende?"** O síndico. O painel só **indica** quem cobre a categoria e mostra a carga de cada um; nada é atribuído sozinho.
+- **"E o prazo?"** Cada categoria tem um prazo padrão (emergência 1 h; limpeza 24 h; estrutura 7 dias). Passou do prazo, o síndico e o responsável recebem um aviso, uma vez.
 - **"O que acontece se o serviço Python cair?"** O Java classifica só pela categoria e marca o chamado como "aproximado". Abrir
   chamado nunca fica bloqueado. Nesse modo **não** há detecção automática de emergência (o morador ainda pode marcar a caixa).
 - **"Como funciona o tempo real? Escala?"** Server-Sent Events: o servidor avisa "algo mudou" e a tela recarrega pela API normal. Se a

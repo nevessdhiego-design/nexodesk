@@ -43,7 +43,7 @@ relatório da 1ª parcial.
 | RNF03 interface responsiva | `app.css` (testado em largura de celular) |
 | Tempo real (RNF01 dos slides) | Server-Sent Events (`PublicadorEventos`, `tempo-real.js`), plano B de consulta a cada 15 s |
 
-**Perfis:** morador (cadastro público), zelador (só os chamados atribuídos a ele) e síndico (gerencia usuários, na tela
+**Perfis:** morador (cadastro público), funcionário com função (zelador, faxineiro(a), eletricista, encanador, manutenção, porteiro, segurança, técnico externo; só os chamados atribuídos a ele) e síndico (gerencia usuários, na tela
 `usuarios.html`). Só o síndico cria outros perfis, promovendo uma conta existente. Também há conversa no chamado, responsável e
 previsão, privacidade (LGPD mínima) e exclusão de conta. Detalhes em [`docs/documentacao-tecnica.md`](docs/documentacao-tecnica.md).
 
@@ -64,7 +64,7 @@ Python (porta 8001) e a API (porta 8080) e encerra os dois com Ctrl+C. Se sobrar
 use o passo a passo manual a seguir.
 
 **Perfil `demo`:** exige a variável `NEXODESK_DEMO_SENHA` (mínimo 8 caracteres), usada como senha dos moradores
-`ana.demo@nexodesk.local` e `bruno.demo@nexodesk.local` e do zelador `ze.demo@nexodesk.local`. Só cria dados se o banco ainda
+`ana.demo@nexodesk.local` e `bruno.demo@nexodesk.local` e do zelador `ze.demo@nexodesk.local` e outros funcionários (uma conta por função; lista em [`docs/contas-demonstracao.md`](docs/contas-demonstracao.md)). Só cria dados se o banco ainda
 não tiver chamados.
 
 ### Passo a passo manual
@@ -134,7 +134,7 @@ Use `clean` ao mudar arquivos de configuração de teste: o Maven não apaga có
 
 ```powershell
 cd servico-prioridade; .\.venv\Scripts\python.exe -m pytest -q     # 20 testes: regras, emergência, casos e endpoint
-cd api-java;           .\mvnw.cmd test                              # 149 testes (~1 min): API, migrações, tempo real, telas
+cd api-java;           .\mvnw.cmd test                              # 172 testes (~1 min): API, migrações, tempo real, telas
 ```
 `RegrasTest` compara as pontuações base do Java com as do `regras.py` e falha se divergirem.
 
@@ -158,7 +158,11 @@ cd api-java;           .\mvnw.cmd test                              # 149 testes
 | `GET /api/sindico/equipe`, `GET /api/sindico/usuarios`, `PATCH /api/sindico/usuarios/{id}` | síndico | equipe e gestão de usuários |
 | `POST /api/sindico/usuarios/{id}/redefinir-senha` | síndico | senha temporária para morador ou zelador (aparece uma vez) |
 | `GET /api/sindico/estatisticas` | síndico | contagens |
-| `GET /api/zelador/chamados`, `PATCH /api/zelador/chamados/{id}/status` | zelador | meus atendimentos e status dos chamados dele |
+| `GET /api/funcionario/chamados`, `PATCH /api/funcionario/chamados/{id}/status` | funcionário | meus atendimentos e status dos chamados dele |
+| `POST .../chamados/{id}/conclusao`, `PATCH .../tarefas/{id}` (em `/api/funcionario` e `/api/sindico`) | funcionário responsável, síndico | foto do serviço pronto e checklist |
+| `GET /api/sindico/funcoes`, `GET /api/sindico/relatorio`, `GET /api/sindico/relatorio.csv` | síndico | funções, relatório do período |
+| `POST /api/auth/esqueci-senha`, `POST /api/auth/redefinir-senha` | público | recuperação de senha por e-mail |
+| `GET /api/chamados/{id}/imagem-conclusao` | dono, síndico, responsável | foto do "depois" |
 | `GET /api/notificacoes`, `POST /api/notificacoes/{id}/lida` | logado | avisos |
 | `GET /api/eventos` (SSE) | logado | avisos de tempo real |
 
@@ -180,7 +184,7 @@ cd api-java;           .\mvnw.cmd test                              # 149 testes
 ## Ainda não feito (decidir com o grupo)
 
 - **Teste de usabilidade com pessoas** (roteiro pronto em `docs/teste-usabilidade/`; nenhum teste aplicado).
-- E-mail testado com um provedor real (hoje só contra servidor SMTP falso).
+- E-mail (aviso de status **e recuperação de senha**) testado com um provedor real (hoje só contra servidor SMTP falso).
 - Tempo real com várias instâncias da API (precisaria de um barramento, como Redis).
 - Gestão de vários condomínios, recuperação de senha por e-mail (hoje só o síndico redefine), painel desktop (PyQt5 do `aa`) e o que mais estiver em
   [`docs/ideias-futuras.md`](docs/ideias-futuras.md).

@@ -1,12 +1,12 @@
 # NexoDesk: Documentação técnica
 
-Projeto A3, Projeto e Engenharia de Software. Versão do documento: 20/10/2026 (fase 2: melhorias).
+Projeto A3, Projeto e Engenharia de Software. Versão do documento: 22/10/2026 (fase 3: equipe por função, prazos, relatórios e nova aparência).
 Código: este repositório (passo a passo de execução em [`../README.md`](../README.md); do protótipo antigo
 para este, em [`migracao-do-aa.md`](migracao-do-aa.md)). Documentos irmãos: [`casos-de-prioridade.md`](casos-de-prioridade.md)
 , [`roteiro-demonstracao.md`](roteiro-demonstracao.md), [`indicadores-medidos.md`](indicadores-medidos.md) e
 [`ideias-futuras.md`](ideias-futuras.md) (o que ficou de fora e por quê).
 
-> Tudo o que está marcado como **verificado** foi executado entre 14 e 20/10/2026 (comandos na seção 8).
+> Tudo o que está marcado como **verificado** foi executado entre 14 e 22/10/2026 (comandos na seção 8).
 > O que não foi executado aparece em **Limitações** (seção 9).
 
 ## 1. Visão geral
@@ -20,7 +20,8 @@ previsão. Tudo que muda aparece **na hora** nas telas abertas (tempo real) e ge
 O sistema evoluiu do protótipo "Nexo" (PHP + PyQt5). O que foi mantido, trocado e descartado está em
 [`migracao-do-aa.md`](migracao-do-aa.md).
 
-Perfis: **morador** (cadastro público), **zelador** (só os chamados atribuídos a ele) e **síndico** (acesso total, gerencia
+Perfis: **morador** (cadastro público), **funcionário** (com uma função: zelador, faxineiro(a), eletricista, encanador, manutenção
+geral, porteiro, segurança ou técnico externo; só vê os chamados atribuídos a ele) e **síndico** (acesso total, gerencia
 usuários). Só o síndico cria outros perfis, promovendo uma conta existente.
 
 ## 2. Requisitos e onde estão implementados
@@ -44,7 +45,15 @@ usuários). Só o síndico cria outros perfis, promovendo uma conta existente.
 | **Emergência fura a fila**: o morador marca, ou o Python detecta ("preso", "choque", "gás", "incêndio"...); selo vermelho e aviso imediato ao síndico | `regras.py` (`detectar_emergencia`), coluna `chamados.emergencia`, `PrioridadeFila` | verificado |
 | **Bônus de idade** (anti-esquecimento): pontuação efetiva = pontuação − mínimo(3, dias ÷ 2); a dificuldade mostrada não muda; "atrasado" a partir de 7 dias | `PrioridadeFila`, `PrioridadeFilaTest` | verificado |
 | **Conversa dentro do chamado** (morador, síndico, responsável); anonimato preservado; limite de 10 mensagens por minuto | `MensagemService`, `conversa.js`, tabela `mensagens` | verificado |
-| **Gestão de usuários** (promover a zelador ou síndico, desativar, reativar, redefinir senha; nunca a própria conta nem o último síndico) | `UsuarioAdminService`, `usuarios.html` | verificado |
+| **Equipe por função e atribuição assistida**: o síndico escolhe o responsável; o painel marca **"Indicado"** quem cobre a categoria (ex.: "sujeira no pátio" → zelador e faxineira) e mostra a **carga** de cada um. O sistema **não atribui sozinho** | `Funcao`, `UsuarioAdminService.equipe()`, `sindico.js` | verificado |
+| **Emergência com telefones e segurança**: 190, 192, 193 e 199 (o sistema só **mostra** os números, não liga para ninguém) e aviso a quem tem a função Segurança | `ChamadoService.avisarSindicosDaEmergencia`, `EventosTempoReal`, `app.js` | verificado |
+| **Prazo (SLA) por categoria** com selo "vence em..." e aviso único de prazo vencido (a cada 15 min) | `Categoria.getPrazoHoras`, `ChamadoService.alertarPrazosVencidos`, `AlertaDePrazoAgendado` | verificado |
+| **Checklist por categoria e foto antes/depois** (a equipe marca etapas e anexa a foto do serviço pronto, sem GPS) | `ChecklistModelo`, `Tarefa`, `ChamadoService.anexarConclusao` | verificado |
+| **Relatórios do síndico** (período, categorias, tempo médio, % dentro do prazo, por responsável), CSV e impressão | `RelatorioService`, `relatorios.html` | verificado |
+| **Recuperação de senha por e-mail** (token de uso único, 30 min; o banco guarda só o hash) | `RecuperacaoSenhaService`, `EmailRecuperacao` | verificado contra servidor de e-mail falso; **nunca com provedor real** |
+| **Contas de demonstração** (uma por função) e botões "Entrar como..." no login do perfil `demo` (sem senha) | `DadosDemonstracao`, `DemoController`, [`contas-demonstracao.md`](contas-demonstracao.md) | verificado |
+| **Nova aparência** (menu por perfil, ícones e logotipo próprios, gráficos, passos do andamento, login com destaque) | `css/app.css`, `js/app.js` | contraste AA conferido por script (login, painel do síndico, relatórios, funcionário e morador) |
+| **Gestão de usuários** (promover a funcionário com função ou a síndico, desativar, reativar, redefinir senha; nunca a própria conta nem o último síndico) | `UsuarioAdminService`, `usuarios.html` | verificado |
 | **Busca e paginação da fila** do síndico (texto, categoria, 20 por vez; a posição exibida é a real na fila) | `sindico.js` | verificado no navegador com 37 chamados |
 | **Responsável e previsão** do chamado; o zelador vê e atualiza só os dele | `ChamadoService.atribuir`, `ZeladorController`, `zelador.html`, migração V5 | verificado |
 | **Privacidade (LGPD mínima)**: página de política e "excluir minha conta" (anonimiza os dados pessoais; os chamados ficam sem identificação) | `privacidade.html`, `ExclusaoDeContaService` | verificado |
@@ -97,6 +106,10 @@ Migrações (Flyway): `api-java/src/main/resources/db/migration/`:
 | V3 | `chamados.emergencia` |
 | V4 | tabela `mensagens` (conversa do chamado) |
 | V5 | `chamados.responsavel_id` e `chamados.previsao` |
+| V6 | `usuarios.funcao`; o perfil `ZELADOR` vira `FUNCIONARIO` + função `ZELADOR` (testado sobre banco da versão 5) |
+| V7 | `chamados.prazo_limite` e `alerta_prazo_enviado` (prazo por categoria) |
+| V8 | `chamados.imagem_conclusao` e tabela `tarefas` (checklist) |
+| V9 | tabela `tokens_senha` (recuperação de senha; só o hash do token) |
 
 Rodam sozinhas na inicialização; bancos criados antes do Flyway entram com baseline na versão 1.
 Regra de ouro: **migração publicada nunca é editada**, só se cria uma nova (um teste confere o V1).
@@ -113,6 +126,8 @@ erDiagram
     USUARIOS ||--o{ AVALIACOES : "escreve"
     CHAMADOS ||--o{ MENSAGENS : "conversa"
     USUARIOS ||--o{ MENSAGENS : "escreve (autor_id)"
+    CHAMADOS ||--o{ TAREFAS : "checklist"
+    USUARIOS ||--o{ TOKENS_SENHA : "recupera a senha"
 
     USUARIOS {
         bigint id PK
@@ -121,7 +136,8 @@ erDiagram
         varchar telefone
         varchar unidade
         varchar senha_hash "bcrypt"
-        varchar perfil "MORADOR, ZELADOR ou SINDICO"
+        varchar perfil "MORADOR, FUNCIONARIO ou SINDICO"
+        varchar funcao "so funcionario: ZELADOR, FAXINEIRO, ELETRICISTA..."
         boolean ativo
         int versao_sessao
         timestamp criado_em
@@ -143,9 +159,26 @@ erDiagram
         bigint morador_id FK
         bigint responsavel_id FK "opcional"
         date previsao "opcional"
+        timestamp prazo_limite "SLA pela categoria"
+        boolean alerta_prazo_enviado
+        varchar imagem_conclusao "foto do depois"
         bigint versao "controle de concorrência"
         timestamp criado_em
         timestamp atualizado_em
+    }
+    TAREFAS {
+        bigint id PK
+        bigint chamado_id FK
+        varchar texto "etapa do checklist"
+        boolean feita
+        int ordem
+    }
+    TOKENS_SENHA {
+        bigint id PK
+        bigint usuario_id FK
+        varchar token_hash "SHA-256; nunca o token"
+        timestamp expira_em
+        timestamp usado_em
     }
     MENSAGENS {
         bigint id PK
@@ -243,8 +276,15 @@ A tabela de pontuação base existe também em `dominio/Categoria.java` (modo de
 | `GET /api/sindico/usuarios`, `PATCH /api/sindico/usuarios/{id}` | síndico | gestão de usuários: perfil e situação |
 | `POST /api/sindico/usuarios/{id}/redefinir-senha` | síndico | "esqueci minha senha" sem e-mail: gera uma senha temporária de 12 caracteres, mostrada uma vez; só para morador ou zelador ativo; derruba as sessões da pessoa |
 | `GET /api/sindico/estatisticas` | síndico | contagens por status e dificuldade, emergências pendentes |
-| `GET /api/zelador/chamados?status=ativos\|todos\|RESOLVIDO` | zelador | "meus atendimentos" |
-| `PATCH /api/zelador/chamados/{id}/status` | zelador | muda o status, só dos chamados dele (os outros dão 404) |
+| `GET /api/funcionario/chamados?status=ativos\|todos\|RESOLVIDO` | funcionário | "meus atendimentos" |
+| `PATCH /api/funcionario/chamados/{id}/status` | funcionário | muda o status, só dos chamados dele (os outros dão 404) |
+| `POST /api/funcionario/chamados/{id}/conclusao`, `POST /api/sindico/chamados/{id}/conclusao` | funcionário responsável / síndico | foto do serviço pronto (multipart, campo `imagem`) |
+| `GET /api/chamados/{id}/imagem-conclusao` | dono, síndico ou funcionário responsável | foto do "depois" |
+| `PATCH /api/funcionario/tarefas/{id}`, `PATCH /api/sindico/tarefas/{id}` | funcionário responsável / síndico | marca ou desmarca uma etapa do checklist |
+| `GET /api/sindico/funcoes` | síndico | funções e as categorias que cada uma cobre |
+| `GET /api/sindico/relatorio?de=&ate=`, `GET /api/sindico/relatorio.csv` | síndico | relatório do período (padrão 30 dias; máximo 366) |
+| `POST /api/auth/esqueci-senha`, `POST /api/auth/redefinir-senha` | público | recuperação de senha por e-mail (resposta sempre igual; com freio de pedidos) |
+| `GET /api/demo/contas` | público, **só no perfil `demo`** | contas de exemplo para o login (nunca devolve senha) |
 | `GET /api/notificacoes`, `POST /api/notificacoes/{id}/lida` | logado | avisos do usuário |
 | `GET /api/eventos` (SSE) | logado | fluxo de avisos de tempo real; até 5 conexões por usuário |
 
@@ -282,7 +322,12 @@ Erros saem sempre como JSON `{"erro": "...", "campos": {...}}`, sem detalhes int
 | Suíte | Testes | Cobre |
 |---|---|---|
 | Java `FluxoChamadoTest` | 43 | cadastro, login, bloqueio por tentativas, sessão, CSRF, abertura e classificação, fila, emergência, envelhecimento, anonimato, status + aviso, conversa, avaliação, minha conta, troca de senha e sessões, concorrência (409), CSV, e-mail, isolamento, upload |
-| Java `EquipeEResponsavelTest` | 18 | promover, rebaixar e desativar; redefinir a senha de morador ou zelador (síndico não, nem a própria conta); atribuir responsável e previsão (avisos, limites, 409); área do zelador (só os chamados dele, anonimato, 403 nas rotas dos outros perfis) |
+| Java `EquipeEResponsavelTest` | 23 | promover, rebaixar e desativar; funções (equipe com carga e categorias, só mudar a função não derruba a sessão, aviso à Segurança em emergência, "O eletricista respondeu"); redefinir a senha de morador ou funcionário (síndico não, nem a própria conta); atribuir responsável e previsão (avisos, limites, 409); área do funcionário (só os chamados dele, anonimato, 403 nas rotas dos outros perfis) |
+| Java `RecuperacaoSenhaTest` | 5 | fluxo completo, resposta igual para qualquer e-mail, token de uso único, expirado ou inventado, link novo invalida o anterior, freio de pedidos |
+| Java `RelatorioTest` | 3 | números do relatório conferidos contra dados criados pelo teste, período vazio e inválido, só o síndico |
+| Java `ChecklistEConclusaoTest` | 3 | checklist criado uma vez, quem pode marcar etapas, foto do depois sem acesso de estranhos e arquivo falso recusado |
+| Java `PrazoChamadoTest` | 2 | prazo vem da categoria (emergência 1 h), aviso de prazo vencido uma única vez, resolvido não avisa |
+| Java `FuncaoTest`, `DemoContasTest` | 3, 1 | toda categoria tem função que a cubra; contas de demonstração sem senha |
 | Java `ExclusaoDeContaTest` | 5 | excluir a conta: dados anonimizados, chamado mantido sem identificação, sessões caem, senha errada, CSRF, regra do último síndico |
 | Java `TempoRealHttpTest` | 5 | fluxo SSE sobre HTTP real: sem sessão é recusado, o síndico vê chamado novo e emergência sem recarregar, o morador vê o status mudar e mais ninguém recebe, mensagem avisa só a outra parte, trocar a senha fecha o fluxo das outras sessões |
 | Java `PublicadorEventosTest` | 10 | limite de conexões por usuário, batimento, conexão morta, encerramento no desligamento |
@@ -299,7 +344,7 @@ Erros saem sempre como JSON `{"erro": "...", "campos": {...}}`, sem detalhes int
 | Java `CookieSeguroProdTest`, `ImagemOrfaTest`, `RegrasTest` | 2, 1, 3 | cookie `Secure` no `prod`; foto apagada se o banco recusa; pontuação base Java = Python |
 | Python `test_regras.py` e `test_casos.py` | 20 | regras de dificuldade, emergência (com alarme falso), endpoint `/classificar`, os 27 casos de ajuste e os 15 de validação |
 
-Total: **149 testes Java e 20 Python, todos passando (20/10/2026).** A suíte Java passou **nos dois bancos**: H2 em
+Total: **172 testes Java e 20 Python, todos passando (22/10/2026).** A suíte Java passou **nos dois bancos**: H2 em
 memória (padrão, ~65 s) e **MySQL 8.4.9** real, a partir de banco vazio (Flyway V1 a V5; variáveis `NEXODESK_TEST_DB_*`, ver README). Nos dois, o Hibernate roda com `ddl-auto=validate`, ou seja,
 recusa subir se as entidades não baterem com as migrações. Além deles, foram executados por HTTP e pelo navegador: o fluxo
 completo com os dois serviços no ar, o perfil `demo`, o zelador (login, lista, mudança de status) e o tempo real com **dois
@@ -318,6 +363,9 @@ Defeito real achado e corrigido nesta fase: ao desligar a API com navegadores co
 
 ## 9. Limitações e próximos passos
 
+- **E-mail de recuperação de senha:** testado contra servidor falso; com provedor real nunca. Sem e-mail configurado o link só aparece no log do perfil `demo`.
+- **Emergência:** o sistema **não aciona** bombeiros, SAMU nem polícia; mostra os números e avisa a equipe interna. O "Indicado" é só sugestão (a regra função × categoria é uma tabela em código, não validada por síndico).
+- **Aparência:** sem fonte própria (usa a do sistema, por causa da CSP e para não baixar arquivos); verificada em 375 px no morador, por script de contraste nas telas citadas; leitor de tela real não usado.
 - **Sem teste de usabilidade com pessoas reais.** O roteiro e a planilha de cálculo do SUS estão prontos em
   [`teste-usabilidade/`](teste-usabilidade/roteiro.md), mas **nenhum teste foi aplicado**: não existe resultado de usabilidade
   e nenhum slide deve afirmar "alta aceitação".
@@ -328,11 +376,12 @@ Defeito real achado e corrigido nesta fase: ao desligar a API com navegadores co
   provedor real (Gmail etc.). Ligar exige o perfil `email` e variáveis de ambiente (ver README).
 - **RNF01:** medido só em `localhost`, com banco pequeno e uma pessoa por vez. Não há teste de carga (muitos usuários ao mesmo
   tempo) nem medição com o banco em outra máquina.
+- **Checklist e foto:** o checklist é um modelo por categoria (não editável pelo síndico) e não bloqueia a conclusão; a foto do depois tem o mesmo tratamento da de abertura.
 - **LGPD:** a página de privacidade e a exclusão de conta atendem o mínimo do projeto, mas **não foram revisadas por advogado**. O
   texto digitado em chamados e mensagens permanece depois da exclusão; não há prazo automático para apagar chamados antigos; o
   "li a política" do cadastro é uma confirmação na tela, não é registrada no banco.
 - **Integração contínua:** o arquivo `.github/workflows/ci.yml` foi escrito e validado, mas só roda de verdade depois do push.
-- Um único condomínio; recuperação de senha só pelo síndico (a senha temporária é entregue pessoalmente; não há e-mail de recuperação); sem HTTPS (necessário para publicar fora do `localhost`;
+- Um único condomínio; sem HTTPS (necessário para publicar fora do `localhost`;
   o perfil `prod` já liga o cookie `Secure` e a leitura dos cabeçalhos do proxy; o HSTS vem do Spring Security quando a conexão é HTTPS).
 - Auditoria de acessibilidade feita por **script** (contraste e estrutura) e revisão manual; **não** foi testado com leitor de tela
   de verdade (NVDA, VoiceOver) nem com o axe/Lighthouse.

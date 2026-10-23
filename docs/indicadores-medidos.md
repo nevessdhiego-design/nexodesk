@@ -1,6 +1,6 @@
 # Indicadores medidos do NexoDesk (para o relatório e os slides finais)
 
-Medidos em **20/10/2026**, no commit mais recente deste repositório, na máquina de desenvolvimento (Windows 11,
+Medidos em **20 e 22/10/2026**, no commit mais recente deste repositório, na máquina de desenvolvimento (Windows 11,
 JDK 21, Python 3.12, MySQL 8.4.9). Cada número tem o comando ou a fonte para qualquer integrante reproduzir.
 Números que o relatório já traz e **dependem do grupo** (sprints, cards no Kanban, % de conclusão) estão na seção 3:
 eu não tenho como medi-los a partir do código, então não os inventei. **Nada aqui vem de teste com usuários**: não houve.
@@ -11,22 +11,22 @@ eu não tenho como medi-los a partir do código, então não os inventei. **Nada
 |---|---|---|
 | Requisitos funcionais implementados e testados | **5 de 5** (RF01 a RF05; RF05 por aviso no sistema, e-mail só testado contra servidor falso) | tabela da seção 2 de `documentacao-tecnica.md` |
 | Requisitos não funcionais atendidos | **3 de 3**, mais o "tempo real" que os slides de 20/08 prometiam (RNF01 medido na seção 2 abaixo) | idem |
-| Testes automáticos Java | **149**, 0 falhas no H2 **e** no MySQL 8.4.9 real, a partir de banco vazio | `cd api-java; .\mvnw.cmd clean test` |
+| Testes automáticos Java | **172**, 0 falhas no H2 **e** no MySQL 8.4.9 real, a partir de banco vazio (Flyway V1 a V9) | `cd api-java; .\mvnw.cmd clean test` |
 | Testes automáticos Python | **20**, 0 falhas | `cd servico-prioridade; .\.venv\Scripts\python.exe -m pytest -q` |
 | Tempo da suíte Java (H2) | **~65 s** (era ~3,5 min antes de corrigir o desligamento com SSE aberto) | idem |
 | Casos de uso implementados | **10** (o relatório da 2ª parcial diz 5; ver nota abaixo) | seção 10.1 da documentação técnica |
-| Perfis de usuário | **3** (morador, zelador, síndico) | `dominio/Perfil.java` |
+| Perfis de usuário / funções de funcionário | **3** perfis (morador, funcionário, síndico) e **8** funções | `dominio/Perfil.java`, `dominio/Funcao.java` |
 | Diagramas (em Mermaid, no repositório) | **6**: 4 UML (casos de uso, classes, 2 de sequência), o modelo entidade-relacionamento e a arquitetura | seções 3, 4 e 10 da documentação técnica |
-| Tabelas no banco | **6** (`usuarios`, `chamados`, `historico_status`, `notificacoes`, `avaliacoes`, `mensagens`) | `cat api-java/src/main/resources/db/migration/V*.sql \| grep -c -i "^CREATE TABLE"` |
-| Migrações de banco (Flyway) | **5** (V1 a V5), testadas em H2 e MySQL, inclusive em banco criado antes do Flyway | `api-java/src/main/resources/db/migration/` |
-| Endpoints REST (mapeamentos) | **28** (+ logout do Spring Security) | seção 6 da documentação técnica |
+| Tabelas no banco | **8** (`usuarios`, `chamados`, `historico_status`, `notificacoes`, `avaliacoes`, `mensagens`, `tarefas`, `tokens_senha`) | `cat api-java/src/main/resources/db/migration/V*.sql \| grep -c -i "^CREATE TABLE"` |
+| Migrações de banco (Flyway) | **9** (V1 a V9), testadas em H2 e MySQL, inclusive em banco criado antes do Flyway e em banco da V5 com zelador | `api-java/src/main/resources/db/migration/` |
+| Endpoints REST (mapeamentos) | **38** (+ logout do Spring Security) | seção 6 da documentação técnica |
 | Categorias de chamado | **13** | `dominio/Categoria.java` |
-| Linhas de código Java (produção / testes) | **3.834 / 3.143** | `git ls-files` + contagem de linhas |
+| Linhas de código Java (produção / testes) | **4.959 / 4.009** | `git ls-files` + contagem de linhas |
 | Linhas Python (produção / testes) | **176 / 235** | idem |
-| Telas (HTML, CSS, JS) | **20 arquivos, 1.860 linhas**; 7 páginas | `api-java/src/main/resources/static` |
-| Commits no repositório | mais de uma dezena; os de 15 a 20/10 ainda **sem push**, o GitHub tem só até `604591e` (conferir com `git status -sb`) | `git rev-list --count HEAD`; `git status -sb` |
+| Telas (HTML, CSS, JS, SVG) | **28 arquivos, 2.607 linhas**; 10 páginas | `api-java/src/main/resources/static` |
+| Commits no repositório | **26**; os da fase 3 (22/10) ainda **sem push** (conferir com `git status -sb`) | `git rev-list --count HEAD`; `git status -sb` |
 | Casos da regra de dificuldade | ajuste: **27 de 27** (100%, foi ajustada neles: não prova nada); **validação: 11 de 15 (73%)** em casos que ela nunca viu. **Cite os 73%** | `docs/casos-de-prioridade.md` |
-| Contraste de cores (WCAG AA, 4,5:1) | 0 falhas no síndico (37 chamados), morador e usuários, em tema claro, escuro e alto contraste (script de medição, não leitor de tela) | seção 9 da documentação técnica |
+| Contraste de cores (WCAG AA, 4,5:1) | 0 falhas no login, painel do síndico, relatórios, funcionário e morador, em tema claro, escuro e alto contraste, depois da nova aparência (script de medição, não leitor de tela). Usuários e conta não foram refeitos depois da fase 3 | seção 9 da documentação técnica |
 
 > **Nota sobre os casos de uso:** o relatório lista 5. A fase 1 entregou 6 (cadastrar-se e entrar, abrir chamado, acompanhar,
 > ver fila priorizada, atualizar status, receber aviso) e a fase 2 acrescentou 4 (conversar no chamado, atribuir responsável e previsão,
@@ -78,7 +78,7 @@ O relatório da 2ª parcial traz estes valores; confirmem com o Kanban antes de 
 
 ```powershell
 git clone <url do repositório>; cd nexodesk-app
-cd api-java;           .\mvnw.cmd clean test           # 149 testes, ~1 min
+cd api-java;           .\mvnw.cmd clean test           # 172 testes, ~1 min
 cd ..\servico-prioridade; python -m venv .venv; .\.venv\Scripts\python.exe -m pip install -r requirements.txt
                        .\.venv\Scripts\python.exe -m pytest -q   # 20 testes
 cd ..;                 .\iniciar-nexodesk.ps1 -Perfil demo        # sistema inteiro com dados de exemplo

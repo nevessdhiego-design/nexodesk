@@ -37,7 +37,7 @@ validação por um síndico real.** Se um síndico real discordar de muitas linh
 | # | Heurística | Problema provável | Onde | Gravidade (1 a 4) | Sugestão |
 |---|---|---|---|---|---|
 | 1 | Prevenção de erros | ~~Mudar para "Resolvido" era um clique sem confirmação~~ **corrigido em 20/10**: pergunta antes de resolver (conferido no navegador) | `sindico.js`, `zelador.js` | 3 | feito |
-| 2 | Ajuda e recuperação | ~~Não existia "esqueci minha senha"~~ **resolvido em parte em 20/10**: o síndico gera uma senha temporária na tela de usuários. Continua sem recuperação automática por e-mail | login, `usuarios.html` | 3 | e-mail real (próximo passo) |
+| 2 | Ajuda e recuperação | ~~Não existia "esqueci minha senha"~~ **resolvido em 22/10**: "Esqueci minha senha" por e-mail (link de 30 min, uso único) e o síndico ainda pode gerar senha temporária. O e-mail só foi testado contra servidor falso | login, `esqueci-senha.html` | 3 | testar com provedor real |
 | 3 | Visibilidade do estado | Lista do síndico sem busca: com dezenas de chamados rola muito. **Busca por texto e filtro de categoria feitos em 20/10** (conferido no navegador, sem diferenciar maiúsculas e acentos, mantendo a posição real na fila). **Paginação feita em 20/10** (20 por vez, "Mostrar mais") | `sindico.html` | 3 | feito |
 | 4 | Reconhecimento | A caixa "é uma emergência" fica no fim do formulário, depois da foto e do anonimato | `morador.html` | 2 | levar para perto do título ou destacar |
 | 5 | Controle e liberdade | Chamado aberto não pode ser editado nem cancelado pelo morador | `morador.js` | 2 | permitir cancelar enquanto "Aberto" |
