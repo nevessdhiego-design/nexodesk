@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>NexoDesk - Esqueci minha senha</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/acessibilidade.css">
+  <script src="/js/acessibilidade.js"></script>
+</head>
+<body>
+  <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
+  <main class="login" id="conteudo" tabindex="-1">
+    <h1 class="marca-grande">Nexo<span>Desk</span></h1>
+    <div class="cartao">
+      <h2>Esqueci minha senha</h2>
+      <p class="muted">Informe o e-mail da sua conta. Se ela existir, enviamos um link para escolher uma nova senha (vale por 30 minutos).</p>
+      <div id="mensagem" class="mensagem hidden" role="alert"></div>
+      <form id="form-esqueci">
+        <label for="email">E-mail</label>
+        <input id="email" type="email" autocomplete="username" maxlength="160" required>
+        <div class="acoes"><button type="submit">Enviar o link</button></div>
+      </form>
+      <p class="muted"><a href="/index.html">Voltar ao login</a></p>
+    </div>
+  </main>
+  <script src="/js/app.js"></script>
+  <script src="/js/esqueci-senha.js"></script>
+</body>
+</html>

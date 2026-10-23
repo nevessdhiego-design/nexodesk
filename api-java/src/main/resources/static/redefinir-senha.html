@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>NexoDesk - Nova senha</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/acessibilidade.css">
+  <script src="/js/acessibilidade.js"></script>
+</head>
+<body>
+  <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
+  <main class="login" id="conteudo" tabindex="-1">
+    <h1 class="marca-grande">Nexo<span>Desk</span></h1>
+    <div class="cartao">
+      <h2>Escolha uma nova senha</h2>
+      <div id="mensagem" class="mensagem hidden" role="alert"></div>
+      <form id="form-redefinir">
+        <label for="nova">Nova senha (de 8 a 72 caracteres)</label>
+        <input id="nova" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
+        <label for="confirmacao">Repita a nova senha</label>
+        <input id="confirmacao" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
+        <div class="acoes"><button type="submit">Salvar a nova senha</button></div>
+      </form>
+      <p class="muted"><a href="/esqueci-senha.html">Pedir um novo link</a> · <a href="/index.html">Voltar ao login</a></p>
+    </div>
+  </main>
+  <script src="/js/app.js"></script>
+  <script src="/js/redefinir-senha.js"></script>
+</body>
+</html>
