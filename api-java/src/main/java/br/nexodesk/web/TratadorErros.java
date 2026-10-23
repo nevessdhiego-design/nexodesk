@@ -41,6 +41,12 @@ public class TratadorErros {
         return ResponseEntity.badRequest().body(Map.of("erro", "Corpo da requisição inválido."));
     }
 
+    /** Parâmetro da URL com tipo errado (ex.: data "ontem"): 400 sem repetir o texto interno do Spring. */
+    @ExceptionHandler(org.springframework.beans.TypeMismatchException.class)
+    ResponseEntity<Map<String, Object>> aoConverterParametro(org.springframework.beans.TypeMismatchException e) {
+        return ResponseEntity.badRequest().body(Map.of("erro", "Valor inválido em um dos parâmetros da consulta."));
+    }
+
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     ResponseEntity<Map<String, Object>> aoExcederUpload(MaxUploadSizeExceededException e) {
         return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE).body(Map.of("erro", "A imagem deve ter no máximo 5 MB."));

@@ -2,7 +2,9 @@ package br.nexodesk.web;
 
 import br.nexodesk.servico.ChamadoService;
 import br.nexodesk.servico.ExportadorCsv;
+import br.nexodesk.servico.RelatorioService;
 import br.nexodesk.servico.UsuarioAdminService;
+import br.nexodesk.web.Dtos.RelatorioResponse;
 import br.nexodesk.web.Dtos.AlterarUsuarioRequest;
 import br.nexodesk.web.Dtos.AtribuirResponsavelRequest;
 import br.nexodesk.web.Dtos.EquipeResponse;
@@ -35,10 +37,12 @@ public class SindicoController {
 
     private final ChamadoService chamados;
     private final UsuarioAdminService usuarios;
+    private final RelatorioService relatorios;
 
-    public SindicoController(ChamadoService chamados, UsuarioAdminService usuarios) {
+    public SindicoController(ChamadoService chamados, UsuarioAdminService usuarios, RelatorioService relatorios) {
         this.chamados = chamados;
         this.usuarios = usuarios;
+        this.relatorios = relatorios;
     }
 
     /** Fila do mais fácil ao mais difícil. ?status=ativos (padrão) | todos | ABERTO | EM_ANDAMENTO | RESOLVIDO */
@@ -101,6 +105,26 @@ public class SindicoController {
     @PostMapping("/usuarios/{id}/redefinir-senha")
     public SenhaTemporariaResponse redefinirSenha(@PathVariable Long id, Authentication autenticacao) {
         return usuarios.redefinirSenha(autenticacao.getName(), id);
+    }
+
+    /** Relatório do período (padrão: últimos 30 dias). Datas no formato AAAA-MM-DD. */
+    @GetMapping("/relatorio")
+    public RelatorioResponse relatorio(
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate de,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate ate) {
+        return relatorios.gerar(de, ate);
+    }
+
+    @GetMapping("/relatorio.csv")
+    public ResponseEntity<byte[]> relatorioCsv(
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate de,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate ate) {
+        RelatorioResponse r = relatorios.gerar(de, ate);
+        return ResponseEntity.ok()
+                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+                .header("Content-Disposition", "attachment; filename=\"nexodesk-relatorio-" + r.de() + "-a-" + r.ate() + ".csv\"")
+                .header("Cache-Control", "no-store")
+                .body(relatorios.csv(r).getBytes(StandardCharsets.UTF_8));
     }
 
     @GetMapping("/estatisticas")

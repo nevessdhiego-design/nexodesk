@@ -169,6 +169,19 @@ public final class Dtos {
     public record FuncaoResponse(String codigo, String rotulo, List<String> categorias, boolean recebeEmergencias) {
     }
 
+    public record ContagemResponse(String rotulo, long total) {
+    }
+
+    public record CargaFuncionarioResponse(String nome, String funcao, long atribuidos, long resolvidos, Double mediaAvaliacao) {
+    }
+
+    /** Resumo do período para a prestação de contas do síndico. Os percentuais e médias são nulos quando não há base para calcular. */
+    public record RelatorioResponse(java.time.LocalDate de, java.time.LocalDate ate, long total, long abertos, long emAndamento,
+                                    long resolvidos, long emergencias, Double tempoMedioResolucaoHoras,
+                                    Double percentualNoPrazo, long vencidosAgora,
+                                    List<ContagemResponse> porCategoria, List<CargaFuncionarioResponse> porFuncionario) {
+    }
+
     public record EquipeResponse(Long id, String nome, String perfil, String funcao, String funcaoRotulo,
                                  java.util.List<String> categorias, long cargaAberta) {
     }

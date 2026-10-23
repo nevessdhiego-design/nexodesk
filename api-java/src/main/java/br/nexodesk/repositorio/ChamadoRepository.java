@@ -43,6 +43,10 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
     @Query("update Chamado c set c.alertaPrazoEnviado = true where c.id = :id")
     int marcarAlertaDePrazo(@Param("id") Long id);
 
+    /** Chamados abertos no período [inicio, fim) para o relatório do síndico. */
+    @EntityGraph(attributePaths = {"responsavel"})
+    List<Chamado> findByCriadoEmGreaterThanEqualAndCriadoEmLessThan(java.time.LocalDateTime inicio, java.time.LocalDateTime fim);
+
     long countByEmergenciaTrueAndStatusIn(Collection<StatusChamado> status);
 
     long countByStatus(StatusChamado status);

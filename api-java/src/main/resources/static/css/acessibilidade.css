@@ -57,6 +57,7 @@ html.a11y-escuro .telefones-emergencia { background: #34201f; border-color: #6b3
 html.a11y-contraste .telefones-emergencia { background: #fff; border: 2px solid #000; }
 html.a11y-contraste a.telefone { background: #000; color: #fff; }
 html.a11y-escuro button.conta-demo { background: var(--accent); color: #fff; }
+html.a11y-escuro input[type=date] { background: #1a1b1e; color: var(--text); }
 html.a11y-escuro button.secundario-escuro { background: var(--accent); color: #fff; }
 html.a11y-escuro h2, html.a11y-escuro h3 { color: #9fd4cc; }
 html.a11y-escuro input, html.a11y-escuro select, html.a11y-escuro textarea {
