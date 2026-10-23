@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NexoDesk - Relatórios</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/acessibilidade.css">
+  <script src="/js/acessibilidade.js"></script>
+</head>
+<body>
+  <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo nao-imprimir">
+    <div class="marca">Nexo<span>Desk</span></div>
+    <div class="espaco"></div>
+    <span class="usuario" id="usuario"></span>
+    <a class="botao-link" href="/sindico.html">Painel</a>
+    <a class="botao-link" href="/usuarios.html">Usuários</a>
+    <a class="botao-link" href="/conta.html">Minha conta</a>
+    <button type="button" class="secundario" id="botao-sair">Sair</button>
+  </header>
+
+  <main class="pagina" id="conteudo" tabindex="-1">
+    <h1 class="somente-leitor">Relatórios do síndico</h1>
+    <section class="cartao">
+      <h2>Relatório do período</h2>
+      <p class="muted">Considera os chamados <strong>abertos</strong> no período. Serve para a prestação de contas: o que entrou, o que foi resolvido, quanto demorou, quanto ficou dentro do prazo e quem atendeu.</p>
+      <div id="mensagem" class="mensagem hidden" role="alert"></div>
+      <form id="form-periodo" class="nao-imprimir">
+        <div class="grade-periodo">
+          <div><label for="de">De</label><input id="de" type="date" required></div>
+          <div><label for="ate">Até</label><input id="ate" type="date" required></div>
+        </div>
+        <div class="acoes">
+          <button type="submit">Gerar relatório</button>
+          <button type="button" class="secundario-escuro" id="ultimos30">Últimos 30 dias</button>
+          <button type="button" class="secundario-escuro" id="este-mes">Este mês</button>
+          <button type="button" class="secundario-escuro" id="imprimir">Imprimir</button>
+          <a class="botao-link escuro" id="baixar-csv" href="/api/sindico/relatorio.csv" download>Baixar CSV</a>
+        </div>
+      </form>
+      <p class="muted" id="periodo" role="status"></p>
+    </section>
+
+    <section class="estatisticas" id="resumo" aria-label="Resumo do período"></section>
+
+    <section class="cartao">
+      <h2>Chamados por categoria</h2>
+      <div id="por-categoria"></div>
+    </section>
+
+    <section class="cartao">
+      <h2>Quem atendeu</h2>
+      <div class="tabela-rolavel">
+        <table class="usuarios">
+          <caption class="somente-leitor">Chamados atribuídos, resolvidos e avaliação média por responsável</caption>
+          <thead>
+            <tr>
+              <th scope="col">Responsável</th>
+              <th scope="col">Função</th>
+              <th scope="col">Atribuídos</th>
+              <th scope="col">Resolvidos</th>
+              <th scope="col">Avaliação média</th>
+            </tr>
+          </thead>
+          <tbody id="por-funcionario"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/relatorios.js"></script>
+</body>
+</html>
