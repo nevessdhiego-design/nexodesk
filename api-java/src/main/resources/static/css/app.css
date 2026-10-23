@@ -208,6 +208,15 @@ table.usuarios td.email { overflow-wrap: anywhere; min-width: 180px; }
 table.usuarios select { min-width: 130px; }
 table.usuarios tr.inativo td { color: var(--muted); background: #f6f7f8; }
 table.usuarios .acoes-linha { display: flex; gap: .4rem; flex-wrap: wrap; }
+.telefones-emergencia { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; background: #FBF0EF; border: 1px solid #F0C4C4; border-radius: 10px; padding: .6rem .8rem; margin: .5rem 0; font-size: .95rem; }
+a.telefone { display: inline-block; font-weight: 700; color: #fff; background: var(--danger); border-radius: 999px; padding: .15rem .7rem; text-decoration: none; }
+a.telefone:hover { background: #8f2525; }
+.bloco-responsavel { margin-top: .5rem; }
+.bloco-responsavel > .muted { margin: 0 0 .25rem; }
+.contas-demo { border: 1px dashed var(--highlight); border-radius: 10px; padding: .75rem; margin: .5rem 0 1rem; }
+.contas-demo h2 { font-size: 1.05rem; margin: 0 0 .25rem; }
+#botoes-contas-demo { display: flex; flex-wrap: wrap; gap: .4rem; }
+button.conta-demo { background: var(--secondary); font-size: .85rem; padding: .35rem .7rem; }
 button.secundario-escuro { background: var(--secondary); }
 button.perigo { background: var(--danger); }
 button.perigo:hover { background: #8f2525; }

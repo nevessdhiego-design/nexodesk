@@ -1,0 +1,3 @@
+-- Perfil FUNCIONARIO (antes ZELADOR) com uma funcao: zelador, faxineiro, eletricista, encanador, porteiro, seguranca...
+ALTER TABLE usuarios ADD COLUMN funcao VARCHAR(30) NULL;
+UPDATE usuarios SET funcao = 'ZELADOR', perfil = 'FUNCIONARIO' WHERE perfil = 'ZELADOR';

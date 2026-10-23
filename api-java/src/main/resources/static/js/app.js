@@ -74,7 +74,7 @@ async function sair() {
 /** Cada perfil tem a sua tela inicial. */
 function paginaDoPerfil(perfil) {
   if (perfil === 'SINDICO') return '/sindico.html';
-  if (perfil === 'ZELADOR') return '/zelador.html';
+  if (perfil === 'FUNCIONARIO') return '/funcionario.html';
   return '/morador.html';
 }
 
@@ -88,7 +88,21 @@ function formatarDia(iso) {
 /** "Responsável: Zé · previsão 20/10/2026", ou texto vazio se ninguém cuida ainda. */
 function textoResponsavel(c) {
   if (!c.responsavelNome) return '';
-  return 'Responsável: ' + c.responsavelNome + (c.previsao ? ' · previsão ' + formatarDia(c.previsao) : '');
+  return 'Responsável: ' + c.responsavelNome + (c.responsavelFuncao ? ' (' + c.responsavelFuncao + ')' : '') + (c.previsao ? ' · previsão ' + formatarDia(c.previsao) : '');
+}
+
+/** Telefones de emergência do Brasil. O NexoDesk NÃO liga para ninguém: só mostra os números (links tel: no celular). */
+const TELEFONES_EMERGENCIA = [
+  { numero: '190', nome: 'Polícia' },
+  { numero: '192', nome: 'SAMU' },
+  { numero: '193', nome: 'Bombeiros' },
+  { numero: '199', nome: 'Defesa Civil' },
+];
+
+function telefonesEmergencia() {
+  return el('div', { class: 'telefones-emergencia', role: 'group', 'aria-label': 'Telefones de emergência' },
+    el('strong', { text: 'Em emergência, ligue: ' }),
+    TELEFONES_EMERGENCIA.map((t) => el('a', { class: 'telefone', href: 'tel:' + t.numero, text: t.numero + ' ' + t.nome })));
 }
 
 /** Garante usuário logado com o perfil esperado; senão manda para o login. */

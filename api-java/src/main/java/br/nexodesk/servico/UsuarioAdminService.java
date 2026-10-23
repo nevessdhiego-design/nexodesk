@@ -1,5 +1,6 @@
 package br.nexodesk.servico;
 
+import br.nexodesk.dominio.Funcao;
 import br.nexodesk.dominio.Perfil;
 import br.nexodesk.dominio.Usuario;
 import br.nexodesk.repositorio.ChamadoRepository;
@@ -9,7 +10,10 @@ import br.nexodesk.web.Dtos.EquipeResponse;
 import br.nexodesk.web.Dtos.SenhaTemporariaResponse;
 import br.nexodesk.web.Dtos.UsuarioAdminResponse;
 import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -56,8 +60,17 @@ public class UsuarioAdminService {
     /** Síndicos e zeladores ativos: quem pode ser escolhido como responsável por um chamado. */
     @Transactional(readOnly = true)
     public List<EquipeResponse> equipe() {
-        return usuarios.findByPerfilInAndAtivoTrueOrderByNomeAsc(List.of(Perfil.SINDICO, Perfil.ZELADOR)).stream()
-                .map(u -> new EquipeResponse(u.getId(), u.getNome(), u.getPerfil().name()))
+        Map<Long, Long> carga = new HashMap<>();
+        for (Object[] linha : chamados.cargaPorResponsavel(br.nexodesk.dominio.StatusChamado.RESOLVIDO)) {
+            carga.put((Long) linha[0], (Long) linha[1]);
+        }
+        return usuarios.findByPerfilInAndAtivoTrueOrderByNomeAsc(List.of(Perfil.SINDICO, Perfil.FUNCIONARIO)).stream()
+                .map(u -> new EquipeResponse(u.getId(), u.getNome(), u.getPerfil().name(),
+                        u.getFuncao() == null ? null : u.getFuncao().name(),
+                        u.getFuncao() == null ? null : u.getFuncao().getRotulo(),
+                        u.getFuncao() == null ? List.<String>of()
+                                : u.getFuncao().getCategorias().stream().map(Enum::name).toList(),
+                        carga.getOrDefault(u.getId(), 0L)))
                 .toList();
     }
 
@@ -71,14 +84,24 @@ public class UsuarioAdminService {
             throw new ApiException(HttpStatus.BAD_REQUEST,
                     "Você não pode alterar a sua própria conta aqui. Peça a outro síndico.");
         }
-        if (req.perfil() == null && req.ativo() == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Informe o novo perfil ou se a conta fica ativa.");
+        if (req.perfil() == null && req.ativo() == null && req.funcao() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Informe o novo perfil, a função ou se a conta fica ativa.");
         }
 
         Perfil novoPerfil = req.perfil() != null ? req.perfil() : alvo.getPerfil();
         boolean novoAtivo = req.ativo() != null ? req.ativo() : alvo.isAtivo();
+        if (req.funcao() != null && novoPerfil != Perfil.FUNCIONARIO) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "A função só vale para funcionários.");
+        }
+        Funcao novaFuncao = novoPerfil != Perfil.FUNCIONARIO ? null
+                : req.funcao() != null ? req.funcao()
+                : alvo.getFuncao() != null ? alvo.getFuncao() : Funcao.ZELADOR;
         if (novoPerfil == alvo.getPerfil() && novoAtivo == alvo.isAtivo()) {
-            return paraResposta(alvo); // nada mudou
+            if (!Objects.equals(novaFuncao, alvo.getFuncao())) {
+                alvo.setFuncao(novaFuncao); // mudar só a função não muda o que a pessoa pode fazer: não derruba a sessão
+                usuarios.save(alvo);
+            }
+            return paraResposta(alvo);
         }
 
         boolean eraSindicoAtivo = alvo.getPerfil() == Perfil.SINDICO && alvo.isAtivo();
@@ -93,6 +116,7 @@ public class UsuarioAdminService {
         Perfil perfilAnterior = alvo.getPerfil();
         boolean estavaAtivo = alvo.isAtivo();
         alvo.setPerfil(novoPerfil);
+        alvo.setFuncao(novaFuncao);
         alvo.setAtivo(novoAtivo);
         alvo.setVersaoSessao(alvo.getVersaoSessao() + 1); // derruba as sessões abertas com o perfil/situação antigos
         usuarios.save(alvo);
@@ -148,6 +172,7 @@ public class UsuarioAdminService {
 
     private static UsuarioAdminResponse paraResposta(Usuario u) {
         return new UsuarioAdminResponse(u.getId(), u.getNome(), u.getEmail(), u.getUnidade(),
-                u.getPerfil().name(), u.isAtivo(), u.getCriadoEm());
+                u.getPerfil().name(), u.getFuncao() == null ? null : u.getFuncao().name(),
+                u.getFuncao() == null ? null : u.getFuncao().getRotulo(), u.isAtivo(), u.getCriadoEm());
     }
 }

@@ -73,12 +73,12 @@ public class SecurityConfig {
                 .addFilterAfter(new FiltroCookieCsrf(), BasicAuthenticationFilter.class)
                 .addFilterAfter(new FiltroSessaoValida(usuarios), SecurityContextHolderFilter.class)
                 .authorizeHttpRequests(a -> a
-                        .requestMatchers("/", "/index.html", "/morador.html", "/sindico.html", "/zelador.html", "/usuarios.html", "/conta.html", "/privacidade.html",
+                        .requestMatchers("/", "/index.html", "/morador.html", "/sindico.html", "/funcionario.html", "/usuarios.html", "/conta.html", "/privacidade.html",
                                 "/css/**", "/js/**", "/img/**", "/favicon.ico", "/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/categorias", "/api/auth/sessao").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categorias", "/api/auth/sessao", "/api/demo/contas").permitAll()
                         .requestMatchers("/api/sindico/**").hasRole("SINDICO")
-                        .requestMatchers("/api/zelador/**").hasRole("ZELADOR")
+                        .requestMatchers("/api/funcionario/**").hasRole("FUNCIONARIO")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().denyAll())
                 .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

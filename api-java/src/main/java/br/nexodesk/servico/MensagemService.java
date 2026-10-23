@@ -98,7 +98,8 @@ public class MensagemService {
         destinatarios.remove(autor.getId());
 
         String trecho = texto.length() <= TAMANHO_TRECHO_AVISO ? texto : texto.substring(0, TAMANHO_TRECHO_AVISO - 1) + "…";
-        String resposta = autor.getPerfil() == Perfil.SINDICO ? "O síndico respondeu" : "O zelador respondeu";
+        String resposta = autor.getPerfil() == Perfil.SINDICO ? "O síndico respondeu"
+                : "O " + (autor.getFuncao() == null ? "funcionário" : autor.getFuncao().getRotuloCurto()) + " respondeu";
         Set<String> emails = new HashSet<>();
         for (Usuario d : destinatarios.values()) {
             boolean ehOMoradorDono = d.getId().equals(c.getMorador().getId());
@@ -123,7 +124,8 @@ public class MensagemService {
         boolean autorEhEquipe = autor.getPerfil() != Perfil.MORADOR;
         boolean ocultar = !autorEhEquipe && c.isAnonimo() && quem.getPerfil() != Perfil.MORADOR;
         String nome = autorEhEquipe
-                ? autor.getNome() + (doSindico ? " (síndico)" : " (zelador)")
+                ? autor.getNome() + (doSindico ? " (síndico)"
+                        : " (" + (autor.getFuncao() == null ? "funcionário" : autor.getFuncao().getRotuloCurto()) + ")")
                 : ocultar ? "Anônimo" : autor.getNome();
         return new MensagemResponse(m.getId(), nome, autorEhEquipe, autor.getId().equals(quem.getId()),
                 m.getTexto(), m.getCriadoEm());

@@ -1,6 +1,7 @@
 package br.nexodesk.config;
 
 import br.nexodesk.dominio.Categoria;
+import br.nexodesk.dominio.Funcao;
 import br.nexodesk.dominio.Perfil;
 import br.nexodesk.dominio.StatusChamado;
 import br.nexodesk.dominio.Usuario;
@@ -84,6 +85,8 @@ public class DadosDemonstracao implements ApplicationRunner {
                 Categoria.ESTRUTURA, "Hall do bloco B", "Apareceu uma rachadura na parede do hall e há infiltração junto.", false);
         ChamadoResponse lixeira = abrir(bruno, "Lixeira do térreo transbordando",
                 Categoria.LIMPEZA, "Térreo", "A lixeira não é esvaziada há dias.", false);
+        abrir(ana, "Sujeira no chão do pátio",
+                Categoria.LIMPEZA, "Pátio", "Tem lixo e uma poça suja no chão do pátio, perto dos bancos.", false);
         abrir(ana, "Portão da garagem não fecha direito",
                 Categoria.SEGURANCA, "Portão da garagem", "O portão fica aberto por vários minutos depois que o carro entra.", false);
         abrir(bruno, "Reserva do salão de festas",
@@ -94,10 +97,23 @@ public class DadosDemonstracao implements ApplicationRunner {
         envelhecer(infiltracao.id(), 6);
 
         // um zelador de exemplo cuida do chamado da lixeira, com previsão para daqui a 2 dias
-        String zelador = equipe("Zé (zelador de demonstração)", "ze.demo@nexodesk.local", Perfil.ZELADOR);
+        String zelador = equipe("Zé", "ze.demo@nexodesk.local", Funcao.ZELADOR);
         Long idZelador = usuarios.findByEmail(zelador).orElseThrow().getId();
         servico.atribuir(emailSindico, lixeira.id(),
                 new AtribuirResponsavelRequest(idZelador, java.time.LocalDate.now().plusDays(2), null));
+
+        // uma pessoa para cada função de um condomínio (todas com a mesma senha de demonstração)
+        equipe("Marta", "marta.demo@nexodesk.local", Funcao.FAXINEIRO);
+        String eletricista = equipe("Eduardo", "eletricista.demo@nexodesk.local", Funcao.ELETRICISTA);
+        String encanador = equipe("Nilton", "encanador.demo@nexodesk.local", Funcao.ENCANADOR);
+        equipe("Paulo", "porteiro.demo@nexodesk.local", Funcao.PORTEIRO);
+        equipe("Sérgio", "seguranca.demo@nexodesk.local", Funcao.SEGURANCA);
+        equipe("Téo", "elevador.demo@nexodesk.local", Funcao.TECNICO_EXTERNO);
+        equipe("Mário", "manutencao.demo@nexodesk.local", Funcao.MANUTENCAO);
+        servico.atribuir(emailSindico, vazamento.id(),
+                new AtribuirResponsavelRequest(usuarios.findByEmail(encanador).orElseThrow().getId(), java.time.LocalDate.now().plusDays(1), null));
+        servico.atribuir(emailSindico, lampada.id(),
+                new AtribuirResponsavelRequest(usuarios.findByEmail(eletricista).orElseThrow().getId(), null, null));
 
         // dois chamados já andaram, para a demonstração mostrar histórico e avisos
         servico.alterarStatus(emailSindico, lampada.id(),
@@ -106,7 +122,7 @@ public class DadosDemonstracao implements ApplicationRunner {
         servico.alterarStatus(emailSindico, vazamento.id(),
                 new AlterarStatusRequest(StatusChamado.EM_ANDAMENTO, "Encanador agendado para amanhã.", null));
 
-        log.info("Perfil demo: 2 moradores (ana.demo@nexodesk.local, bruno.demo@nexodesk.local), 1 zelador (ze.demo@nexodesk.local) e 8 chamados criados.");
+        log.info("Perfil demo: sindico, 2 moradores, 1 zelador, faxineira, eletricista, encanador, porteiro, seguranca, tecnico do elevador e manutencao (todos @nexodesk.local) e 9 chamados criados.");
     }
 
     /** Só para a demonstração: faz de conta que o chamado foi aberto há alguns dias. */
@@ -115,13 +131,14 @@ public class DadosDemonstracao implements ApplicationRunner {
                 java.sql.Timestamp.valueOf(java.time.LocalDateTime.now().minusDays(dias)), id);
     }
 
-    private String equipe(String nome, String email, Perfil perfil) {
+    private String equipe(String nome, String email, Funcao funcao) {
         if (!usuarios.existsByEmail(email)) {
             Usuario u = new Usuario();
             u.setNome(nome);
             u.setEmail(email);
             u.setSenhaHash(codificador.encode(senhaDemo));
-            u.setPerfil(perfil);
+            u.setPerfil(Perfil.FUNCIONARIO);
+            u.setFuncao(funcao);
             usuarios.save(u);
         }
         return email;

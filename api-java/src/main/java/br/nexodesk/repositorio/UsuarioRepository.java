@@ -23,6 +23,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     long countByPerfilAndAtivoTrue(Perfil perfil);
 
+    java.util.List<Usuario> findByFuncaoAndAtivoTrue(br.nexodesk.dominio.Funcao funcao);
+
     /** Só o que o filtro de sessão precisa (não carrega o usuário inteiro a cada requisição). */
     interface SituacaoDaSessao {
         boolean getAtivo();

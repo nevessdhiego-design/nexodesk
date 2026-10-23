@@ -38,6 +38,11 @@ public class Usuario {
     @Column(nullable = false, length = 20)
     private Perfil perfil;
 
+    /** Só para perfil FUNCIONARIO: o que a pessoa faz (zelador, eletricista...). Nulo para morador e síndico. */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 30)
+    private Funcao funcao;
+
     @Column(nullable = false)
     private boolean ativo = true;
 
@@ -68,6 +73,8 @@ public class Usuario {
     public void setSenhaHash(String senhaHash) { this.senhaHash = senhaHash; }
     public Perfil getPerfil() { return perfil; }
     public void setPerfil(Perfil perfil) { this.perfil = perfil; }
+    public Funcao getFuncao() { return funcao; }
+    public void setFuncao(Funcao funcao) { this.funcao = funcao; }
     public boolean isAtivo() { return ativo; }
     public void setAtivo(boolean ativo) { this.ativo = ativo; }
     public int getVersaoSessao() { return versaoSessao; }

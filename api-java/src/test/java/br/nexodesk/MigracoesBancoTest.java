@@ -129,4 +129,30 @@ class MigracoesBancoTest {
             assertThat(r.getInt("versao_sessao")).isZero();
         }
     }
+
+    @Test
+    void contaZeladorAntigaViraFuncionarioComFuncaoZelador() throws Exception {
+        JdbcDataSource ds = banco();
+        // banco na versão 5 (antes das funções), com um zelador e um morador
+        Flyway ate5 = Flyway.configure().dataSource(ds).locations("filesystem:" + PASTA.toAbsolutePath())
+                .baselineOnMigrate(true).baselineVersion("1").target("5").load();
+        ate5.migrate();
+        try (Connection c = ds.getConnection(); Statement s = c.createStatement()) {
+            s.execute("INSERT INTO usuarios (nome, email, senha_hash, perfil) VALUES ('Zé', 'ze@x.test', '$2a$10$abc', 'ZELADOR')");
+            s.execute("INSERT INTO usuarios (nome, email, senha_hash, perfil) VALUES ('Ana', 'ana@x.test', '$2a$10$abc', 'MORADOR')");
+        }
+
+        flyway(ds).migrate(); // aplica V6
+
+        try (Connection c = ds.getConnection(); Statement s = c.createStatement()) {
+            ResultSet r = s.executeQuery("SELECT perfil, funcao FROM usuarios WHERE email = 'ze@x.test'");
+            assertThat(r.next()).isTrue();
+            assertThat(r.getString("perfil")).isEqualTo("FUNCIONARIO");
+            assertThat(r.getString("funcao")).isEqualTo("ZELADOR");
+            r = s.executeQuery("SELECT perfil, funcao FROM usuarios WHERE email = 'ana@x.test'");
+            assertThat(r.next()).isTrue();
+            assertThat(r.getString("perfil")).isEqualTo("MORADOR");
+            assertThat(r.getString("funcao")).isNull();
+        }
+    }
 }

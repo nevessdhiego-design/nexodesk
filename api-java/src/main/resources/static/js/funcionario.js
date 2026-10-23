@@ -1,4 +1,4 @@
-// Tela do zelador: só os chamados atribuídos a ele. Todo texto vindo do servidor entra com textContent.
+// Tela do funcionário: só os chamados atribuídos a ele. Todo texto vindo do servidor entra com textContent.
 const caixa = document.getElementById('mensagem');
 const lista = document.getElementById('lista-chamados');
 const filtro = document.getElementById('filtro');
@@ -21,7 +21,7 @@ function cartaoChamado(c, posicao) {
         && !window.confirm('Marcar o chamado #' + c.id + ' como resolvido? O morador será avisado agora e poderá avaliar o atendimento.')) return;
     salvar.disabled = true;
     try {
-      await api('/api/zelador/chamados/' + c.id + '/status', {
+      await api('/api/funcionario/chamados/' + c.id + '/status', {
         metodo: 'PATCH',
         // a versão que a tela mostrava: se o síndico já mexeu neste chamado, a API responde 409
         json: { status: seletor.value, observacao: observacao.value, versao: c.versao },
@@ -59,7 +59,7 @@ function cartaoChamado(c, posicao) {
 }
 
 async function carregar() {
-  const chamados = await api('/api/zelador/chamados?status=' + encodeURIComponent(filtro.value));
+  const chamados = await api('/api/funcionario/chamados?status=' + encodeURIComponent(filtro.value));
   lista.replaceChildren(...(chamados.length
     ? chamados.map((c, i) => cartaoChamado(c, i + 1))
     : [el('p', { class: 'vazio', text: 'Nenhum chamado atribuído a você neste filtro.' })]));
@@ -89,9 +89,9 @@ function aoMudar(evento) {
 }
 
 (async function iniciar() {
-  const eu = await exigirPerfil('ZELADOR');
+  const eu = await exigirPerfil('FUNCIONARIO');
   if (!eu) return;
-  document.getElementById('usuario').textContent = eu.nome;
+  document.getElementById('usuario').textContent = eu.nome + (eu.funcao ? ' · ' + eu.funcao : '');
   recarregarAvisos = iniciarAvisos();
   await Promise.all([carregar(), recarregarAvisos()]);
   iniciarTempoReal(aoMudar);

@@ -30,6 +30,10 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
     @Query("update Chamado c set c.responsavel = null where c.responsavel = :usuario")
     int liberarResponsavel(@Param("usuario") Usuario usuario);
 
+    /** Quantos chamados não resolvidos cada pessoa da equipe tem: {id do responsável, quantidade}. */
+    @Query("select c.responsavel.id, count(c) from Chamado c where c.responsavel is not null and c.status <> :resolvido group by c.responsavel.id")
+    List<Object[]> cargaPorResponsavel(@Param("resolvido") StatusChamado resolvido);
+
     long countByEmergenciaTrueAndStatusIn(Collection<StatusChamado> status);
 
     long countByStatus(StatusChamado status);
