@@ -217,6 +217,16 @@ a.telefone:hover { background: #8f2525; }
 .contas-demo h2 { font-size: 1.05rem; margin: 0 0 .25rem; }
 #botoes-contas-demo { display: flex; flex-wrap: wrap; gap: .4rem; }
 button.conta-demo { background: var(--secondary); font-size: .85rem; padding: .35rem .7rem; }
+.checklist { list-style: none; margin: .4rem 0 0; padding: 0; }
+.checklist li { padding: .15rem 0; }
+.checklist .check { margin-top: 0; font-weight: 500; }
+.checklist-bloco { margin-top: .5rem; }
+.antes-depois { margin-top: .5rem; }
+.figuras { display: flex; flex-wrap: wrap; gap: .75rem; }
+.figura { margin: 0; }
+.figura figcaption { font-weight: 700; font-size: .85rem; color: var(--secondary); text-align: center; }
+.envio-depois { margin-top: .5rem; }
+.envio-depois button { margin-top: .4rem; }
 button.secundario-escuro { background: var(--secondary); }
 button.perigo { background: var(--danger); }
 button.perigo:hover { background: #8f2525; }

@@ -91,6 +91,70 @@ function textoResponsavel(c) {
   return 'Responsável: ' + c.responsavelNome + (c.responsavelFuncao ? ' (' + c.responsavelFuncao + ')' : '') + (c.previsao ? ' · previsão ' + formatarDia(c.previsao) : '');
 }
 
+/**
+ * Checklist do serviço. A equipe (base = '/api/funcionario' ou '/api/sindico') marca as etapas; sem base é só leitura
+ * (o morador vê o andamento). aoErro recebe a mensagem se a API recusar.
+ */
+function blocoTarefas(c, base, aoErro) {
+  if (!c.tarefas || !c.tarefas.length) return null;
+  const feitas = c.tarefas.filter((t) => t.feita).length;
+  const itens = c.tarefas.map((t) => {
+    const caixa = el('input', { type: 'checkbox', id: 'tarefa-' + t.id, checked: t.feita, disabled: !base });
+    if (base) {
+      caixa.addEventListener('change', async () => {
+        caixa.disabled = true;
+        try {
+          await api(base + '/tarefas/' + t.id, { metodo: 'PATCH', json: { feita: caixa.checked } });
+        } catch (erro) {
+          caixa.checked = !caixa.checked;
+          if (aoErro) aoErro(erro.message);
+        } finally {
+          caixa.disabled = false;
+        }
+      });
+    }
+    return el('li', {}, el('label', { class: 'check', for: 'tarefa-' + t.id }, caixa, el('span', { text: t.texto })));
+  });
+  return el('details', { class: 'checklist-bloco', open: true },
+    el('summary', { text: 'Etapas do serviço (' + feitas + ' de ' + c.tarefas.length + ')' }),
+    el('ul', { class: 'checklist' }, itens));
+}
+
+function figuraDoChamado(legenda, caminho) {
+  return el('figure', { class: 'figura' },
+    el('img', { class: 'foto', src: caminho, alt: legenda + ': foto do serviço' }),
+    el('figcaption', { text: legenda }));
+}
+
+/** "Antes" (foto de abertura) e "Depois" (foto do serviço pronto). Com base, a equipe também envia a foto do depois. */
+function blocoAntesDepois(c, base, aoEnviar, aoErro) {
+  const figuras = [];
+  if (c.temImagem) figuras.push(figuraDoChamado('Antes', '/api/chamados/' + c.id + '/imagem'));
+  if (c.temImagemConclusao) figuras.push(figuraDoChamado('Depois', '/api/chamados/' + c.id + '/imagem-conclusao'));
+  let envio = null;
+  if (base) {
+    const arquivo = el('input', { type: 'file', id: 'depois-' + c.id, accept: 'image/jpeg,image/png,image/gif' });
+    const enviar = el('button', { type: 'button', class: 'secundario-escuro', text: c.temImagemConclusao ? 'Trocar a foto do depois' : 'Enviar foto do serviço pronto' });
+    enviar.addEventListener('click', async () => {
+      if (!arquivo.files[0]) { if (aoErro) aoErro('Escolha a foto do serviço pronto.'); return; }
+      const form = new FormData();
+      form.append('imagem', arquivo.files[0]);
+      enviar.disabled = true;
+      try {
+        await api(base + '/chamados/' + c.id + '/conclusao', { metodo: 'POST', form });
+        if (aoEnviar) await aoEnviar();
+      } catch (erro) {
+        if (aoErro) aoErro(erro.message);
+        enviar.disabled = false;
+      }
+    });
+    envio = el('div', { class: 'envio-depois' },
+      el('label', { for: 'depois-' + c.id, text: 'Foto do serviço pronto (JPG, PNG ou GIF até 5 MB)' }), arquivo, enviar);
+  }
+  if (!figuras.length && !envio) return null;
+  return el('div', { class: 'antes-depois' }, figuras.length ? el('div', { class: 'figuras' }, figuras) : null, envio);
+}
+
 /** Selo do prazo: "Vence em 5 h", "Vence em 2 dias" ou "Prazo vencido há 3 h". Nada para chamado resolvido ou sem prazo. */
 function seloPrazo(c) {
   if (c.minutosParaPrazo === null || c.minutosParaPrazo === undefined) return null;

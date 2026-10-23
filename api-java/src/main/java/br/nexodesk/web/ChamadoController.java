@@ -67,6 +67,16 @@ public class ChamadoController {
         avaliacoes.avaliar(autenticacao.getName(), id, dados);
     }
 
+    /** Foto do serviço pronto (o "depois"); mesma regra de acesso da foto de abertura. */
+    @GetMapping("/chamados/{id}/imagem-conclusao")
+    public ResponseEntity<Resource> imagemConclusao(@PathVariable Long id, Authentication autenticacao) {
+        Resource recurso = chamados.imagemConclusao(autenticacao.getName(), id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(chamados.tipoImagem(recurso)))
+                .header("Cache-Control", "private, max-age=3600")
+                .body(recurso);
+    }
+
     @GetMapping("/chamados/{id}/imagem")
     public ResponseEntity<Resource> imagem(@PathVariable Long id, Authentication autenticacao) {
         Resource recurso = chamados.imagem(autenticacao.getName(), id);

@@ -115,7 +115,8 @@ function cartaoChamado(c, posicao) {
         el('span', { class: 'estrelas', text: '★'.repeat(c.notaAvaliacao) + '☆'.repeat(5 - c.notaAvaliacao), 'aria-label': c.notaAvaliacao + ' de 5 estrelas' }),
         c.comentarioAvaliacao ? el('p', { text: c.comentarioAvaliacao }) : null)
       : null,
-    c.temImagem ? el('img', { class: 'foto', src: '/api/chamados/' + c.id + '/imagem', alt: 'Foto enviada no chamado' }) : null,
+    blocoAntesDepois(c, '/api/sindico', carregar, (m) => mostrarMensagem(caixa, m, 'erro')),
+    blocoTarefas(c, '/api/sindico', (m) => mostrarMensagem(caixa, m, 'erro')),
     el('details', {},
       el('summary', { text: 'Por que essa dificuldade?' }),
       el('ul', {}, c.justificativa.map((j) => el('li', { text: j }))),

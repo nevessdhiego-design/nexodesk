@@ -12,7 +12,10 @@ import br.nexodesk.dominio.Usuario;
 import br.nexodesk.repositorio.AvaliacaoRepository;
 import br.nexodesk.repositorio.ChamadoRepository;
 import br.nexodesk.repositorio.HistoricoStatusRepository;
+import br.nexodesk.dominio.Tarefa;
 import br.nexodesk.repositorio.NotificacaoRepository;
+import br.nexodesk.repositorio.TarefaRepository;
+import br.nexodesk.web.Dtos.TarefaResponse;
 import br.nexodesk.web.Dtos.AlterarStatusRequest;
 import br.nexodesk.web.Dtos.AtribuirResponsavelRequest;
 import br.nexodesk.web.Dtos.ChamadoResponse;
@@ -54,12 +57,13 @@ public class ChamadoService {
     private final ApplicationEventPublisher eventos;
     private final PrioridadeFila prioridade;
     private final Clock relogio;
+    private final TarefaRepository tarefas;
 
     public ChamadoService(ChamadoRepository chamados, HistoricoStatusRepository historicos,
                           NotificacaoRepository notificacoes, UsuarioService usuarios,
                           ClassificadorDificuldade classificador, ArmazenamentoImagem imagens,
                           AvaliacaoRepository avaliacoes, ApplicationEventPublisher eventos,
-                          PrioridadeFila prioridade, Clock relogio) {
+                          PrioridadeFila prioridade, Clock relogio, TarefaRepository tarefas) {
         this.chamados = chamados;
         this.historicos = historicos;
         this.notificacoes = notificacoes;
@@ -70,6 +74,7 @@ public class ChamadoService {
         this.eventos = eventos;
         this.prioridade = prioridade;
         this.relogio = relogio;
+        this.tarefas = tarefas;
     }
 
     /** RF01 + RF02: cadastra o chamado já classificado por dificuldade. */
@@ -253,6 +258,9 @@ public class ChamadoService {
         c.setResponsavel(novo);
         c.setPrevisao(req.previsao());
         chamados.saveAndFlush(c);
+        if (novo != null) {
+            criarChecklistSeNecessario(c);
+        }
 
         Set<String> emails = new java.util.HashSet<>();
         if (mudouResponsavel || mudouPrevisao) {
@@ -281,6 +289,89 @@ public class ChamadoService {
         }
         Avaliacao nota = avaliacoes.buscarDosChamados(List.of(c)).stream().findFirst().orElse(null);
         return paraResposta(c, true, List.of(), nota);
+    }
+
+    /** O checklist nasce do modelo da categoria na primeira atribuição e não é recriado depois. */
+    private void criarChecklistSeNecessario(Chamado c) {
+        if (tarefas.existsByChamado(c)) {
+            return;
+        }
+        int ordem = 0;
+        for (String texto : ChecklistModelo.itens(c.getCategoria())) {
+            Tarefa t = new Tarefa();
+            t.setChamado(c);
+            t.setTexto(texto);
+            t.setOrdem(ordem++);
+            tarefas.save(t);
+        }
+    }
+
+    private static void exigirEquipeDoChamado(Usuario quem, Chamado c) {
+        boolean permitido = quem.getPerfil() == Perfil.SINDICO
+                || (quem.getPerfil() == Perfil.FUNCIONARIO && ehResponsavel(c, quem));
+        if (!permitido) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Chamado não encontrado."); // para os outros, o chamado não existe
+        }
+    }
+
+    private Set<String> moradorESindicos(Chamado c) {
+        Set<String> emails = new java.util.HashSet<>();
+        emails.add(c.getMorador().getEmail());
+        usuarios.sindicosAtivos().forEach(s -> emails.add(s.getEmail()));
+        return emails;
+    }
+
+    /** Marca ou desmarca uma etapa do checklist. Só o síndico e o funcionário responsável pelo chamado. */
+    @Transactional
+    public TarefaResponse marcarTarefa(String email, Long tarefaId, boolean feita) {
+        Usuario quem = usuarios.buscarPorEmail(email);
+        Tarefa t = tarefas.findById(tarefaId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Etapa não encontrada."));
+        exigirEquipeDoChamado(quem, t.getChamado());
+        t.setFeita(feita);
+        tarefas.save(t);
+        eventos.publishEvent(new ChamadoAtribuidoEvent(t.getChamado().getId(), moradorESindicos(t.getChamado())));
+        return new TarefaResponse(t.getId(), t.getTexto(), t.isFeita());
+    }
+
+    /** Foto do serviço pronto ("depois"). Passa pelo mesmo tratamento da foto de abertura: tipo pelo conteúdo e sem GPS. */
+    @Transactional
+    public ChamadoResponse anexarConclusao(String email, Long id, org.springframework.web.multipart.MultipartFile arquivo) {
+        Usuario quem = usuarios.buscarPorEmail(email);
+        Chamado c = chamados.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Chamado não encontrado."));
+        exigirEquipeDoChamado(quem, c);
+        if (arquivo == null || arquivo.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Escolha a foto do serviço pronto.");
+        }
+        String nome = imagens.salvar(arquivo);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status != STATUS_COMMITTED) {
+                    imagens.remover(nome);
+                }
+            }
+        });
+        String antiga = c.getImagemConclusao();
+        c.setImagemConclusao(nome);
+        chamados.saveAndFlush(c);
+        if (antiga != null) {
+            imagens.remover(antiga);
+        }
+        avisar(c.getMorador(), c, truncar("O serviço do seu chamado #" + c.getId() + " tem foto do resultado. Veja o antes e o depois.", 300));
+        eventos.publishEvent(new ChamadoAtribuidoEvent(c.getId(), moradorESindicos(c)));
+        Avaliacao nota = avaliacoes.buscarDosChamados(List.of(c)).stream().findFirst().orElse(null);
+        return paraResposta(c, true, List.of(), nota);
+    }
+
+    public Resource imagemConclusao(String email, Long id) {
+        Usuario quem = usuarios.buscarPorEmail(email);
+        Chamado c = buscarComAcesso(quem, id);
+        if (c.getImagemConclusao() == null) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Este chamado não tem foto de conclusão.");
+        }
+        return imagens.carregar(c.getImagemConclusao());
     }
 
     /**
@@ -436,7 +527,7 @@ public class ChamadoService {
         return new ChamadoResponse(
                 c.getId(), c.getTitulo(), c.getDescricao(),
                 c.getCategoria().name(), c.getCategoria().getRotulo(),
-                c.getLocalOcorrencia(), c.isAnonimo(), c.getImagem() != null,
+                c.getLocalOcorrencia(), c.isAnonimo(), c.getImagem() != null, c.getImagemConclusao() != null,
                 c.getStatus().name(), c.getStatus().getRotulo(),
                 c.getDificuldade().name(), c.getDificuldade().getRotulo(),
                 c.getPontuacao(), justificativa, c.isClassificacaoFallback(),
@@ -453,6 +544,8 @@ public class ChamadoService {
                         : Duration.between(LocalDateTime.now(relogio), c.getPrazoLimite()).toMinutes(),
                 avaliacao == null ? null : avaliacao.getNota(),
                 avaliacao == null ? null : avaliacao.getComentario(),
+                tarefas.findByChamadoOrderByOrdemAscIdAsc(c).stream()
+                        .map(t -> new TarefaResponse(t.getId(), t.getTexto(), t.isFeita())).toList(),
                 historico);
     }
 }

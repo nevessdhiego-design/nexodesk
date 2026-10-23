@@ -62,7 +62,7 @@ function cartaoChamado(c) {
         const completo = await api('/api/chamados/' + c.id);
         detalhes.append(
           el('p', { class: 'descricao', text: completo.descricao }),
-          completo.temImagem ? el('img', { class: 'foto', src: '/api/chamados/' + c.id + '/imagem', alt: 'Foto enviada no chamado' }) : null,
+          blocoAntesDepois(completo),
           el('h3', { text: 'Histórico' }),
           el('ul', {}, completo.historico.map((h) => el('li', {
             text: formatarData(h.criadoEm) + ' — ' + (h.statusAnterior ? h.statusAnterior + ' → ' : '') + h.statusNovo
@@ -88,6 +88,7 @@ function cartaoChamado(c) {
       seloPrazo(c)),
     el('div', { class: 'meta', text: c.categoriaRotulo + (c.localOcorrencia ? ' · ' + c.localOcorrencia : '') + ' · aberto em ' + formatarData(c.criadoEm) }),
     c.responsavelNome ? el('div', { class: 'responsavel', text: textoResponsavel(c) }) : null,
+    blocoTarefas(c),
     blocoAvaliacao(c),
     blocoConversa(c.id),
     alternar,
