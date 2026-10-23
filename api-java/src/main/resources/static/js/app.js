@@ -91,6 +91,15 @@ function textoResponsavel(c) {
   return 'Responsável: ' + c.responsavelNome + (c.responsavelFuncao ? ' (' + c.responsavelFuncao + ')' : '') + (c.previsao ? ' · previsão ' + formatarDia(c.previsao) : '');
 }
 
+/** Selo do prazo: "Vence em 5 h", "Vence em 2 dias" ou "Prazo vencido há 3 h". Nada para chamado resolvido ou sem prazo. */
+function seloPrazo(c) {
+  if (c.minutosParaPrazo === null || c.minutosParaPrazo === undefined) return null;
+  const m = Math.abs(c.minutosParaPrazo);
+  const horas = Math.round(m / 60);
+  const tempo = m < 60 ? m + ' min' : horas < 48 ? horas + ' h' : Math.round(horas / 24) + ' dias';
+  return c.minutosParaPrazo < 0 ? selo('Prazo vencido há ' + tempo, 'ATRASADO') : selo('Vence em ' + tempo, 'neutro');
+}
+
 /** Telefones de emergência do Brasil. O NexoDesk NÃO liga para ninguém: só mostra os números (links tel: no celular). */
 const TELEFONES_EMERGENCIA = [
   { numero: '190', nome: 'Polícia' },

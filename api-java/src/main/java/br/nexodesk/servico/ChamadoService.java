@@ -1,6 +1,7 @@
 package br.nexodesk.servico;
 
 import br.nexodesk.dominio.Avaliacao;
+import br.nexodesk.dominio.Categoria;
 import br.nexodesk.dominio.Chamado;
 import br.nexodesk.dominio.Dificuldade;
 import br.nexodesk.dominio.HistoricoStatus;
@@ -19,7 +20,9 @@ import br.nexodesk.web.Dtos.EstatisticasResponse;
 import br.nexodesk.web.Dtos.HistoricoResponse;
 import br.nexodesk.web.Dtos.NovoChamadoForm;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Map;
@@ -111,6 +114,8 @@ public class ChamadoService {
         c.setJustificativa(truncar(String.join(SEPARADOR, justificativa), 1000));
         c.setClassificacaoFallback(r.fallback());
         c.setMorador(morador);
+        c.setPrazoLimite(LocalDateTime.now(relogio).plusHours(
+                c.isEmergencia() ? Categoria.PRAZO_EMERGENCIA_HORAS : form.categoria().getPrazoHoras()));
         c = chamados.save(c);
 
         registrarHistorico(c, null, StatusChamado.ABERTO, morador, "Chamado aberto.");
@@ -278,6 +283,30 @@ public class ChamadoService {
         return paraResposta(c, true, List.of(), nota);
     }
 
+    /**
+     * Avisa, uma única vez, síndicos e responsável de cada chamado não resolvido que passou do prazo. Chamado pelo agendador
+     * (a cada 15 min). Marca o aviso por consulta direta para não mexer na versão do chamado (evita 409 na tela de quem edita).
+     */
+    @Transactional
+    public int alertarPrazosVencidos() {
+        List<Chamado> vencidos = chamados.findByStatusNotAndPrazoLimiteBeforeAndAlertaPrazoEnviadoFalse(
+                StatusChamado.RESOLVIDO, LocalDateTime.now(relogio));
+        for (Chamado c : vencidos) {
+            Map<Long, Usuario> destinatarios = new java.util.LinkedHashMap<>();
+            usuarios.sindicosAtivos().forEach(s -> destinatarios.put(s.getId(), s));
+            if (c.getResponsavel() != null && c.getResponsavel().isAtivo()) {
+                destinatarios.put(c.getResponsavel().getId(), c.getResponsavel());
+            }
+            String mensagem = truncar("PRAZO VENCIDO no chamado #" + c.getId() + " \"" + truncar(c.getTitulo(), 60) + "\" ("
+                    + c.getCategoria().getRotulo() + ").", 300);
+            destinatarios.values().forEach(d -> avisar(d, c, mensagem));
+            chamados.marcarAlertaDePrazo(c.getId());
+            eventos.publishEvent(new PrazoVencidoEvent(c.getId(),
+                    destinatarios.values().stream().map(Usuario::getEmail).collect(Collectors.toSet())));
+        }
+        return vencidos.size();
+    }
+
     private void avisar(Usuario destinatario, Chamado c, String mensagem) {
         Notificacao n = new Notificacao();
         n.setUsuario(destinatario);
@@ -419,6 +448,9 @@ public class ChamadoService {
                 c.getResponsavel() == null ? null : c.getResponsavel().getNome(),
                 c.getResponsavel() == null || c.getResponsavel().getFuncao() == null ? null : c.getResponsavel().getFuncao().getRotulo(),
                 c.getPrevisao(),
+                c.getPrazoLimite(),
+                c.getPrazoLimite() == null || c.getStatus() == StatusChamado.RESOLVIDO ? null
+                        : Duration.between(LocalDateTime.now(relogio), c.getPrazoLimite()).toMinutes(),
                 avaliacao == null ? null : avaliacao.getNota(),
                 avaliacao == null ? null : avaliacao.getComentario(),
                 historico);

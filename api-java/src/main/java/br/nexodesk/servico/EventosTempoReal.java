@@ -20,6 +20,7 @@ public class EventosTempoReal {
     public static final String STATUS = "status";
     public static final String MENSAGEM = "mensagem";
     public static final String ATRIBUICAO = "atribuicao";
+    public static final String PRAZO = "prazo";
 
     private final PublicadorEventos publicador;
     private final UsuarioService usuarios;
@@ -54,6 +55,11 @@ public class EventosTempoReal {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void aoAtribuir(ChamadoAtribuidoEvent e) {
         publicador.notificar(e.destinatarios(), ATRIBUICAO, e.chamadoId());
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void aoVencerOPrazo(PrazoVencidoEvent e) {
+        publicador.notificar(e.destinatarios(), PRAZO, e.chamadoId());
     }
 
     private Set<String> emailsDosSindicos() {

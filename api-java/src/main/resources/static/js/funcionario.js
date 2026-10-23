@@ -42,7 +42,8 @@ function cartaoChamado(c, posicao) {
       c.emergencia ? selo('EMERGÊNCIA', 'EMERGENCIA') : null,
       selo(c.statusRotulo, c.status),
       selo(c.dificuldadeRotulo, c.dificuldade),
-      c.atrasado ? selo('Atrasado', 'ATRASADO') : null),
+      c.atrasado ? selo('Atrasado', 'ATRASADO') : null,
+      seloPrazo(c)),
     el('div', { class: 'meta', text: c.categoriaRotulo
       + (c.localOcorrencia ? ' · ' + c.localOcorrencia : '')
       + ' · ' + c.moradorNome + (c.moradorUnidade ? ' (' + c.moradorUnidade + ')' : '')

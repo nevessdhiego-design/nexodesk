@@ -136,6 +136,9 @@ public final class Dtos {
             String responsavelNome,
             String responsavelFuncao,
             java.time.LocalDate previsao,
+            LocalDateTime prazoLimite,
+            /** Minutos até o prazo (negativo = vencido); nulo se resolvido ou sem prazo. */
+            Long minutosParaPrazo,
             Integer notaAvaliacao,
             String comentarioAvaliacao,
             List<HistoricoResponse> historico) {

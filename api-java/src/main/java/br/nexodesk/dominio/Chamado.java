@@ -87,6 +87,13 @@ public class Chamado {
     @Column(name = "atualizado_em", nullable = false)
     private LocalDateTime atualizadoEm;
 
+    /** Prazo (SLA) calculado na abertura pela categoria; nulo nos chamados anteriores à V7. */
+    @Column(name = "prazo_limite")
+    private LocalDateTime prazoLimite;
+
+    @Column(name = "alerta_prazo_enviado", nullable = false)
+    private boolean alertaPrazoEnviado;
+
     /** Controle de concorrência otimista: o Hibernate soma 1 a cada alteração e recusa gravar sobre versão antiga. */
     @Version
     @Column(nullable = false)
@@ -136,5 +143,8 @@ public class Chamado {
     public void setPrevisao(LocalDate previsao) { this.previsao = previsao; }
     public LocalDateTime getCriadoEm() { return criadoEm; }
     public LocalDateTime getAtualizadoEm() { return atualizadoEm; }
+    public LocalDateTime getPrazoLimite() { return prazoLimite; }
+    public void setPrazoLimite(LocalDateTime prazoLimite) { this.prazoLimite = prazoLimite; }
+    public boolean isAlertaPrazoEnviado() { return alertaPrazoEnviado; }
     public Long getVersao() { return versao; }
 }
