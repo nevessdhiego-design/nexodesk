@@ -64,7 +64,7 @@ async function carregar() {
   const chamados = await api('/api/funcionario/chamados?status=' + encodeURIComponent(filtro.value));
   lista.replaceChildren(...(chamados.length
     ? chamados.map((c, i) => cartaoChamado(c, i + 1))
-    : [el('p', { class: 'vazio', text: 'Nenhum chamado atribuído a você neste filtro.' })]));
+    : [vazio('Nenhum chamado atribuído a você neste filtro. Quando o síndico atribuir um, ele aparece aqui.')]));
 }
 
 filtro.addEventListener('change', () => carregar().catch((e) => mostrarMensagem(caixa, e.message, 'erro')));

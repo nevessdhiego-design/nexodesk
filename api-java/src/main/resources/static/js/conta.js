@@ -61,7 +61,7 @@ document.getElementById('form-exclusao').addEventListener('submit', async (e) =>
     window.location.href = '/index.html';
     return;
   }
-  document.getElementById('voltar').href = paginaDoPerfil(eu.perfil);
+  montarMenu(eu.perfil);
   document.getElementById('email').value = eu.email;
   document.getElementById('nome').value = eu.nome || '';
   document.getElementById('unidade').value = eu.unidade || '';

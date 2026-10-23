@@ -4,14 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NexoDesk - Entrar</title>
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
   <link rel="stylesheet" href="/css/app.css">
   <link rel="stylesheet" href="/css/acessibilidade.css">
   <script src="/js/acessibilidade.js"></script>
 </head>
 <body>
   <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
-  <main class="login" id="conteudo" tabindex="-1">
-    <h1 class="marca-grande">Nexo<span>Desk</span></h1>
+  <main class="login-pagina" id="conteudo" tabindex="-1">
+    <section class="login-destaque">
+      <h1 class="marca-grande">Nexo<span>Desk</span></h1>
+      <p class="lead">Os chamados do seu condomínio em um só lugar.</p>
+      <ul class="vantagens">
+        <li><span data-icone="raio"></span> Emergência passa na frente da fila</li>
+        <li><span data-icone="conversa"></span> Converse com a equipe dentro do chamado</li>
+        <li><span data-icone="relogio"></span> Prazo e andamento em tempo real</li>
+        <li><span data-icone="escudo"></span> Dados protegidos, com opção de anonimato</li>
+      </ul>
+    </section>
+    <div class="login">
     <div class="cartao">
       <p class="muted">Chamados do seu condomínio em um só lugar: abra, acompanhe e receba avisos.</p>
 
@@ -51,6 +62,7 @@
         <div class="acoes"><button type="submit">Criar conta</button></div>
       </form>
       <p class="muted"><a href="/privacidade.html">Privacidade: quais dados guardamos e como excluir a sua conta</a></p>
+    </div>
     </div>
   </main>
   <script src="/js/app.js"></script>

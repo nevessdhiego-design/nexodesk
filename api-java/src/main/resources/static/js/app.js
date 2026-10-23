@@ -97,9 +97,12 @@ function textoResponsavel(c) {
  */
 function blocoTarefas(c, base, aoErro) {
   if (!c.tarefas || !c.tarefas.length) return null;
-  const feitas = c.tarefas.filter((t) => t.feita).length;
+  const resumo = el('summary', { text: '' });
+  const caixas = [];
+  const atualizarResumo = () => { resumo.textContent = 'Etapas do serviço (' + caixas.filter((x) => x.checked).length + ' de ' + c.tarefas.length + ')'; };
   const itens = c.tarefas.map((t) => {
     const caixa = el('input', { type: 'checkbox', id: 'tarefa-' + t.id, checked: t.feita, disabled: !base });
+    caixas.push(caixa);
     if (base) {
       caixa.addEventListener('change', async () => {
         caixa.disabled = true;
@@ -110,14 +113,14 @@ function blocoTarefas(c, base, aoErro) {
           if (aoErro) aoErro(erro.message);
         } finally {
           caixa.disabled = false;
+          atualizarResumo();
         }
       });
     }
     return el('li', {}, el('label', { class: 'check', for: 'tarefa-' + t.id }, caixa, el('span', { text: t.texto })));
   });
-  return el('details', { class: 'checklist-bloco', open: true },
-    el('summary', { text: 'Etapas do serviço (' + feitas + ' de ' + c.tarefas.length + ')' }),
-    el('ul', { class: 'checklist' }, itens));
+  atualizarResumo();
+  return el('details', { class: 'checklist-bloco', open: true }, resumo, el('ul', { class: 'checklist' }, itens));
 }
 
 function figuraDoChamado(legenda, caminho) {
@@ -148,8 +151,9 @@ function blocoAntesDepois(c, base, aoEnviar, aoErro) {
         enviar.disabled = false;
       }
     });
-    envio = el('div', { class: 'envio-depois' },
-      el('label', { for: 'depois-' + c.id, text: 'Foto do serviço pronto (JPG, PNG ou GIF até 5 MB)' }), arquivo, enviar);
+    envio = el('details', { class: 'envio-depois' },
+      el('summary', { text: c.temImagemConclusao ? 'Trocar a foto do serviço pronto' : 'Anexar foto do serviço pronto' }),
+      el('label', { for: 'depois-' + c.id, text: 'Foto (JPG, PNG ou GIF até 5 MB)' }), arquivo, enviar);
   }
   if (!figuras.length && !envio) return null;
   return el('div', { class: 'antes-depois' }, figuras.length ? el('div', { class: 'figuras' }, figuras) : null, envio);
@@ -186,9 +190,56 @@ async function exigirPerfil(perfil) {
       window.location.href = paginaDoPerfil(eu.perfil);
       return null;
     }
+    montarMenu(eu.perfil);
     return eu;
   } catch (e) {
     window.location.href = '/index.html';
     return null;
   }
 }
+
+
+// ---------- aparência: ícones, menu e topo (tudo montado por JS: a CSP não aceita HTML nem estilo inline) ----------
+
+/** Ícone do arquivo /img/icones.svg (desenhado para o projeto). Decorativo: o texto ao lado diz o que é. */
+function icone(nome, classe) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'icone' + (classe ? ' ' + classe : ''));
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const uso = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  uso.setAttribute('href', '/img/icones.svg#i-' + nome);
+  svg.append(uso);
+  return svg;
+}
+
+/** Estado vazio com ícone e uma frase que orienta o que fazer. */
+function vazio(texto) {
+  return el('div', { class: 'vazio' }, icone('vazio', 'icone-grande'), el('p', { text: texto }));
+}
+
+const MENUS = {
+  MORADOR: [['/morador.html', 'chamados', 'Meus chamados'], ['/conta.html', 'conta', 'Minha conta']],
+  SINDICO: [['/sindico.html', 'casa', 'Painel'], ['/relatorios.html', 'relatorio', 'Relatórios'],
+    ['/usuarios.html', 'usuarios', 'Usuários'], ['/conta.html', 'conta', 'Minha conta']],
+  FUNCIONARIO: [['/funcionario.html', 'ferramenta', 'Meus atendimentos'], ['/conta.html', 'conta', 'Minha conta']],
+};
+
+/** Preenche <nav id="menu"> conforme o perfil e marca a página atual (aria-current). */
+function montarMenu(perfil) {
+  const nav = document.getElementById('menu');
+  if (!nav || !MENUS[perfil]) return;
+  nav.replaceChildren(...MENUS[perfil].map(([caminho, nomeIcone, texto]) =>
+    el('a', { href: caminho, 'aria-current': window.location.pathname === caminho ? 'page' : null }, icone(nomeIcone), el('span', { text: texto }))));
+}
+
+/** Logotipo no topo, ícones nos botões do topo e ícones marcados com data-icone no HTML. */
+(function decorar() {
+  document.querySelectorAll('.topo .marca').forEach((marca) =>
+    marca.prepend(el('img', { class: 'logo', src: '/img/logo.svg', alt: '', width: '28', height: '28' })));
+  const sino = document.getElementById('botao-sino');
+  if (sino) sino.prepend(icone('sino'));
+  const sairBotao = document.getElementById('botao-sair');
+  if (sairBotao) sairBotao.prepend(icone('sair'));
+  document.querySelectorAll('[data-icone]').forEach((no) => no.prepend(icone(no.dataset.icone)));
+})();
