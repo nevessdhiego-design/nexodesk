@@ -129,6 +129,13 @@ try {
     Write-Host "NexoDesk em http://localhost:8080  (Ctrl+C para encerrar)"
     Write-Host "Na 1a execucao o console mostra a senha inicial do sindico, UMA vez: anote."
     Write-Host ""
+    if ($Perfil -match "demo") {
+        Write-Host "Contas de demonstracao (todas @nexodesk.local; a senha e a de NEXODESK_DEMO_SENHA, o sindico usa NEXODESK_SINDICO_SENHA):"
+        Write-Host "  sindico, ana.demo, bruno.demo (moradores), ze.demo (zelador), marta.demo (faxineira), eletricista.demo,"
+        Write-Host "  encanador.demo, porteiro.demo, seguranca.demo, elevador.demo (tecnico externo), manutencao.demo"
+        Write-Host "  A tela de login mostra botoes 'Entrar como...' que preenchem o e-mail."
+        Write-Host ""
+    }
     Push-Location $pastaApi
     try { & $java @argumentos } finally { Pop-Location }
 }

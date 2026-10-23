@@ -3,11 +3,12 @@ const caixa = document.getElementById('mensagem');
 const corpo = document.getElementById('lista-usuarios');
 const busca = document.getElementById('busca');
 let todos = [];
+let funcoes = [];   // vem da API (/api/sindico/funcoes): uma só fonte para o que cada função cobre
 let eu = null;
 
 const PERFIS = [
   { valor: 'MORADOR', rotulo: 'Morador' },
-  { valor: 'ZELADOR', rotulo: 'Zelador' },
+  { valor: 'FUNCIONARIO', rotulo: 'Funcionário' },
   { valor: 'SINDICO', rotulo: 'Síndico' },
 ];
 
@@ -31,13 +32,20 @@ function linha(u) {
   const ehEu = u.email === eu.email;
   const perfil = el('select', { id: 'perfil-' + u.id, 'aria-label': 'Perfil de ' + u.nome, disabled: ehEu },
     PERFIS.map((p) => el('option', { value: p.valor, text: p.rotulo, selected: p.valor === u.perfil })));
-  const salvar = el('button', { type: 'button', text: 'Salvar perfil', disabled: ehEu, 'aria-label': 'Salvar perfil de ' + u.nome });
+  // a função (zelador, eletricista...) só vale para funcionário
+  const funcao = el('select', { id: 'funcao-' + u.id, 'aria-label': 'Função de ' + u.nome, disabled: ehEu || u.perfil !== 'FUNCIONARIO' },
+    funcoes.map((f) => el('option', { value: f.codigo, text: f.rotulo, selected: f.codigo === (u.funcao || 'ZELADOR') })));
+  perfil.addEventListener('change', () => { funcao.disabled = ehEu || perfil.value !== 'FUNCIONARIO'; });
+  const salvar = el('button', { type: 'button', text: 'Salvar', disabled: ehEu, 'aria-label': 'Salvar perfil e função de ' + u.nome });
   salvar.addEventListener('click', () => {
-    if (perfil.value === u.perfil) {
-      mostrarMensagem(caixa, 'O perfil de ' + u.nome + ' já é ' + rotuloPerfil(u.perfil) + '.', 'ok');
+    const mudanca = { perfil: perfil.value };
+    if (perfil.value === 'FUNCIONARIO') mudanca.funcao = funcao.value;
+    if (perfil.value === u.perfil && (perfil.value !== 'FUNCIONARIO' || funcao.value === u.funcao)) {
+      mostrarMensagem(caixa, 'Nada mudou para ' + u.nome + '.', 'ok');
       return;
     }
-    alterar(u, { perfil: perfil.value }, u.nome + ' agora é ' + rotuloPerfil(perfil.value) + '.');
+    const rotuloFuncao = funcoes.find((f) => f.codigo === funcao.value);
+    alterar(u, mudanca, u.nome + ' agora é ' + (perfil.value === 'FUNCIONARIO' && rotuloFuncao ? rotuloFuncao.rotulo : rotuloPerfil(perfil.value)) + '.');
   });
 
   const alternarAtivo = el('button', {
@@ -73,7 +81,7 @@ function linha(u) {
     el('td', { class: 'nome', text: u.nome + (ehEu ? ' (você)' : '') }),
     el('td', { class: 'email', text: u.email }),
     el('td', { text: u.unidade || '—' }),
-    el('td', {}, perfil),
+    el('td', {}, el('div', { class: 'acoes-linha' }, perfil, funcao)),
     el('td', {}, selo(u.ativo ? 'Ativo' : 'Desativado', u.ativo ? 'RESOLVIDO' : 'neutro')),
     el('td', {}, el('div', { class: 'acoes-linha' }, salvar, alternarAtivo, redefinir)));
 }
@@ -89,7 +97,7 @@ function desenhar() {
 }
 
 async function carregar() {
-  todos = await api('/api/sindico/usuarios');
+  [todos, funcoes] = await Promise.all([api('/api/sindico/usuarios'), api('/api/sindico/funcoes')]);
   desenhar();
 }
 

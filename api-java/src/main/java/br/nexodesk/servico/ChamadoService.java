@@ -195,7 +195,7 @@ public class ChamadoService {
         if (sindico.getPerfil() == Perfil.MORADOR) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Só a equipe do condomínio muda o status.");
         }
-        if (sindico.getPerfil() == Perfil.ZELADOR && !ehResponsavel(c, sindico)) {
+        if (sindico.getPerfil() == Perfil.FUNCIONARIO && !ehResponsavel(c, sindico)) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Chamado não encontrado."); // o zelador só enxerga os dele
         }
         verificarVersao(c, req.versao());
@@ -332,9 +332,13 @@ public class ChamadoService {
 
     /** Aviso dentro do sistema para cada síndico ativo. Não leva o nome do morador (o chamado pode ser anônimo). */
     private void avisarSindicosDaEmergencia(Chamado c) {
+        String local = c.getLocalOcorrencia() == null ? "" : ", " + truncar(c.getLocalOcorrencia(), 40);
         String mensagem = truncar("EMERGÊNCIA no chamado #" + c.getId() + " \"" + truncar(c.getTitulo(), 60) + "\" ("
-                + c.getCategoria().getRotulo() + "). Atenda primeiro.", 300);
-        for (Usuario sindico : usuarios.sindicosAtivos()) {
+                + c.getCategoria().getRotulo() + local + "). Atenda primeiro.", 300);
+        // síndicos e também a equipe de segurança (função Segurança)
+        java.util.List<Usuario> avisados = new java.util.ArrayList<>(usuarios.sindicosAtivos());
+        avisados.addAll(usuarios.segurancaAtiva());
+        for (Usuario sindico : avisados) {
             Notificacao n = new Notificacao();
             n.setUsuario(sindico);
             n.setChamado(c);
@@ -353,7 +357,7 @@ public class ChamadoService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Chamado não encontrado."));
         boolean dono = c.getMorador().getId().equals(quem.getId());
         boolean sindico = quem.getPerfil() == Perfil.SINDICO;
-        boolean zeladorResponsavel = quem.getPerfil() == Perfil.ZELADOR && ehResponsavel(c, quem);
+        boolean zeladorResponsavel = quem.getPerfil() == Perfil.FUNCIONARIO && ehResponsavel(c, quem);
         if (!dono && !sindico && !zeladorResponsavel) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Chamado não encontrado.");
         }
@@ -413,6 +417,7 @@ public class ChamadoService {
                 c.getCriadoEm(), c.getAtualizadoEm(), c.getVersao(),
                 c.getResponsavel() == null ? null : c.getResponsavel().getId(),
                 c.getResponsavel() == null ? null : c.getResponsavel().getNome(),
+                c.getResponsavel() == null || c.getResponsavel().getFuncao() == null ? null : c.getResponsavel().getFuncao().getRotulo(),
                 c.getPrevisao(),
                 avaliacao == null ? null : avaliacao.getNota(),
                 avaliacao == null ? null : avaliacao.getComentario(),

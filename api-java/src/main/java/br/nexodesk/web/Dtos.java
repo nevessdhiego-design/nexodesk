@@ -77,7 +77,11 @@ public final class Dtos {
     public record AtribuirResponsavelRequest(Long responsavelId, java.time.LocalDate previsao, Long versao) {
     }
 
-    public record AlterarUsuarioRequest(br.nexodesk.dominio.Perfil perfil, Boolean ativo) {
+    /** funcao só vale para o perfil FUNCIONARIO (se faltar, fica a atual ou ZELADOR). */
+    public record AlterarUsuarioRequest(br.nexodesk.dominio.Perfil perfil, Boolean ativo, br.nexodesk.dominio.Funcao funcao) {
+        public AlterarUsuarioRequest(br.nexodesk.dominio.Perfil perfil, Boolean ativo) {
+            this(perfil, ativo, null);
+        }
     }
 
     public record AlterarStatusRequest(
@@ -89,7 +93,8 @@ public final class Dtos {
 
     // ---------- saída ----------
 
-    public record UsuarioResponse(Long id, String nome, String email, String telefone, String unidade, String perfil) {
+    public record UsuarioResponse(Long id, String nome, String email, String telefone, String unidade, String perfil,
+                                  String funcao) {
     }
 
     public record SessaoResponse(boolean autenticado, UsuarioResponse usuario) {
@@ -129,6 +134,7 @@ public final class Dtos {
             Long versao,
             Long responsavelId,
             String responsavelNome,
+            String responsavelFuncao,
             java.time.LocalDate previsao,
             Integer notaAvaliacao,
             String comentarioAvaliacao,
@@ -141,14 +147,19 @@ public final class Dtos {
     }
 
     public record UsuarioAdminResponse(Long id, String nome, String email, String unidade, String perfil,
-                                       boolean ativo, LocalDateTime criadoEm) {
+                                       String funcao, String funcaoRotulo, boolean ativo, LocalDateTime criadoEm) {
     }
 
     /** A senha temporária só aparece nesta resposta. */
     public record SenhaTemporariaResponse(String nome, String senhaTemporaria) {
     }
 
-    public record EquipeResponse(Long id, String nome, String perfil) {
+    /** categorias: o que a função cobre (o painel marca "Indicado" quando o chamado é de uma delas); cargaAberta: chamados não resolvidos dela. */
+    public record FuncaoResponse(String codigo, String rotulo, List<String> categorias, boolean recebeEmergencias) {
+    }
+
+    public record EquipeResponse(Long id, String nome, String perfil, String funcao, String funcaoRotulo,
+                                 java.util.List<String> categorias, long cargaAberta) {
     }
 
     public record NotificacaoResponse(Long id, Long chamadoId, String mensagem, boolean lida,

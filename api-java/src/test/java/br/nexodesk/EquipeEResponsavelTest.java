@@ -82,7 +82,7 @@ class EquipeEResponsavelTest {
     /** Cria uma pessoa, o síndico a promove a zelador e devolve o e-mail dela (a sessão antiga já não vale). */
     String novoZelador(MockHttpSession sindico) throws Exception {
         String email = cadastrarMorador();
-        mudarPerfil(sindico, email, "ZELADOR");
+        mudarPerfil(sindico, email, "FUNCIONARIO");
         return email;
     }
 
@@ -115,12 +115,12 @@ class EquipeEResponsavelTest {
         MockHttpSession antiga = entrar(email, SENHA);
         mvc.perform(get("/api/chamados/meus").session(antiga)).andExpect(status().isOk());
 
-        mudarPerfil(sindico, email, "ZELADOR");
+        mudarPerfil(sindico, email, "FUNCIONARIO");
 
         mvc.perform(get("/api/chamados/meus").session(antiga)).andExpect(status().isUnauthorized());
         MockHttpSession nova = entrar(email, SENHA);
-        mvc.perform(get("/api/zelador/chamados").session(nova)).andExpect(status().isOk());
-        mvc.perform(get("/api/auth/sessao").session(nova)).andExpect(jsonPath("$.usuario.perfil").value("ZELADOR"));
+        mvc.perform(get("/api/funcionario/chamados").session(nova)).andExpect(status().isOk());
+        mvc.perform(get("/api/auth/sessao").session(nova)).andExpect(jsonPath("$.usuario.perfil").value("FUNCIONARIO"));
     }
 
     @Test
@@ -316,7 +316,7 @@ class EquipeEResponsavelTest {
         int dosOutros = abrirChamado(morador, "Pintura descascando", false);
         atribuir(sindico, dele, idDe(zeladorEmail), null);
 
-        String json = mvc.perform(get("/api/zelador/chamados").session(zelador))
+        String json = mvc.perform(get("/api/funcionario/chamados").session(zelador))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         List<Integer> ids = JsonPath.read(json, "$[*].id");
         assertThat(ids).containsExactly(dele);
@@ -325,10 +325,10 @@ class EquipeEResponsavelTest {
         mvc.perform(get("/api/chamados/%d".formatted(dosOutros)).session(zelador)).andExpect(status().isNotFound());
         mvc.perform(get("/api/chamados/%d/mensagens".formatted(dosOutros)).session(zelador)).andExpect(status().isNotFound());
 
-        mvc.perform(patch("/api/zelador/chamados/%d/status".formatted(dosOutros)).with(csrf()).session(zelador)
+        mvc.perform(patch("/api/funcionario/chamados/%d/status".formatted(dosOutros)).with(csrf()).session(zelador)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"EM_ANDAMENTO\"}"))
                 .andExpect(status().isNotFound());
-        mvc.perform(patch("/api/zelador/chamados/%d/status".formatted(dele)).with(csrf()).session(zelador)
+        mvc.perform(patch("/api/funcionario/chamados/%d/status".formatted(dele)).with(csrf()).session(zelador)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"EM_ANDAMENTO\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("EM_ANDAMENTO"));
@@ -351,11 +351,11 @@ class EquipeEResponsavelTest {
         mvc.perform(patch("/api/sindico/chamados/%d/status".formatted(id)).with(csrf()).session(zelador)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"RESOLVIDO\"}"))
                 .andExpect(status().isForbidden());
-        mvc.perform(get("/api/zelador/chamados").session(morador)).andExpect(status().isForbidden());
-        mvc.perform(patch("/api/zelador/chamados/%d/status".formatted(id)).with(csrf()).session(morador)
+        mvc.perform(get("/api/funcionario/chamados").session(morador)).andExpect(status().isForbidden());
+        mvc.perform(patch("/api/funcionario/chamados/%d/status".formatted(id)).with(csrf()).session(morador)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"RESOLVIDO\"}"))
                 .andExpect(status().isForbidden());
-        mvc.perform(get("/api/zelador/chamados").session(sindico)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/funcionario/chamados").session(sindico)).andExpect(status().isForbidden());
     }
 
     @Test
@@ -367,7 +367,7 @@ class EquipeEResponsavelTest {
         int id = abrirChamado(morador, "Barulho estranho no gerador", true);
         atribuir(sindico, id, idDe(zeladorEmail), null);
 
-        String json = mvc.perform(get("/api/zelador/chamados").session(zelador)).andReturn().getResponse().getContentAsString();
+        String json = mvc.perform(get("/api/funcionario/chamados").session(zelador)).andReturn().getResponse().getContentAsString();
         assertThat(json).doesNotContain("Marta Anonima", "Bloco B");
         mvc.perform(get("/api/chamados/%d".formatted(id)).session(zelador))
                 .andExpect(jsonPath("$.moradorNome").value("Anônimo"));
@@ -397,7 +397,7 @@ class EquipeEResponsavelTest {
 
         mudarPerfil(sindico, zeladorEmail, "MORADOR");
 
-        mvc.perform(get("/api/zelador/chamados").session(zelador)).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/funcionario/chamados").session(zelador)).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/chamados/%d".formatted(id)).session(morador))
                 .andExpect(jsonPath("$.responsavelId").doesNotExist());
         mvc.perform(get("/api/sindico/equipe").session(sindico))
@@ -467,5 +467,121 @@ class EquipeEResponsavelTest {
                 .andExpect(status().isForbidden());
         mvc.perform(post("/api/sindico/usuarios/%d/redefinir-senha".formatted(idDe(moradorEmail))).session(sindico))
                 .andExpect(status().isForbidden());
+    }
+
+    // ---------- funções (zelador, eletricista, segurança...) ----------
+
+    /** Promove a funcionário com uma função e devolve o e-mail. */
+    String novoFuncionario(MockHttpSession sindico, String funcao) throws Exception {
+        String email = cadastrarMorador();
+        mvc.perform(patch("/api/sindico/usuarios/%d".formatted(idDe(email))).with(csrf()).session(sindico)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"perfil\":\"FUNCIONARIO\",\"funcao\":\"%s\"}".formatted(funcao)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.funcao").value(funcao));
+        return email;
+    }
+
+    @Test
+    void equipeInformaFuncaoCategoriasECargaDeCadaPessoa() throws Exception {
+        MockHttpSession sindico = sindico();
+        String eletricista = novoFuncionario(sindico, "ELETRICISTA");
+        MockHttpSession morador = entrar(cadastrarMorador(), SENHA);
+        int id = abrirChamado(morador, "Tomada queimada no hall", false);
+        atribuir(sindico, id, idDe(eletricista), null);
+
+        String json = mvc.perform(get("/api/sindico/equipe").session(sindico)).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String filtro = "$[?(@.id==%d)]".formatted(idDe(eletricista));
+        assertThat((List<String>) JsonPath.read(json, filtro + ".funcao")).containsExactly("ELETRICISTA");
+        assertThat((List<String>) JsonPath.read(json, filtro + ".funcaoRotulo")).containsExactly("Eletricista");
+        assertThat((List<List<String>>) JsonPath.read(json, filtro + ".categorias").getClass().cast(JsonPath.read(json, filtro + ".categorias")))
+                .singleElement().asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.LIST)
+                .containsExactlyInAnyOrder("ELETRICA", "ILUMINACAO");
+        assertThat(((List<Number>) JsonPath.read(json, filtro + ".cargaAberta")).get(0).intValue()).isEqualTo(1);
+
+        // resolvido deixa de contar na carga
+        mvc.perform(patch("/api/sindico/chamados/%d/status".formatted(id)).with(csrf()).session(sindico)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"RESOLVIDO\"}"))
+                .andExpect(status().isOk());
+        String depois = mvc.perform(get("/api/sindico/equipe").session(sindico)).andReturn().getResponse().getContentAsString();
+        assertThat(((List<Number>) JsonPath.read(depois, filtro + ".cargaAberta")).get(0).intValue()).isZero();
+    }
+
+    @Test
+    void funcoesDisponiveisVemDaApiComAsCategoriasQueCobrem() throws Exception {
+        mvc.perform(get("/api/sindico/funcoes").session(sindico()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.codigo=='ZELADOR')].categorias[0]").value(org.hamcrest.Matchers.hasItem("LIMPEZA")))
+                .andExpect(jsonPath("$[?(@.codigo=='SEGURANCA')].recebeEmergencias").value(org.hamcrest.Matchers.hasItem(true)))
+                .andExpect(jsonPath("$.length()").value(8));
+        mvc.perform(get("/api/sindico/funcoes").session(entrar(cadastrarMorador(), SENHA))).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void mudarSoAFuncaoNaoDerrubaASessaoMasFuncaoEmMoradorEhRecusada() throws Exception {
+        MockHttpSession sindico = sindico();
+        String email = novoFuncionario(sindico, "ZELADOR");
+        MockHttpSession sessao = entrar(email, SENHA);
+
+        mvc.perform(patch("/api/sindico/usuarios/%d".formatted(idDe(email))).with(csrf()).session(sindico)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"funcao\":\"ENCANADOR\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.funcaoRotulo").value("Encanador"));
+        mvc.perform(get("/api/funcionario/chamados").session(sessao)).andExpect(status().isOk()); // sessão continua valendo
+        mvc.perform(get("/api/auth/me").session(sessao)).andExpect(jsonPath("$.funcao").value("Encanador"));
+
+        String morador = cadastrarMorador();
+        mvc.perform(patch("/api/sindico/usuarios/%d".formatted(idDe(morador))).with(csrf()).session(sindico)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"funcao\":\"ZELADOR\"}"))
+                .andExpect(status().isBadRequest());
+        // sem informar a função, quem vira funcionário começa como zelador
+        mvc.perform(patch("/api/sindico/usuarios/%d".formatted(idDe(morador))).with(csrf()).session(sindico)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"perfil\":\"FUNCIONARIO\"}"))
+                .andExpect(jsonPath("$.funcao").value("ZELADOR"));
+        // voltar a morador limpa a função
+        mvc.perform(patch("/api/sindico/usuarios/%d".formatted(idDe(morador))).with(csrf()).session(sindico)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"perfil\":\"MORADOR\"}"))
+                .andExpect(jsonPath("$.funcao").doesNotExist());
+    }
+
+    @Test
+    void emergenciaAvisaTambemQuemTemAFuncaoSegurancaMasChamadoComumNao() throws Exception {
+        MockHttpSession sindico = sindico();
+        String seguranca = novoFuncionario(sindico, "SEGURANCA");
+        MockHttpSession vigia = entrar(seguranca, SENHA);
+        MockHttpSession morador = entrar(cadastrarMorador(), SENHA);
+
+        int comum = abrirChamado(morador, "Tomada solta no corredor", false);
+        MvcResult r = mvc.perform(multipart("/api/chamados").with(csrf())
+                        .param("titulo", "Cheiro forte de gás no bloco A").param("descricao", "Tem cheiro de gás na escada.")
+                        .param("categoria", "SEGURANCA").param("localOcorrencia", "Bloco A").param("anonimo", "false")
+                        .param("emergencia", "true").session(morador))
+                .andExpect(status().isCreated()).andReturn();
+        int emergencia = JsonPath.read(r.getResponse().getContentAsString(), "$.id");
+
+        mvc.perform(get("/api/notificacoes").session(vigia))
+                .andExpect(jsonPath("$.itens[?(@.chamadoId==%d)].mensagem".formatted(emergencia))
+                        .value(Matchers.hasItem(Matchers.allOf(Matchers.containsString("EMERGÊNCIA no chamado #" + emergencia),
+                                Matchers.containsString("Bloco A")))))
+                .andExpect(jsonPath("$.itens[?(@.chamadoId==%d)]".formatted(comum)).isEmpty());
+    }
+
+    @Test
+    void mensagemDeFuncionarioMostraAFuncaoDele() throws Exception {
+        MockHttpSession sindico = sindico();
+        String eletricista = novoFuncionario(sindico, "ELETRICISTA");
+        MockHttpSession funcionario = entrar(eletricista, SENHA);
+        MockHttpSession morador = entrar(cadastrarMorador(), SENHA);
+        int id = abrirChamado(morador, "Disjuntor caindo toda hora", false);
+        atribuir(sindico, id, idDe(eletricista), null);
+
+        mvc.perform(post("/api/chamados/%d/mensagens".formatted(id)).with(csrf()).session(funcionario)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"texto\":\"Passo aí amanhã cedo.\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.autor").value(Matchers.containsString("(eletricista)")));
+        mvc.perform(get("/api/notificacoes").session(morador))
+                .andExpect(jsonPath("$.itens[?(@.chamadoId==%d)].mensagem".formatted(id))
+                        .value(Matchers.hasItem(Matchers.containsString("O eletricista respondeu"))));
     }
 }

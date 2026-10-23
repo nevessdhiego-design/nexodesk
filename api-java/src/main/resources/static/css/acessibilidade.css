@@ -53,6 +53,10 @@ html.a11y-escuro {
 html.a11y-escuro .topo { background: #101113; }
 html.a11y-escuro .fila-num, html.a11y-escuro button.link, html.a11y-escuro .chamado summary, html.a11y-escuro .conversa summary { color: var(--highlight); }
 html.a11y-escuro .estrelas { color: #f0cd7a; }
+html.a11y-escuro .telefones-emergencia { background: #34201f; border-color: #6b3434; }
+html.a11y-contraste .telefones-emergencia { background: #fff; border: 2px solid #000; }
+html.a11y-contraste a.telefone { background: #000; color: #fff; }
+html.a11y-escuro button.conta-demo { background: var(--accent); color: #fff; }
 html.a11y-escuro button.secundario-escuro { background: var(--accent); color: #fff; }
 html.a11y-escuro h2, html.a11y-escuro h3 { color: #9fd4cc; }
 html.a11y-escuro input, html.a11y-escuro select, html.a11y-escuro textarea {

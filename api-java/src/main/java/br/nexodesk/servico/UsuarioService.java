@@ -64,6 +64,12 @@ public class UsuarioService {
         return usuarios.findByPerfilAndAtivoTrue(Perfil.SINDICO);
     }
 
+    /** Quem recebe aviso de toda emergência: funcionários com a função Segurança. */
+    @Transactional(readOnly = true)
+    public java.util.List<Usuario> segurancaAtiva() {
+        return usuarios.findByFuncaoAndAtivoTrue(br.nexodesk.dominio.Funcao.SEGURANCA);
+    }
+
     @Transactional(readOnly = true)
     public UsuarioResponse eu(String email) {
         return paraResposta(buscarPorEmail(email));
@@ -103,7 +109,8 @@ public class UsuarioService {
     }
 
     public static UsuarioResponse paraResposta(Usuario u) {
-        return new UsuarioResponse(u.getId(), u.getNome(), u.getEmail(), u.getTelefone(), u.getUnidade(), u.getPerfil().name());
+        return new UsuarioResponse(u.getId(), u.getNome(), u.getEmail(), u.getTelefone(), u.getUnidade(), u.getPerfil().name(),
+                u.getFuncao() == null ? null : u.getFuncao().getRotulo());
     }
 
     private static String vazioParaNulo(String s) {

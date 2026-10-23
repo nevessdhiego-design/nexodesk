@@ -27,18 +27,23 @@ class DadosDemonstracaoTest {
     void criaMoradoresEChamadosVariadosComHistoricoEAvisos() {
         assertThat(usuarios.existsByEmail("ana.demo@nexodesk.local")).isTrue();
         assertThat(usuarios.existsByEmail("bruno.demo@nexodesk.local")).isTrue();
-        assertThat(chamados.count()).isEqualTo(8);
+        assertThat(chamados.count()).isEqualTo(9);
         assertThat(chamados.countByStatus(StatusChamado.RESOLVIDO)).isEqualTo(1);
         assertThat(chamados.countByStatus(StatusChamado.EM_ANDAMENTO)).isEqualTo(1);
-        assertThat(chamados.countByStatus(StatusChamado.ABERTO)).isEqualTo(6);
-        // 2 avisos de andamento/resolução + 2 da atribuição do chamado da lixeira (morador e zelador)
-        assertThat(notificacoes.count()).isEqualTo(4);
-        assertThat(usuarios.existsByEmail("ze.demo@nexodesk.local")).isTrue();
+        assertThat(chamados.countByStatus(StatusChamado.ABERTO)).isEqualTo(7);
+        // 2 avisos de andamento/resolução + 3 atribuições (lixeira, vazamento e lâmpada), cada uma avisa o morador e o responsável
+        assertThat(notificacoes.count()).isEqualTo(8);
+        // uma conta para cada função de um condomínio, para a apresentação
+        for (String conta : new String[] {"ze", "marta", "eletricista", "encanador", "porteiro", "seguranca", "elevador", "manutencao"}) {
+            assertThat(usuarios.existsByEmail(conta + ".demo@nexodesk.local")).as(conta).isTrue();
+        }
+        assertThat(usuarios.findByEmail("seguranca.demo@nexodesk.local").orElseThrow().getFuncao())
+                .isEqualTo(br.nexodesk.dominio.Funcao.SEGURANCA);
     }
 
     @Test
     void rodarDeNovoNaoDuplicaNada() {
         demonstracao.run(null);
-        assertThat(chamados.count()).isEqualTo(8);
+        assertThat(chamados.count()).isEqualTo(9);
     }
 }

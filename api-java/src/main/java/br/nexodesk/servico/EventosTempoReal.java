@@ -32,6 +32,11 @@ public class EventosTempoReal {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void aoAbrirChamado(ChamadoAbertoEvent e) {
         publicador.notificar(emailsDosSindicos(), e.emergencia() ? EMERGENCIA : CHAMADO_NOVO, e.chamadoId());
+        if (e.emergencia()) {
+            // a equipe de segurança também fica sabendo na hora
+            publicador.notificar(usuarios.segurancaAtiva().stream().map(Usuario::getEmail).collect(Collectors.toSet()),
+                    EMERGENCIA, e.chamadoId());
+        }
     }
 
     /** O morador vê o status mudar; os outros síndicos veem a lista se atualizar. */

@@ -103,6 +103,11 @@ async function carregarChamados() {
 
 document.getElementById('botao-sair').addEventListener('click', sair);
 
+// ao marcar "é uma emergência", os telefones de emergência aparecem na hora (o sistema só mostra, não liga)
+const caixaTelefones = document.getElementById('telefones-emergencia');
+caixaTelefones.append(telefonesEmergencia());
+document.getElementById('emergencia').addEventListener('change', (e) => caixaTelefones.classList.toggle('hidden', !e.target.checked));
+
 const banner = document.getElementById('novidades');
 async function atualizarTudo() {
   banner.classList.add('hidden');

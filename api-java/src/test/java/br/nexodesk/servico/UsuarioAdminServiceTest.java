@@ -41,6 +41,9 @@ class UsuarioAdminServiceTest {
         u.setNome("Pessoa " + id);
         u.setEmail(email);
         u.setPerfil(perfil);
+        if (perfil == Perfil.FUNCIONARIO) {
+            u.setFuncao(br.nexodesk.dominio.Funcao.ZELADOR);
+        }
         u.setAtivo(true);
         return u;
     }
@@ -53,7 +56,7 @@ class UsuarioAdminServiceTest {
 
         for (AlterarUsuarioRequest req : new AlterarUsuarioRequest[] {
                 new AlterarUsuarioRequest(Perfil.MORADOR, null),
-                new AlterarUsuarioRequest(Perfil.ZELADOR, null),
+                new AlterarUsuarioRequest(Perfil.FUNCIONARIO, null),
                 new AlterarUsuarioRequest(null, false)}) {
             assertThatThrownBy(() -> servico.alterar("a@nexodesk.test", 2L, req))
                     .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.getStatus()).isEqualTo(HttpStatus.CONFLICT));
@@ -83,18 +86,18 @@ class UsuarioAdminServiceTest {
         Usuario morador = pessoa(3L, "c@nexodesk.test", Perfil.MORADOR);
         when(usuarios.findById(3L)).thenReturn(Optional.of(morador));
 
-        servico.alterar("a@nexodesk.test", 3L, new AlterarUsuarioRequest(Perfil.ZELADOR, null));
+        servico.alterar("a@nexodesk.test", 3L, new AlterarUsuarioRequest(Perfil.FUNCIONARIO, null));
 
-        assertThat(morador.getPerfil()).isEqualTo(Perfil.ZELADOR);
+        assertThat(morador.getPerfil()).isEqualTo(Perfil.FUNCIONARIO);
         verify(chamados, never()).liberarResponsavel(any());
     }
 
     @Test
     void pedidoSemMudancaNaoDerrubaSessaoNemGrava() {
-        Usuario zelador = pessoa(4L, "d@nexodesk.test", Perfil.ZELADOR);
+        Usuario zelador = pessoa(4L, "d@nexodesk.test", Perfil.FUNCIONARIO);
         when(usuarios.findById(4L)).thenReturn(Optional.of(zelador));
 
-        servico.alterar("a@nexodesk.test", 4L, new AlterarUsuarioRequest(Perfil.ZELADOR, true));
+        servico.alterar("a@nexodesk.test", 4L, new AlterarUsuarioRequest(Perfil.FUNCIONARIO, true));
 
         assertThat(zelador.getVersaoSessao()).isZero();
         verify(usuarios, never()).save(any());

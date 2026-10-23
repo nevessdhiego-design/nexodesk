@@ -26,13 +26,21 @@ function blocoResponsavel(c) {
   if (c.status === 'RESOLVIDO') {
     return c.responsavelNome ? el('p', { class: 'responsavel', text: textoResponsavel(c) }) : null;
   }
+  // quem cobre a categoria vem primeiro ("Indicado"); entre eles, o de menor carga; síndicos por último. É só sugestão.
+  const indicado = (p) => p.categorias.includes(c.categoria);
+  const ordenada = [...equipe].sort((a, b) => (indicado(b) - indicado(a)) || ((a.perfil === 'SINDICO') - (b.perfil === 'SINDICO'))
+    || (a.cargaAberta - b.cargaAberta) || a.nome.localeCompare(b.nome, 'pt-BR'));
   const quem = el('select', { id: 'resp-' + c.id },
     el('option', { value: '', text: 'Sem responsável' }),
-    equipe.map((p) => el('option', {
+    ordenada.map((p) => el('option', {
       value: String(p.id),
-      text: p.nome + (p.perfil === 'ZELADOR' ? ' (zelador)' : ' (síndico)'),
+      text: (indicado(p) ? 'Indicado · ' : '') + p.nome + ' · ' + (p.funcaoRotulo || 'Síndico') + ' · ' + p.cargaAberta + ' em aberto',
       selected: p.id === c.responsavelId,
     })));
+  const indicados = ordenada.filter(indicado).map((p) => p.nome);
+  const dica = el('p', { class: 'muted', text: indicados.length
+    ? 'Para ' + c.categoriaRotulo + ' o sistema indica: ' + indicados.join(', ') + '. Quem atribui é você.'
+    : 'Nenhuma função da equipe cobre ' + c.categoriaRotulo + '. Atribua a quem preferir.' });
   const quando = el('input', { type: 'date', id: 'prev-' + c.id, min: hojeIso(), value: c.previsao || null });
   const atribuir = el('button', { type: 'button', text: 'Salvar responsável' });
   atribuir.addEventListener('click', async () => {
@@ -51,10 +59,12 @@ function blocoResponsavel(c) {
       if (erro.status === 409) await carregar().catch(() => {});
     }
   });
-  return el('div', { class: 'edicao responsavel-edicao' },
-    el('div', {}, el('label', { for: 'resp-' + c.id, text: 'Responsável' }), quem),
-    el('div', {}, el('label', { for: 'prev-' + c.id, text: 'Previsão (opcional)' }), quando),
-    atribuir);
+  return el('div', { class: 'bloco-responsavel' },
+    dica,
+    el('div', { class: 'edicao responsavel-edicao' },
+      el('div', {}, el('label', { for: 'resp-' + c.id, text: 'Responsável' }), quem),
+      el('div', {}, el('label', { for: 'prev-' + c.id, text: 'Previsão (opcional)' }), quando),
+      atribuir));
 }
 
 function cartaoChamado(c, posicao) {
@@ -96,6 +106,7 @@ function cartaoChamado(c, posicao) {
       + ' · ' + formatarData(c.criadoEm)
       + (c.status !== 'RESOLVIDO' && c.diasEmEspera > 0 ? ' · há ' + c.diasEmEspera + (c.diasEmEspera === 1 ? ' dia' : ' dias')
         + (c.pontuacaoEfetiva < c.pontuacao ? ' (subiu na fila: peso ' + c.pontuacaoEfetiva + ' em vez de ' + c.pontuacao + ')' : '') : '') }),
+    c.emergencia ? telefonesEmergencia() : null,
     el('p', { class: 'descricao', text: c.descricao }),
     c.notaAvaliacao !== null && c.notaAvaliacao !== undefined
       ? el('div', { class: 'avaliacao' },

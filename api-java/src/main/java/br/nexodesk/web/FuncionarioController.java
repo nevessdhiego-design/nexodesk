@@ -15,16 +15,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Área do zelador (perfil ZELADOR, regra em SecurityConfig): ele só enxerga e atualiza os chamados que o síndico
+ * Área do funcionário (perfil FUNCIONARIO, regra em SecurityConfig): ele só enxerga e atualiza os chamados que o síndico
  * atribuiu a ele. Chamado de outra pessoa responde 404, como se não existisse.
  */
 @RestController
-@RequestMapping("/api/zelador")
-public class ZeladorController {
+@RequestMapping("/api/funcionario")
+public class FuncionarioController {
 
     private final ChamadoService chamados;
 
-    public ZeladorController(ChamadoService chamados) {
+    public FuncionarioController(ChamadoService chamados) {
         this.chamados = chamados;
     }
 

@@ -6,6 +6,7 @@ import br.nexodesk.servico.UsuarioAdminService;
 import br.nexodesk.web.Dtos.AlterarUsuarioRequest;
 import br.nexodesk.web.Dtos.AtribuirResponsavelRequest;
 import br.nexodesk.web.Dtos.EquipeResponse;
+import br.nexodesk.web.Dtos.FuncaoResponse;
 import br.nexodesk.web.Dtos.SenhaTemporariaResponse;
 import br.nexodesk.web.Dtos.UsuarioAdminResponse;
 import br.nexodesk.web.Dtos.AlterarStatusRequest;
@@ -74,6 +75,14 @@ public class SindicoController {
     @GetMapping("/equipe")
     public List<EquipeResponse> equipe() {
         return usuarios.equipe();
+    }
+
+    /** Funções que um funcionário pode ter e as categorias de chamado que cada uma cobre. */
+    @GetMapping("/funcoes")
+    public List<FuncaoResponse> funcoes() {
+        return java.util.Arrays.stream(br.nexodesk.dominio.Funcao.values())
+                .map(f -> new FuncaoResponse(f.name(), f.getRotulo(), f.getCategorias().stream().map(Enum::name).toList(), f.recebeEmergencias()))
+                .toList();
     }
 
     @GetMapping("/usuarios")

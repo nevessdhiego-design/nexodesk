@@ -55,6 +55,23 @@ formCadastrar.addEventListener('submit', async (e) => {
   }
 });
 
+// No perfil "demo" a API lista as contas de exemplo (sem senha); fora dele a rota não existe e nada aparece.
+fetch('/api/demo/contas', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+  .then((r) => (r.ok ? r.json() : []))
+  .then((contas) => {
+    if (!contas.length) return;
+    document.getElementById('botoes-contas-demo').replaceChildren(...contas.map((c) => {
+      const botao = el('button', { type: 'button', class: 'conta-demo', text: c.rotulo, title: c.email });
+      botao.addEventListener('click', () => {
+        document.getElementById('login-email').value = c.email;
+        document.getElementById('login-senha').focus();
+      });
+      return botao;
+    }));
+    document.getElementById('contas-demo').classList.remove('hidden');
+  })
+  .catch(() => { /* sem demonstração: segue o login normal */ });
+
 // Quem já está logado vai direto para o painel.
 api('/api/auth/sessao')
   .then((s) => { if (s.autenticado) irParaPainel(s.usuario); })
