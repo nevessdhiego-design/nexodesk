@@ -129,19 +129,38 @@ function cartaoChamado(c, posicao) {
       salvar));
 }
 
+/** Barra empilhada com legenda. O tamanho de cada trecho vem do valor (CSSOM, permitido pela CSP); a legenda diz os números por extenso. */
+function barraEmpilhada(titulo, partes) {
+  const total = partes.reduce((soma, p) => soma + p[1], 0);
+  const resumo = titulo + ': ' + partes.map((p) => p[1] + ' ' + p[0].toLowerCase()).join(', ');
+  const barra = el('div', { class: 'barra-empilhada', role: 'img', 'aria-label': resumo });
+  partes.filter((p) => p[1] > 0).forEach((p) => {
+    const trecho = el('div', { class: 'trecho ' + p[2] });
+    trecho.style.flexGrow = String(p[1]);
+    barra.append(trecho);
+  });
+  if (!total) barra.append(el('div', { class: 'trecho vazio-trecho' }));
+  return el('div', { class: 'grafico' }, el('h3', { text: titulo }), barra,
+    el('ul', { class: 'legenda' }, partes.map((p) => el('li', {}, el('span', { class: 'ponto ' + p[2] }), el('span', { text: p[0] + ': ' + p[1] })))));
+}
+
 async function carregarEstatisticas() {
   const e = await api('/api/sindico/estatisticas');
   const itens = [
-    ['Emergências pendentes', e.emergenciasAbertas],
-    ['Abertos', e.abertos], ['Em andamento', e.emAndamento], ['Resolvidos', e.resolvidos],
-    ['Pendentes fáceis', e.pendentesFaceis], ['Pendentes médios', e.pendentesMedios], ['Pendentes difíceis', e.pendentesDificeis],
+    ['Emergências pendentes', e.emergenciasAbertas, 'alerta', e.emergenciasAbertas > 0 ? 'urgente' : ''],
+    ['Abertos', e.abertos, 'chamados', ''], ['Em andamento', e.emAndamento, 'ferramenta', ''], ['Resolvidos', e.resolvidos, 'check', 'ok'],
+    ['Pendentes fáceis', e.pendentesFaceis, 'relogio', ''], ['Pendentes médios', e.pendentesMedios, 'relogio', ''], ['Pendentes difíceis', e.pendentesDificeis, 'relogio', ''],
     ['Avaliação média', e.mediaAvaliacoes === null || e.mediaAvaliacoes === undefined
-      ? '—' : String(e.mediaAvaliacoes).replace('.', ',') + ' / 5 (' + e.totalAvaliacoes + ')'],
+      ? '—' : String(e.mediaAvaliacoes).replace('.', ',') + ' / 5 (' + e.totalAvaliacoes + ')', 'estrela', ''],
   ];
-  document.getElementById('estatisticas').replaceChildren(...itens.map(([rotulo, valor]) =>
-    el('div', { class: 'estatistica' },
+  document.getElementById('estatisticas').replaceChildren(...itens.map(([rotulo, valor, nomeIcone, classe]) =>
+    el('div', { class: 'estatistica ' + classe },
+      icone(nomeIcone, 'icone-estatistica'),
       el('div', { class: 'valor', text: String(valor) }),
       el('div', { class: 'rotulo', text: rotulo }))));
+  document.getElementById('graficos').replaceChildren(
+    barraEmpilhada('Chamados por situação', [['Abertos', e.abertos, 'c-aberto'], ['Em andamento', e.emAndamento, 'c-andamento'], ['Resolvidos', e.resolvidos, 'c-resolvido']]),
+    barraEmpilhada('Pendentes por dificuldade', [['Fáceis', e.pendentesFaceis, 'c-facil'], ['Médios', e.pendentesMedios, 'c-medio'], ['Difíceis', e.pendentesDificeis, 'c-dificil']]));
 }
 
 async function carregar() {
@@ -185,7 +204,7 @@ function desenharLista() {
   if (mostrarMais) mostrarMais.addEventListener('click', () => { limiteVisivel += TAMANHO_PAGINA; desenharLista(); });
   lista.replaceChildren(...(visiveis.length
     ? naPagina.map(({ c, posicao }) => cartaoChamado(c, posicao))
-    : [el('p', { class: 'vazio', text: chamadosNaTela.length ? 'Nenhum chamado combina com a busca.' : 'Nenhum chamado neste filtro.' })]),
+    : [vazio(chamadosNaTela.length ? 'Nenhum chamado combina com a busca. Tente outras palavras ou limpe o filtro.' : 'Nenhum chamado neste filtro. Quando um morador abrir um chamado, ele aparece aqui sozinho.')]),
     ...(mostrarMais ? [el('div', { class: 'acoes' }, mostrarMais)] : []));
   document.getElementById('contagem').textContent = naPagina.length + ' de ' + visiveis.length + ' chamados exibidos'
     + (visiveis.length !== chamadosNaTela.length ? ' (' + chamadosNaTela.length + ' no filtro de status)' : '');

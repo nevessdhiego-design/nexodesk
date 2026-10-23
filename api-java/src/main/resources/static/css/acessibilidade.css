@@ -165,3 +165,30 @@ html.a11y-escuro .a11y-btn:hover { background: #9fd4cc; color: #1a1b1e; }
 html.a11y-escuro #a11y-restaurar { background: #1a1b1e; color: #f2f2f4; }
 html.a11y-contraste #a11y-botao { background: #000; border-color: #fff; }
 html.a11y-contraste #a11y-painel { border: 2px solid #000; }
+
+/* ---------- fase 3: ajustes de aparência nos modos escuro e de alto contraste ---------- */
+html.a11y-escuro .menu { background: #1f2024; border-bottom-color: var(--border); }
+html.a11y-escuro .menu a { color: var(--muted); }
+html.a11y-escuro .menu a:hover { background: #2a2b31; color: var(--text); }
+html.a11y-escuro .menu a[aria-current="page"] { color: var(--text); border-bottom-color: var(--highlight); }
+html.a11y-escuro .estatistica.urgente { background: #34201f; }
+html.a11y-escuro .estatistica.urgente .valor, html.a11y-escuro .estatistica.urgente .icone-estatistica { color: #ff9c94; }
+html.a11y-escuro .estatistica .icone-estatistica { color: var(--highlight); }
+html.a11y-escuro .barra-empilhada { background: #2c2d33; }
+html.a11y-escuro .grafico h3 { color: var(--secondary); }
+html.a11y-escuro .passos .bolinha { background: #25262b; }
+html.a11y-escuro .passos li.feito { color: #8fe0ae; }
+html.a11y-escuro .passos li.atual { color: var(--text); }
+html.a11y-escuro .esqueleto { background: linear-gradient(90deg, #2c2d33 25%, #34353c 50%, #2c2d33 75%); background-size: 200% 100%; }
+html.a11y-escuro .login-destaque .marca-grande { color: var(--text); }
+html.a11y-escuro .vantagens .icone { background: #1f3a36; }
+html.a11y-escuro .chamado { border-left-color: #3a3b41; }
+html.a11y-contraste .menu { background: #fff; border-bottom: 2px solid #000; }
+html.a11y-contraste .menu a { color: #000; }
+html.a11y-contraste .menu a[aria-current="page"] { border-bottom-color: #000; }
+html.a11y-contraste .estatistica .icone-estatistica, html.a11y-contraste .icone-grande { color: #000; }
+html.a11y-contraste .trecho { background: #000 !important; border-right: 3px solid #fff; }
+html.a11y-contraste .barra-empilhada { border: 2px solid #000; }
+html.a11y-contraste .passos .bolinha { border-color: #000; }
+html.a11y-contraste .passos li.feito .bolinha { background: #000; border-color: #000; }
+html.a11y-contraste .chamado { border-left-color: #000; }

@@ -45,6 +45,16 @@ function blocoAvaliacao(c) {
     el('div', { class: 'acoes' }, enviar), aviso);
 }
 
+/** Aberto → Em andamento → Resolvido, mostrando onde o chamado está. */
+function passosDoChamado(c) {
+  const ordem = [['ABERTO', 'Aberto'], ['EM_ANDAMENTO', 'Em andamento'], ['RESOLVIDO', 'Resolvido']];
+  const atual = ordem.findIndex((p) => p[0] === c.status);
+  return el('ol', { class: 'passos', 'aria-label': 'Andamento do chamado' }, ordem.map(([, rotulo], i) =>
+    el('li', { class: i < atual || (i === atual && c.status === 'RESOLVIDO') ? 'feito' : i === atual ? 'atual' : '', 'aria-current': i === atual ? 'step' : null },
+      el('span', { class: 'bolinha' }, i < atual || (i === atual && c.status === 'RESOLVIDO') ? icone('check') : String(i + 1)),
+      el('span', { text: rotulo }))));
+}
+
 function cartaoChamado(c) {
   const detalhes = el('div', { class: 'hidden' });
   let carregado = false;
@@ -87,6 +97,7 @@ function cartaoChamado(c) {
       c.anonimo ? selo('Anônimo', 'neutro') : null,
       seloPrazo(c)),
     el('div', { class: 'meta', text: c.categoriaRotulo + (c.localOcorrencia ? ' · ' + c.localOcorrencia : '') + ' · aberto em ' + formatarData(c.criadoEm) }),
+    passosDoChamado(c),
     c.responsavelNome ? el('div', { class: 'responsavel', text: textoResponsavel(c) }) : null,
     blocoTarefas(c),
     blocoAvaliacao(c),
@@ -100,7 +111,7 @@ async function carregarChamados() {
   listaChamados.replaceChildren(
     ...(chamados.length
       ? chamados.map(cartaoChamado)
-      : [el('p', { class: 'vazio', text: 'Você ainda não abriu nenhum chamado.' })]));
+      : [vazio('Você ainda não abriu nenhum chamado. Use o formulário acima: leva menos de um minuto.')]));
 }
 
 document.getElementById('botao-sair').addEventListener('click', sair);

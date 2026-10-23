@@ -32,7 +32,7 @@ public class DemoController {
         return usuarios.findAllByOrderByNomeAsc().stream()
                 .filter(Usuario::isAtivo)
                 .filter(u -> u.getEmail().endsWith("@nexodesk.local"))
-                .map(u -> new ContaDemo(u.getNome() + " · " + rotulo(u), u.getEmail()))
+                .map(u -> new ContaDemo(u.getNome().equalsIgnoreCase(rotulo(u)) ? u.getNome() : u.getNome() + " · " + rotulo(u), u.getEmail()))
                 .toList();
     }
 

@@ -244,3 +244,93 @@ button.perigo:hover { background: #8f2525; }
 
 /* texto só para leitor de tela */
 .somente-leitor { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* =====================================================================
+   Fase 3: aparência. Mesma identidade (verde-petróleo), mais respiro,
+   sombras suaves, ícones, menu por perfil, gráficos e passos.
+   Tudo por classes (a CSP não aceita estilo inline).
+   ===================================================================== */
+:root {
+  --sombra: 0 1px 2px rgba(23, 34, 44, .06), 0 4px 14px rgba(23, 34, 44, .06);
+  --sombra-forte: 0 2px 4px rgba(23, 34, 44, .08), 0 10px 28px rgba(23, 34, 44, .12);
+  --raio: 14px;
+}
+body { font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; }
+h1, h2, h3 { letter-spacing: -.01em; }
+.cartao { border-radius: var(--raio); box-shadow: var(--sombra); border-color: #e4e9eb; }
+.chamado { border-radius: var(--raio); box-shadow: var(--sombra); border-color: #e4e9eb; transition: box-shadow .15s ease; }
+.chamado:hover { box-shadow: var(--sombra-forte); }
+button, a.botao-link { border-radius: 10px; transition: background .15s ease, transform .05s ease; }
+button:active { transform: translateY(1px); }
+input[type=text], input[type=email], input[type=password], input[type=tel], select, textarea { border-radius: 10px; }
+
+.icone { width: 1.15em; height: 1.15em; vertical-align: -.2em; flex: none; }
+.icone-grande { width: 2.6rem; height: 2.6rem; color: var(--highlight); }
+.topo { box-shadow: 0 2px 8px rgba(0, 0, 0, .18); }
+.topo .marca { display: flex; align-items: center; }
+.topo .logo { border-radius: 7px; margin-right: .5rem; }
+.topo button, .topo a.botao-link { display: inline-flex; align-items: center; gap: .4rem; }
+
+/* menu por perfil */
+.menu { display: flex; gap: .25rem; background: #fff; border-bottom: 1px solid var(--border); padding: 0 1rem; overflow-x: auto; position: sticky; top: 0; z-index: 5; }
+.menu a { display: inline-flex; align-items: center; gap: .45rem; padding: .8rem .9rem; color: var(--muted); font-weight: 600; text-decoration: none; border-bottom: 3px solid transparent; white-space: nowrap; }
+.menu a:hover { color: var(--secondary); background: #f4f7f7; }
+.menu a[aria-current="page"] { color: var(--secondary); border-bottom-color: var(--highlight); }
+@media (max-width: 640px) { .menu { padding: 0 .25rem; } .menu a { padding: .75rem .6rem; font-size: .92rem; } }
+
+/* estatísticas com ícone */
+.estatistica { position: relative; border-radius: var(--raio); box-shadow: var(--sombra); padding-top: .9rem; }
+.estatistica .icone-estatistica { position: absolute; top: .75rem; right: .75rem; width: 1.3rem; height: 1.3rem; color: var(--highlight); }
+.estatistica.urgente { border-color: var(--danger); background: #fff6f5; }
+.estatistica.urgente .valor, .estatistica.urgente .icone-estatistica { color: var(--danger); }
+.estatistica.ok .icone-estatistica { color: var(--ok); }
+
+/* gráficos */
+.graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+.grafico h3 { font-size: 1rem; margin-bottom: .5rem; color: var(--secondary); }
+.barra-empilhada { display: flex; height: 18px; border-radius: 999px; overflow: hidden; background: #e8edef; gap: 2px; }
+.trecho { min-width: 6px; }
+.trecho.c-aberto { background: #3f6a9c; }
+.trecho.c-andamento { background: #b7791f; }
+.trecho.c-resolvido { background: #2f7d4f; }
+.trecho.c-facil { background: #2f7d4f; }
+.trecho.c-medio { background: #b7791f; }
+.trecho.c-dificil { background: #b83232; }
+.vazio-trecho { flex: 1; }
+.legenda { list-style: none; margin: .6rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem 1rem; font-size: .88rem; color: var(--muted); }
+.legenda li { display: inline-flex; align-items: center; gap: .35rem; }
+.ponto { width: .7rem; height: .7rem; border-radius: 50%; display: inline-block; }
+.ponto.c-aberto { background: #3f6a9c; } .ponto.c-andamento { background: #b7791f; } .ponto.c-resolvido { background: #2f7d4f; }
+.ponto.c-facil { background: #2f7d4f; } .ponto.c-medio { background: #b7791f; } .ponto.c-dificil { background: #b83232; }
+
+/* passos do andamento (morador) */
+.passos { list-style: none; display: flex; align-items: center; gap: .5rem; margin: .6rem 0 0; padding: 0; flex-wrap: wrap; color: var(--muted); font-size: .88rem; }
+.passos li { display: inline-flex; align-items: center; gap: .4rem; }
+.passos li + li::before { content: ""; width: 1.4rem; height: 2px; background: var(--border); margin-right: .1rem; }
+.passos .bolinha { width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 2px solid var(--border); display: inline-flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 700; background: #fff; }
+.passos .bolinha .icone { width: .85rem; height: .85rem; }
+.passos li.feito { color: var(--ok); } .passos li.feito .bolinha { background: var(--ok); border-color: var(--ok); color: #fff; }
+.passos li.atual { color: var(--secondary); font-weight: 700; } .passos li.atual .bolinha { border-color: var(--highlight); color: var(--secondary); }
+
+/* estado vazio e esqueleto de carregamento */
+.vazio { display: flex; flex-direction: column; align-items: center; gap: .4rem; text-align: center; color: var(--muted); padding: 2rem 1rem; }
+.vazio p { margin: 0; max-width: 34ch; }
+.esqueleto { height: 92px; border-radius: var(--raio); margin-bottom: .75rem; background: linear-gradient(90deg, #eef1f2 25%, #f7f9f9 50%, #eef1f2 75%); background-size: 200% 100%; animation: brilho 1.4s infinite linear; }
+@keyframes brilho { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .esqueleto { animation: none; } .chamado { transition: none; } }
+
+/* login com destaque */
+.login-pagina { max-width: 980px; margin: 2.5rem auto; padding: 0 1rem; display: grid; grid-template-columns: 1fr 440px; gap: 2.5rem; align-items: center; }
+.login-pagina .login { margin: 0; max-width: none; }
+.login-destaque .marca-grande { font-size: 3rem; text-align: left; margin: 0 0 .5rem; color: var(--secondary); }
+.login-destaque .lead { font-size: 1.25rem; color: var(--muted); margin: 0 0 1.25rem; }
+.vantagens { list-style: none; margin: 0; padding: 0; display: grid; gap: .8rem; }
+.vantagens li { display: flex; align-items: center; gap: .7rem; font-weight: 600; }
+.vantagens .icone { width: 1.6rem; height: 1.6rem; color: var(--highlight); background: #e8f1ef; border-radius: 8px; padding: .3rem; box-sizing: content-box; }
+@media (max-width: 860px) { .login-pagina { grid-template-columns: 1fr; margin: 1.25rem auto; gap: 1.25rem; } .login-destaque .marca-grande { text-align: center; font-size: 2.2rem; } .login-destaque .lead { text-align: center; font-size: 1.05rem; } .vantagens { display: none; } }
+
+/* cartão de chamado: faixa lateral */
+.chamado { border-left: 5px solid #dfe5e7; }
+.chamado.emergencia { border-left-width: 6px; }
+
+.filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .25rem 1rem; }
