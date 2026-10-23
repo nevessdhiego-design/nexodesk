@@ -84,6 +84,12 @@ public final class Dtos {
         }
     }
 
+    public record MarcarTarefaRequest(@NotNull(message = "Informe se a etapa foi feita.") Boolean feita) {
+    }
+
+    public record TarefaResponse(Long id, String texto, boolean feita) {
+    }
+
     public record AlterarStatusRequest(
             @NotNull(message = "Informe o novo status.") StatusChamado status,
             @Size(max = 500) String observacao,
@@ -116,6 +122,7 @@ public final class Dtos {
             String localOcorrencia,
             boolean anonimo,
             boolean temImagem,
+            boolean temImagemConclusao,
             String status,
             String statusRotulo,
             String dificuldade,
@@ -141,6 +148,7 @@ public final class Dtos {
             Long minutosParaPrazo,
             Integer notaAvaliacao,
             String comentarioAvaliacao,
+            List<TarefaResponse> tarefas,
             List<HistoricoResponse> historico) {
     }
 

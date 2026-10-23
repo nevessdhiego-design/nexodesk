@@ -40,4 +40,20 @@ public class FuncionarioController {
                                          Authentication autenticacao) {
         return chamados.alterarStatus(autenticacao.getName(), id, req);
     }
+
+    /** Foto do serviço pronto (multipart, campo "imagem"). */
+    @org.springframework.web.bind.annotation.PostMapping(path = "/chamados/{id}/conclusao", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ChamadoResponse anexarConclusao(@PathVariable Long id,
+                                           @RequestParam("imagem") org.springframework.web.multipart.MultipartFile imagem,
+                                           Authentication autenticacao) {
+        return chamados.anexarConclusao(autenticacao.getName(), id, imagem);
+    }
+
+    /** Marca ou desmarca uma etapa do checklist. */
+    @PatchMapping("/tarefas/{id}")
+    public br.nexodesk.web.Dtos.TarefaResponse marcarTarefa(@PathVariable Long id,
+                                                           @Valid @RequestBody br.nexodesk.web.Dtos.MarcarTarefaRequest req,
+                                                           Authentication autenticacao) {
+        return chamados.marcarTarefa(autenticacao.getName(), id, req.feita());
+    }
 }
