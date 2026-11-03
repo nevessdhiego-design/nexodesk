@@ -96,7 +96,7 @@ function cartaoChamado(c, posicao) {
     }
   });
 
-  return el('article', { class: 'chamado' + (c.emergencia ? ' emergencia' : '') },
+  return el('article', { class: 'chamado st-' + c.status.toLowerCase() + (c.emergencia ? ' emergencia' : '') },
     el('div', { class: 'linha' },
       el('span', { class: 'fila-num', text: posicao + 'º' }),
       el('span', { class: 'titulo', text: '#' + c.id + ' ' + c.titulo }),
@@ -154,10 +154,10 @@ async function carregarEstatisticas() {
   const e = await api('/api/sindico/estatisticas');
   const itens = [
     ['Emergências pendentes', e.emergenciasAbertas, 'alerta', e.emergenciasAbertas > 0 ? 'urgente' : ''],
-    ['Abertos', e.abertos, 'chamados', ''], ['Em andamento', e.emAndamento, 'ferramenta', ''], ['Resolvidos', e.resolvidos, 'check', 'ok'],
-    ['Pendentes fáceis', e.pendentesFaceis, 'relogio', ''], ['Pendentes médios', e.pendentesMedios, 'relogio', ''], ['Pendentes difíceis', e.pendentesDificeis, 'relogio', ''],
+    ['Abertos', e.abertos, 'chamados', 'tom-azul'], ['Em andamento', e.emAndamento, 'ferramenta', 'tom-ambar'], ['Resolvidos', e.resolvidos, 'check', 'ok'],
+    ['Pendentes fáceis', e.pendentesFaceis, 'relogio', 'ok'], ['Pendentes médios', e.pendentesMedios, 'relogio', 'tom-ambar'], ['Pendentes difíceis', e.pendentesDificeis, 'relogio', 'tom-vermelho'],
     ['Avaliação média', e.mediaAvaliacoes === null || e.mediaAvaliacoes === undefined
-      ? '—' : String(e.mediaAvaliacoes).replace('.', ',') + ' / 5 (' + e.totalAvaliacoes + ')', 'estrela', ''],
+      ? '—' : String(e.mediaAvaliacoes).replace('.', ',') + ' / 5 (' + e.totalAvaliacoes + ')', 'estrela', 'tom-ambar'],
   ];
   document.getElementById('estatisticas').replaceChildren(...itens.map(([rotulo, valor, nomeIcone, classe]) =>
     el('div', { class: 'estatistica ' + classe },

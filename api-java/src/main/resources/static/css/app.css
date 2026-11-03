@@ -347,3 +347,103 @@ input[type=text], input[type=email], input[type=password], input[type=tel], sele
 .filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .25rem 1rem; }
 
 table.matriz th[scope=row] { text-transform: none; font-size: .9rem; letter-spacing: 0; color: var(--text); }
+
+/* =====================================================================
+   Fase 5: layout mais visual e consistente em todas as telas.
+   Cabeçalho de página com ícone, cartões de resumo coloridos, faixa de
+   cor por situação do chamado, tabela de usuários com avatar (vira
+   cartões no celular), menu em pílulas e botões com hierarquia.
+   ===================================================================== */
+.pagina { max-width: 1120px; padding: 1.25rem 1rem 3rem; }
+
+/* topo e menu */
+.topo { background: linear-gradient(120deg, #1d2a37 0%, #253342 45%, #2f5650 100%); }
+.menu { padding: .4rem 1rem; gap: .3rem; }
+.menu a { border-bottom: 0; border-radius: 10px; padding: .5rem .85rem; }
+.menu a[aria-current="page"] { background: #e2efec; color: var(--secondary); }
+
+/* cabeçalho de página */
+.cabecalho-pagina {
+  position: relative; overflow: hidden; display: flex; align-items: center; gap: 1rem;
+  background: linear-gradient(120deg, #2f5650 0%, #3e5954 55%, #5e9188 140%);
+  color: #fff; border-radius: 18px; padding: 1.25rem 1.5rem; margin-bottom: 1.1rem; box-shadow: var(--sombra-forte);
+}
+.cabecalho-pagina::after {
+  content: ""; position: absolute; right: -60px; top: -70px; width: 220px; height: 220px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, .2), rgba(255, 255, 255, 0) 70%); pointer-events: none;
+}
+.cabecalho-icone { flex: none; width: 3.4rem; height: 3.4rem; border-radius: 16px; background: rgba(255, 255, 255, .18); display: inline-flex; align-items: center; justify-content: center; }
+.cabecalho-icone .icone { width: 1.8rem; height: 1.8rem; }
+.cabecalho-pagina h1 { margin: 0; font-size: 1.55rem; color: #fff; letter-spacing: -.015em; }
+.cabecalho-pagina p { margin: .15rem 0 0; color: #eaf3f1; font-size: .98rem; }
+@media (max-width: 640px) { .cabecalho-pagina { padding: 1rem; gap: .75rem; } .cabecalho-pagina h1 { font-size: 1.25rem; } .cabecalho-icone { width: 2.8rem; height: 2.8rem; } }
+
+/* títulos de cartão com uma marca de cor */
+.cartao > h2 { display: flex; align-items: center; gap: .55rem; }
+.cartao > h2::before { content: ""; width: 5px; height: 1.2em; border-radius: 4px; background: linear-gradient(180deg, var(--highlight), var(--accent)); flex: none; }
+
+/* cartões de resumo: ícone em um quadrado colorido, número grande */
+.estatisticas { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: .85rem; }
+.estatistica {
+  --tom: #2f6a61; --tom-fundo: #e3efec;
+  display: grid; grid-template-columns: auto 1fr; grid-template-areas: "ic valor" "ic rotulo"; column-gap: .9rem; align-items: center;
+  padding: .85rem 1rem; border-radius: 16px;
+}
+.estatistica.tom-azul { --tom: #2a5788; --tom-fundo: #e4edf8; }
+.estatistica.tom-ambar { --tom: #8a5a0b; --tom-fundo: #fbeed2; }
+.estatistica.tom-vermelho { --tom: #b83232; --tom-fundo: #fbe4e4; }
+.estatistica.ok { --tom: #276b42; --tom-fundo: #e1f2e8; }
+.estatistica.urgente { --tom: #b83232; --tom-fundo: #fbe0de; }
+.estatistica .icone-estatistica {
+  position: static; grid-area: ic; width: 3rem; height: 3rem; padding: .8rem; border-radius: 14px;
+  background: var(--tom-fundo); color: var(--tom);
+}
+.estatistica .valor { grid-area: valor; font-size: 1.75rem; line-height: 1.15; color: var(--tom); }
+.estatistica .rotulo { grid-area: rotulo; font-size: .85rem; }
+.estatistica.ok .icone-estatistica { color: var(--tom); }
+
+/* chamados: faixa de cor pela situação e posição na fila em destaque */
+.chamado.st-aberto { border-left-color: #3f6a9c; }
+.chamado.st-em_andamento { border-left-color: #b7791f; }
+.chamado.st-resolvido { border-left-color: #2f7d4f; }
+.chamado.emergencia { border-left-color: var(--danger); }
+.fila-num { display: inline-flex; align-items: center; justify-content: center; min-width: 2.1rem; height: 2.1rem; border-radius: 50%; background: #e3efec; color: var(--accent); font-size: .9rem; }
+.chamado .titulo { font-size: 1.02rem; }
+.filtros { background: #f4f8f7; border: 1px solid var(--border); border-radius: 12px; padding: .5rem 1rem 1rem; margin-bottom: .5rem; }
+
+/* botões com hierarquia: principal preenchido, perigo vazado, ações de tabela menores */
+button.perigo { background: #fff; color: var(--danger); border: 1.5px solid var(--danger); }
+button.perigo:hover { background: #fbeaea; }
+table.usuarios .acoes-linha button { padding: .4rem .8rem; font-size: .85rem; }
+
+/* tabela de usuários */
+table.usuarios th { background: #f1f6f5; border-bottom: 2px solid var(--border); }
+table.usuarios th:first-child { border-top-left-radius: 10px; }
+table.usuarios th:last-child { border-top-right-radius: 10px; }
+table.usuarios tbody tr:hover td { background: #f8fbfa; }
+table.usuarios td.nome { font-weight: 600; }
+.avatar { display: inline-flex; align-items: center; justify-content: center; width: 2.3rem; height: 2.3rem; margin-right: .6rem; border-radius: 50%; background: linear-gradient(135deg, #5e9188, #3e5954); color: #fff; font-size: .8rem; font-weight: 800; vertical-align: middle; }
+table.usuarios td.nome .avatar + span { display: inline-block; max-width: calc(100% - 3.2rem); vertical-align: middle; }
+table.usuarios td.email { color: var(--muted); font-size: .88rem; overflow-wrap: anywhere; min-width: 200px; }
+table.usuarios select { min-width: 150px; }
+
+@media (max-width: 860px) {
+  table.usuarios, table.usuarios tbody, table.usuarios tr, table.usuarios td { display: block; width: 100%; }
+  table.usuarios thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+  table.usuarios tbody tr { border: 1px solid var(--border); border-radius: 14px; padding: .35rem .85rem .6rem; margin-bottom: .8rem; box-shadow: var(--sombra); background: var(--card); }
+  table.usuarios td { border-bottom: 1px dashed var(--border); padding: .45rem 0; }
+  table.usuarios td:last-child { border-bottom: 0; }
+  table.usuarios td[data-rotulo]::before { content: attr(data-rotulo); display: block; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: .15rem; }
+  table.usuarios td.nome::before { display: none; }
+  table.usuarios td.email { min-width: 0; }
+  table.usuarios tbody tr:hover td { background: transparent; }
+}
+
+/* login: fundo suave e vantagens em cartões */
+body:has(.login-pagina) { background: radial-gradient(900px 420px at 15% -10%, #d9ebe7 0%, rgba(217, 235, 231, 0) 70%), radial-gradient(700px 380px at 105% 105%, #dfe8f1 0%, rgba(223, 232, 241, 0) 70%), var(--bg); }
+.login-pagina .login.cartao { box-shadow: var(--sombra-forte); border-radius: 20px; }
+.vantagens li { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: .6rem .8rem; box-shadow: var(--sombra); }
+
+.mensagem { border-radius: 12px; }
+
+@media print { .cabecalho-pagina { background: #fff; color: #000; box-shadow: none; border: 1px solid #999; } .cabecalho-pagina h1, .cabecalho-pagina p { color: #000; } }

@@ -28,6 +28,12 @@ async function alterar(usuario, mudanca, textoSucesso) {
   await carregar();
 }
 
+/** Iniciais para o avatar (decorativo; o nome completo está na célula). */
+function iniciais(nome) {
+  const partes = nome.replace(/\(.*?\)/g, '').trim().split(/\s+/).filter(Boolean);
+  return ((partes[0] || '?')[0] + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase();
+}
+
 function linha(u) {
   const ehEu = u.email === eu.email;
   const perfil = el('select', { id: 'perfil-' + u.id, 'aria-label': 'Perfil de ' + u.nome, disabled: ehEu },
@@ -78,12 +84,14 @@ function linha(u) {
   });
 
   return el('tr', { class: u.ativo ? '' : 'inativo' },
-    el('td', { class: 'nome', text: u.nome + (ehEu ? ' (você)' : '') }),
-    el('td', { class: 'email', text: u.email }),
-    el('td', { text: u.unidade || '—' }),
-    el('td', {}, el('div', { class: 'acoes-linha' }, perfil, funcao)),
-    el('td', {}, selo(u.ativo ? 'Ativo' : 'Desativado', u.ativo ? 'RESOLVIDO' : 'neutro')),
-    el('td', {}, el('div', { class: 'acoes-linha' }, salvar, alternarAtivo, redefinir)));
+    el('td', { class: 'nome', 'data-rotulo': 'Nome' },
+      el('span', { class: 'avatar', 'aria-hidden': 'true', text: iniciais(u.nome) }),
+      el('span', { text: u.nome + (ehEu ? ' (você)' : '') })),
+    el('td', { class: 'email', 'data-rotulo': 'E-mail', text: u.email }),
+    el('td', { 'data-rotulo': 'Unidade', text: u.unidade || '—' }),
+    el('td', { 'data-rotulo': 'Perfil e função' }, el('div', { class: 'acoes-linha' }, perfil, funcao)),
+    el('td', { 'data-rotulo': 'Situação' }, selo(u.ativo ? 'Ativo' : 'Desativado', u.ativo ? 'RESOLVIDO' : 'neutro')),
+    el('td', { 'data-rotulo': 'Ações' }, el('div', { class: 'acoes-linha' }, salvar, alternarAtivo, redefinir)));
 }
 
 function desenhar() {

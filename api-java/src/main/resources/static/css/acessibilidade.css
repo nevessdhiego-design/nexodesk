@@ -192,3 +192,40 @@ html.a11y-contraste .barra-empilhada { border: 2px solid #000; }
 html.a11y-contraste .passos .bolinha { border-color: #000; }
 html.a11y-contraste .passos li.feito .bolinha { background: #000; border-color: #000; }
 html.a11y-contraste .chamado { border-left-color: #000; }
+
+/* ---------- fase 5: layout mais visual nos modos escuro e de alto contraste ---------- */
+html.a11y-escuro .topo { background: linear-gradient(120deg, #101113, #1c2a29); }
+html.a11y-escuro .menu a[aria-current="page"] { background: #2a3d3a; }
+html.a11y-escuro .cabecalho-pagina { background: linear-gradient(120deg, #1f3a36, #2a4a45 60%, #3c6b63 140%); }
+html.a11y-escuro .estatistica .icone-estatistica { background: rgba(255, 255, 255, .08); color: var(--highlight); }
+html.a11y-escuro .estatistica .valor { color: var(--text); }
+html.a11y-escuro .estatistica.urgente .icone-estatistica { background: rgba(255, 122, 122, .15); }
+html.a11y-escuro .chamado.st-aberto { border-left-color: #6f9bd1; }
+html.a11y-escuro .chamado.st-em_andamento { border-left-color: #e0a84a; }
+html.a11y-escuro .chamado.st-resolvido { border-left-color: #5fbf85; }
+html.a11y-escuro .chamado.emergencia { border-left-color: #ff7a7a; }
+html.a11y-escuro .fila-num { background: #2a3d3a; color: var(--highlight); }
+html.a11y-escuro .filtros { background: #202126; }
+html.a11y-escuro button.perigo { background: transparent; color: #ff9c94; border-color: #ff9c94; }
+html.a11y-escuro button.perigo:hover { background: rgba(255, 122, 122, .12); }
+html.a11y-escuro table.usuarios th { background: #2a2b31; }
+html.a11y-escuro table.usuarios tbody tr:hover td { background: #2a2b31; }
+html.a11y-escuro table.usuarios tr.inativo td, html.a11y-escuro table.usuarios tr.inativo { background: #202126; }
+html.a11y-escuro .avatar { background: linear-gradient(135deg, #4f7d75, #2f5650); }
+html.a11y-escuro .vantagens li { background: var(--card); }
+html.a11y-escuro body:has(.login-pagina) { background: var(--bg); }
+html.a11y-contraste body:has(.login-pagina) { background: #fff; }
+html.a11y-contraste .topo { background: #000; }
+html.a11y-contraste .menu a[aria-current="page"] { background: #000; color: #fff; }
+html.a11y-contraste .cabecalho-pagina { background: #000; box-shadow: none; }
+html.a11y-contraste .cabecalho-pagina::after { display: none; }
+html.a11y-contraste .cabecalho-icone { background: #fff; color: #000; }
+html.a11y-contraste .estatistica .icone-estatistica { background: #fff; border: 2px solid #000; color: #000; }
+html.a11y-contraste .estatistica .valor { color: #000; }
+html.a11y-contraste .chamado[class*="st-"], html.a11y-contraste .chamado.emergencia { border-left-color: #000; }
+html.a11y-contraste .fila-num { background: #fff; border: 2px solid #000; color: #000; }
+html.a11y-contraste .filtros { background: #fff; border: 2px solid #000; }
+html.a11y-contraste button.perigo { background: #fff; color: #000; border: 2px solid #000; }
+html.a11y-contraste table.usuarios th { background: #fff; border-bottom: 2px solid #000; }
+html.a11y-contraste .avatar { background: #000; }
+html.a11y-contraste .vantagens li { border: 2px solid #000; }
