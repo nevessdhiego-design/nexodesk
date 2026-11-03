@@ -35,7 +35,7 @@ function cartaoChamado(c, posicao) {
     }
   });
 
-  return el('article', { class: 'chamado' + (c.emergencia ? ' emergencia' : '') },
+  return el('article', { class: 'chamado st-' + c.status.toLowerCase() + (c.emergencia ? ' emergencia' : '') },
     el('div', { class: 'linha' },
       el('span', { class: 'fila-num', text: posicao + 'º' }),
       el('span', { class: 'titulo', text: '#' + c.id + ' ' + c.titulo }),

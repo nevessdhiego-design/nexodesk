@@ -111,7 +111,7 @@ function cartaoChamado(c) {
     alternar.textContent = 'Ocultar detalhes';
   });
 
-  return el('article', { class: 'chamado' + (c.emergencia ? ' emergencia' : '') },
+  return el('article', { class: 'chamado st-' + c.status.toLowerCase() + (c.emergencia ? ' emergencia' : '') },
     el('div', { class: 'linha' },
       el('span', { class: 'titulo', text: '#' + c.id + ' ' + c.titulo }),
       selo(c.statusRotulo, c.status),
