@@ -55,6 +55,29 @@ function passosDoChamado(c) {
       el('span', { text: rotulo }))));
 }
 
+/** Chamado resolvido há até 30 dias que voltou a dar problema: o morador reabre dizendo o que continua errado. */
+function blocoReabrir(c) {
+  if (c.status !== 'RESOLVIDO') return null;
+  const motivo = el('textarea', { id: 'reabrir-' + c.id, maxlength: '300', rows: '2', placeholder: 'O que continua errado?' });
+  const enviar = el('button', { type: 'button', class: 'secundario-escuro', text: 'Reabrir chamado' });
+  const aviso = el('div', { class: 'mensagem hidden', role: 'alert' });
+  enviar.addEventListener('click', async () => {
+    limparMensagem(aviso);
+    if (motivo.value.trim().length < 5) { mostrarMensagem(aviso, 'Conte o que continua errado (mínimo de 5 caracteres).', 'erro'); return; }
+    enviar.disabled = true;
+    try {
+      await api('/api/chamados/' + c.id + '/reabrir', { metodo: 'POST', json: { motivo: motivo.value } });
+      await carregarChamados();
+    } catch (erro) {
+      mostrarMensagem(aviso, erro.message, 'erro');
+      enviar.disabled = false;
+    }
+  });
+  return el('details', { class: 'reabrir' },
+    el('summary', { text: 'O problema voltou? Reabrir este chamado' }),
+    el('label', { for: 'reabrir-' + c.id, text: 'Motivo' }), motivo, el('div', { class: 'acoes' }, enviar), aviso);
+}
+
 function cartaoChamado(c) {
   const detalhes = el('div', { class: 'hidden' });
   let carregado = false;
@@ -95,12 +118,14 @@ function cartaoChamado(c) {
       selo('Dificuldade: ' + c.dificuldadeRotulo, c.dificuldade),
       c.emergencia ? selo('EMERGÊNCIA', 'EMERGENCIA') : null,
       c.anonimo ? selo('Anônimo', 'neutro') : null,
+      c.reaberturas > 0 ? selo('Reaberto ' + c.reaberturas + 'x', 'ATRASADO') : null,
       seloPrazo(c)),
     el('div', { class: 'meta', text: c.categoriaRotulo + (c.localOcorrencia ? ' · ' + c.localOcorrencia : '') + ' · aberto em ' + formatarData(c.criadoEm) }),
     passosDoChamado(c),
     c.responsavelNome ? el('div', { class: 'responsavel', text: textoResponsavel(c) }) : null,
     blocoTarefas(c),
     blocoAvaliacao(c),
+    blocoReabrir(c),
     blocoConversa(c.id),
     alternar,
     detalhes);

@@ -35,6 +35,17 @@ function desenhar(r) {
       el('meter', { id: 'cat-' + i, min: '0', max: String(maximo), value: String(c.total), 'aria-label': c.rotulo + ': ' + c.total + ' chamados' }, String(c.total))))
     : [el('p', { class: 'vazio', text: 'Nenhum chamado neste período.' })]));
 
+  const barras = (alvo, prefixo, itens, vazioTexto) => {
+    const maior = Math.max(1, ...itens.map((c) => c.total));
+    document.getElementById(alvo).replaceChildren(...(itens.length
+      ? itens.map((c, i) => el('div', { class: 'barra-linha' },
+        el('label', { for: prefixo + i, text: c.rotulo + ': ' + c.total }),
+        el('meter', { id: prefixo + i, min: '0', max: String(maior), value: String(c.total), 'aria-label': c.rotulo + ': ' + c.total + ' chamados' }, String(c.total))))
+      : [el('p', { class: 'vazio-texto muted', text: vazioTexto })]));
+  };
+  barras('por-bloco', 'bl-', r.porBloco, 'Nenhum chamado neste período.');
+  barras('recorrentes', 'rec-', r.locaisRecorrentes, 'Nenhum problema se repetiu no mesmo lugar neste período.');
+
   document.getElementById('por-funcionario').replaceChildren(...(r.porFuncionario.length
     ? r.porFuncionario.map((f) => el('tr', {},
       el('td', { class: 'nome', text: f.nome }), el('td', { text: f.funcao }),

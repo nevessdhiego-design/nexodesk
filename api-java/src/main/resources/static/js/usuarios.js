@@ -96,9 +96,71 @@ function desenhar() {
   document.getElementById('contagem').textContent = filtrados.length + ' de ' + todos.length + ' usuários · ' + ativos + ' ativos';
 }
 
+const DIAS = [[1, 'Seg'], [2, 'Ter'], [3, 'Qua'], [4, 'Qui'], [5, 'Sex'], [6, 'Sáb'], [7, 'Dom']];
+const caixaEquipe = document.getElementById('mensagem-equipe');
+
+function funcionarios() {
+  return todos.filter((u) => u.perfil === 'FUNCIONARIO' && u.ativo);
+}
+
+async function carregarEquipe() {
+  const pessoas = funcionarios();
+  for (const id of ['aus-pessoa', 'esc-pessoa']) {
+    const seletor = document.getElementById(id);
+    const atual = seletor.value;
+    seletor.replaceChildren(...pessoas.map((u) => el('option', { value: String(u.id), text: u.nome + (u.funcaoRotulo ? ' (' + u.funcaoRotulo + ')' : ''), selected: String(u.id) === atual })));
+  }
+  mostrarEscala();
+  const lista = await api('/api/sindico/ausencias');
+  document.getElementById('lista-ausencias').replaceChildren(...(lista.length
+    ? lista.map((a) => {
+      const remover = el('button', { type: 'button', class: 'link', text: 'Remover', 'aria-label': 'Remover ' + a.tipoRotulo.toLowerCase() + ' de ' + a.nome });
+      remover.addEventListener('click', async () => {
+        try { await api('/api/sindico/ausencias/' + a.id, { metodo: 'DELETE' }); await carregarEquipe(); }
+        catch (erro) { mostrarMensagem(caixaEquipe, erro.message, 'erro'); }
+      });
+      return el('li', {}, el('span', { text: a.nome + ': ' + a.tipoRotulo + ' de ' + formatarDia(a.de) + ' a ' + formatarDia(a.ate) + (a.observacao ? ' (' + a.observacao + ')' : '') + ' ' }), remover);
+    })
+    : [el('li', { class: 'muted', text: 'Nenhuma ausência registrada.' })]));
+}
+
+/** Marca os dias da semana da pessoa escolhida (sem restrição = os sete dias). */
+function mostrarEscala() {
+  const pessoa = funcionarios().find((u) => String(u.id) === document.getElementById('esc-pessoa').value);
+  const dias = pessoa && pessoa.diasTrabalho ? pessoa.diasTrabalho.split(',').map(Number) : DIAS.map((d) => d[0]);
+  document.getElementById('dias-semana').replaceChildren(el('legend', { text: 'Dias de trabalho' }),
+    ...DIAS.map(([n, nome]) => el('label', { class: 'check dia', for: 'dia-' + n }, el('input', { type: 'checkbox', id: 'dia-' + n, value: String(n), checked: dias.includes(n) }), el('span', { text: nome }))));
+}
+
+document.getElementById('esc-pessoa').addEventListener('change', mostrarEscala);
+document.getElementById('form-ausencia').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  limparMensagem(caixaEquipe);
+  try {
+    await api('/api/sindico/usuarios/' + document.getElementById('aus-pessoa').value + '/ausencias', { metodo: 'POST', json: {
+      tipo: document.getElementById('aus-tipo').value, de: document.getElementById('aus-de').value, ate: document.getElementById('aus-ate').value,
+      observacao: document.getElementById('aus-obs').value } });
+    e.target.reset();
+    mostrarMensagem(caixaEquipe, 'Ausência registrada. O painel deixa de indicar essa pessoa nesse período.', 'ok');
+    await carregarEquipe();
+  } catch (erro) { mostrarMensagem(caixaEquipe, erro.message, 'erro'); }
+});
+document.getElementById('form-escala').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  limparMensagem(caixaEquipe);
+  const dias = [...document.querySelectorAll('#dias-semana input:checked')].map((c) => Number(c.value));
+  try {
+    await api('/api/sindico/usuarios/' + document.getElementById('esc-pessoa').value + '/escala', { metodo: 'PUT', json: { dias } });
+    mostrarMensagem(caixaEquipe, 'Escala salva.', 'ok');
+    todos = await api('/api/sindico/usuarios');
+    mostrarEscala();
+  } catch (erro) { mostrarMensagem(caixaEquipe, erro.message, 'erro'); }
+});
+
 async function carregar() {
   [todos, funcoes] = await Promise.all([api('/api/sindico/usuarios'), api('/api/sindico/funcoes')]);
   desenhar();
+  await carregarEquipe();
 }
 
 busca.addEventListener('input', desenhar);

@@ -110,6 +110,10 @@ public class DadosDemonstracao implements ApplicationRunner {
         equipe("Sérgio", "seguranca.demo@nexodesk.local", Funcao.SEGURANCA);
         equipe("Téo", "elevador.demo@nexodesk.local", Funcao.TECNICO_EXTERNO);
         equipe("Mário", "manutencao.demo@nexodesk.local", Funcao.MANUTENCAO);
+        // o eletricista está de férias por alguns dias: o painel não o indica enquanto durar
+        jdbc.update("INSERT INTO ausencias (usuario_id, tipo, de, ate, observacao) VALUES (?, 'FERIAS', ?, ?, 'Férias de demonstração')",
+                usuarios.findByEmail(eletricista).orElseThrow().getId(), java.sql.Date.valueOf(java.time.LocalDate.now().minusDays(1)),
+                java.sql.Date.valueOf(java.time.LocalDate.now().plusDays(5)));
         servico.atribuir(emailSindico, vazamento.id(),
                 new AtribuirResponsavelRequest(usuarios.findByEmail(encanador).orElseThrow().getId(), java.time.LocalDate.now().plusDays(1), null));
         servico.atribuir(emailSindico, lampada.id(),

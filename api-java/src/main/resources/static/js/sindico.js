@@ -27,14 +27,15 @@ function blocoResponsavel(c) {
     return c.responsavelNome ? el('p', { class: 'responsavel', text: textoResponsavel(c) }) : null;
   }
   // quem cobre a categoria vem primeiro ("Indicado"); entre eles, o de menor carga; síndicos por último. É só sugestão.
-  const indicado = (p) => p.categorias.includes(c.categoria);
-  const ordenada = [...equipe].sort((a, b) => (indicado(b) - indicado(a)) || ((a.perfil === 'SINDICO') - (b.perfil === 'SINDICO'))
-    || (a.cargaAberta - b.cargaAberta) || a.nome.localeCompare(b.nome, 'pt-BR'));
+  const indicado = (p) => p.disponivel && p.categorias.includes(c.categoria);   // quem está de férias ou de folga não é indicado
+  const ordenada = [...equipe].sort((a, b) => (indicado(b) - indicado(a)) || (b.disponivel - a.disponivel)
+    || ((a.perfil === 'SINDICO') - (b.perfil === 'SINDICO')) || (a.cargaAberta - b.cargaAberta) || a.nome.localeCompare(b.nome, 'pt-BR'));
   const quem = el('select', { id: 'resp-' + c.id },
     el('option', { value: '', text: 'Sem responsável' }),
     ordenada.map((p) => el('option', {
       value: String(p.id),
-      text: (indicado(p) ? 'Indicado · ' : '') + p.nome + ' · ' + (p.funcaoRotulo || 'Síndico') + ' · ' + p.cargaAberta + ' em aberto',
+      text: (indicado(p) ? 'Indicado · ' : '') + p.nome + ' · ' + (p.funcaoRotulo || 'Síndico') + ' · ' + p.cargaAberta + ' em aberto'
+        + (p.disponivel ? '' : ' · AUSENTE: ' + p.indisponibilidade),
       selected: p.id === c.responsavelId,
     })));
   const indicados = ordenada.filter(indicado).map((p) => p.nome);
@@ -45,6 +46,9 @@ function blocoResponsavel(c) {
   const atribuir = el('button', { type: 'button', text: 'Salvar responsável' });
   atribuir.addEventListener('click', async () => {
     limparMensagem(caixa);
+    const escolhido = equipe.find((p) => String(p.id) === quem.value);
+    if (escolhido && !escolhido.disponivel
+        && !window.confirm(escolhido.nome + ' está ausente (' + escolhido.indisponibilidade + '). Atribuir mesmo assim?')) return;
     atribuir.disabled = true;
     try {
       await api('/api/sindico/chamados/' + c.id + '/responsavel', {
@@ -100,6 +104,8 @@ function cartaoChamado(c, posicao) {
       selo(c.statusRotulo, c.status),
       selo(c.dificuldadeRotulo + ' (' + c.pontuacao + '/10)', c.dificuldade),
       c.atrasado ? selo('Atrasado', 'ATRASADO') : null,
+      c.reaberturas > 0 ? selo('Reaberto ' + c.reaberturas + 'x', 'ATRASADO') : null,
+      c.recorrencias >= 3 ? selo('Se repete: ' + c.recorrencias + 'x em 90 dias', 'ATRASADO') : null,
       seloPrazo(c)),
     el('div', { class: 'meta', text: c.categoriaRotulo
       + (c.localOcorrencia ? ' · ' + c.localOcorrencia : '')

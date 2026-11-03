@@ -45,6 +45,32 @@
         </table>
       </div>
     </section>
+
+    <section class="cartao">
+      <h2>Ausências e escala da equipe</h2>
+      <p class="muted">Quem está de férias, de folga ou de atestado <strong>deixa de ser indicado</strong> no painel enquanto durar (o síndico ainda pode atribuir, depois de confirmar). A escala marca os dias da semana em que a pessoa trabalha.</p>
+      <div id="mensagem-equipe" class="mensagem hidden" role="alert"></div>
+      <form id="form-ausencia">
+        <div class="grade-ausencia">
+          <div><label for="aus-pessoa">Funcionário</label><select id="aus-pessoa" required></select></div>
+          <div><label for="aus-tipo">Tipo</label>
+            <select id="aus-tipo"><option value="FERIAS">Férias</option><option value="FOLGA">Folga</option><option value="ATESTADO">Atestado</option><option value="OUTRO">Outro</option></select></div>
+          <div><label for="aus-de">Primeiro dia</label><input id="aus-de" type="date" required></div>
+          <div><label for="aus-ate">Último dia</label><input id="aus-ate" type="date" required></div>
+          <div><label for="aus-obs">Observação (opcional)</label><input id="aus-obs" type="text" maxlength="120"></div>
+        </div>
+        <div class="acoes"><button type="submit">Registrar ausência</button></div>
+      </form>
+      <h3>Ausências em curso ou futuras</h3>
+      <ul id="lista-ausencias" class="lista-simples"></ul>
+      <h3>Escala semanal</h3>
+      <form id="form-escala">
+        <label for="esc-pessoa">Funcionário</label>
+        <select id="esc-pessoa"></select>
+        <fieldset class="dias-semana" id="dias-semana"><legend>Dias de trabalho</legend></fieldset>
+        <div class="acoes"><button type="submit">Salvar escala</button></div>
+      </form>
+    </section>
   </main>
 
   <script src="/js/app.js"></script>

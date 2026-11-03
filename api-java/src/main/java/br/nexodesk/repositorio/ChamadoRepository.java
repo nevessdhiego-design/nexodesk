@@ -44,8 +44,11 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
     int marcarAlertaDePrazo(@Param("id") Long id);
 
     /** Chamados abertos no período [inicio, fim) para o relatório do síndico. */
-    @EntityGraph(attributePaths = {"responsavel"})
+    @EntityGraph(attributePaths = {"responsavel", "morador"})
     List<Chamado> findByCriadoEmGreaterThanEqualAndCriadoEmLessThan(java.time.LocalDateTime inicio, java.time.LocalDateTime fim);
+
+    /** Quantos chamados da mesma categoria e do mesmo local desde a data (inclui o próprio): detecta problema que se repete. */
+    long countByCategoriaAndLocalOcorrenciaIgnoreCaseAndCriadoEmGreaterThanEqual(br.nexodesk.dominio.Categoria categoria, String local, java.time.LocalDateTime desde);
 
     long countByEmergenciaTrueAndStatusIn(Collection<StatusChamado> status);
 

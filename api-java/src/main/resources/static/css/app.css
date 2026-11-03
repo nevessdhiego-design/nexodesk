@@ -238,6 +238,14 @@ input[type=date] { width: 100%; padding: .6rem .7rem; border: 1px solid var(--bo
   body { background: #fff; }
   .cartao, .estatistica { border: 1px solid #999; break-inside: avoid; }
 }
+.grade-ausencia { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .25rem 1rem; }
+.lista-simples { list-style: none; margin: .5rem 0 1rem; padding: 0; }
+.lista-simples li { padding: .3rem 0; border-bottom: 1px solid var(--border); }
+.dias-semana { border: 1px solid var(--border); border-radius: 10px; margin: .75rem 0 0; padding: .5rem .75rem; display: flex; flex-wrap: wrap; gap: .25rem 1rem; }
+.dias-semana legend { font-weight: 600; font-size: .9rem; padding: 0 .3rem; }
+.dias-semana .dia { margin: 0; }
+.reabrir { margin-top: .5rem; }
+.reabrir summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .9rem; }
 button.secundario-escuro { background: var(--secondary); }
 button.perigo { background: var(--danger); }
 button.perigo:hover { background: #8f2525; }

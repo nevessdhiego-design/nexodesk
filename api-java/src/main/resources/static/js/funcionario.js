@@ -43,6 +43,7 @@ function cartaoChamado(c, posicao) {
       selo(c.statusRotulo, c.status),
       selo(c.dificuldadeRotulo, c.dificuldade),
       c.atrasado ? selo('Atrasado', 'ATRASADO') : null,
+      c.reaberturas > 0 ? selo('Reaberto ' + c.reaberturas + 'x', 'ATRASADO') : null,
       seloPrazo(c)),
     el('div', { class: 'meta', text: c.categoriaRotulo
       + (c.localOcorrencia ? ' · ' + c.localOcorrencia : '')
