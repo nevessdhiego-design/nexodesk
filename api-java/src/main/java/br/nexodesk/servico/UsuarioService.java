@@ -38,7 +38,7 @@ public class UsuarioService {
         u.setNome(dados.nome().trim());
         u.setEmail(email);
         u.setTelefone(vazioParaNulo(dados.telefone()));
-        u.setUnidade(vazioParaNulo(dados.unidade()));
+        aplicarUnidade(u, dados.unidade(), dados.bloco(), dados.apartamento());
         u.setSenhaHash(codificador.encode(dados.senha()));
         u.setPerfil(Perfil.MORADOR);
         return paraResposta(usuarios.save(u));
@@ -81,7 +81,7 @@ public class UsuarioService {
         Usuario u = buscarPorEmail(email);
         u.setNome(dados.nome().trim());
         u.setTelefone(vazioParaNulo(dados.telefone()));
-        u.setUnidade(vazioParaNulo(dados.unidade()));
+        aplicarUnidade(u, dados.unidade(), dados.bloco(), dados.apartamento());
         return paraResposta(usuarios.save(u));
     }
 
@@ -99,6 +99,7 @@ public class UsuarioService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "A nova senha deve ser diferente da atual.");
         }
         u.setSenhaHash(codificador.encode(dados.novaSenha()));
+        u.setSenhaTemporaria(false); // trocou a temporária (ou uma comum): sai da trava
         u.setVersaoSessao(u.getVersaoSessao() + 1);
         return usuarios.save(u).getVersaoSessao();
     }
@@ -110,7 +111,23 @@ public class UsuarioService {
 
     public static UsuarioResponse paraResposta(Usuario u) {
         return new UsuarioResponse(u.getId(), u.getNome(), u.getEmail(), u.getTelefone(), u.getUnidade(), u.getPerfil().name(),
-                u.getFuncao() == null ? null : u.getFuncao().getRotulo());
+                u.getFuncao() == null ? null : u.getFuncao().getRotulo(), u.getBloco(), u.getApartamento(), u.isSenhaTemporaria());
+    }
+
+    /**
+     * Bloco e apartamento estruturados (para filtrar a fila e o relatório por bloco). A "unidade" em texto livre continua
+     * valendo para quem não os informa; quando eles vêm, a unidade passa a ser "Bloco A, 101".
+     */
+    private static void aplicarUnidade(Usuario u, String unidade, String bloco, String apartamento) {
+        u.setBloco(vazioParaNulo(bloco));
+        u.setApartamento(vazioParaNulo(apartamento));
+        if (u.getBloco() != null || u.getApartamento() != null) {
+            u.setUnidade((u.getBloco() != null ? "Bloco " + u.getBloco() : "")
+                    + (u.getBloco() != null && u.getApartamento() != null ? ", " : "")
+                    + (u.getApartamento() != null ? (u.getBloco() == null ? "Apto " : "") + u.getApartamento() : ""));
+        } else {
+            u.setUnidade(vazioParaNulo(unidade));
+        }
     }
 
     private static String vazioParaNulo(String s) {

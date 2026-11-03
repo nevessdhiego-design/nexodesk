@@ -25,6 +25,11 @@ async function api(caminho, { metodo = 'GET', json, form } = {}) {
   if (!resposta.ok) {
     const erro = new Error((dados && dados.erro) || 'Algo deu errado. Tente novamente.');
     erro.status = resposta.status;
+    erro.trocarSenha = !!(dados && dados.trocarSenha);
+    // senha temporária: o servidor só deixa trocar a senha; leva a pessoa para a tela de conta
+    if (erro.trocarSenha && !window.location.pathname.endsWith('/conta.html')) {
+      window.location.href = '/conta.html?trocar=1';
+    }
     throw erro;
   }
   return dados;
@@ -188,6 +193,10 @@ async function exigirPerfil(perfil) {
     const eu = await api('/api/auth/me');
     if (eu.perfil !== perfil) {
       window.location.href = paginaDoPerfil(eu.perfil);
+      return null;
+    }
+    if (eu.trocarSenha) {
+      window.location.href = '/conta.html?trocar=1';
       return null;
     }
     montarMenu(eu.perfil);

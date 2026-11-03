@@ -30,8 +30,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
         boolean getAtivo();
 
         int getVersaoSessao();
+
+        boolean getSenhaTemporaria();
     }
 
-    @Query("select u.ativo as ativo, u.versaoSessao as versaoSessao from Usuario u where u.email = :email")
+    @Query("select u.ativo as ativo, u.versaoSessao as versaoSessao, u.senhaTemporaria as senhaTemporaria from Usuario u where u.email = :email")
     Optional<SituacaoDaSessao> situacaoDaSessao(@Param("email") String email);
 }
