@@ -134,7 +134,7 @@ Use `clean` ao mudar arquivos de configuração de teste: o Maven não apaga có
 
 ```powershell
 cd servico-prioridade; .\.venv\Scripts\python.exe -m pytest -q     # 20 testes: regras, emergência, casos e endpoint
-cd api-java;           .\mvnw.cmd test                              # 172 testes (~1 min): API, migrações, tempo real, telas
+cd api-java;           .\mvnw.cmd test                              # 191 testes (~1 min): API, migrações, tempo real, telas
 ```
 `RegrasTest` compara as pontuações base do Java com as do `regras.py` e falha se divergirem.
 
@@ -185,7 +185,7 @@ cd api-java;           .\mvnw.cmd test                              # 172 testes
 
 - **Teste de usabilidade com pessoas** (roteiro pronto em `docs/teste-usabilidade/`; nenhum teste aplicado).
 - E-mail (aviso de status **e recuperação de senha**) testado com um provedor real (hoje só contra servidor SMTP falso).
-- Tempo real com várias instâncias da API (precisaria de um barramento, como Redis).
+- Tempo real entre instâncias vale só para instâncias que compartilham o mesmo banco (atraso de ~1 s).
 - Gestão de vários condomínios, recuperação de senha por e-mail (hoje só o síndico redefine), painel desktop (PyQt5 do `aa`) e o que mais estiver em
   [`docs/ideias-futuras.md`](docs/ideias-futuras.md).
 - HTTPS real para publicar fora do localhost (o perfil `prod` já liga cookie `Secure` e leitura de cabeçalhos de proxy).

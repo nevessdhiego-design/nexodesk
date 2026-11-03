@@ -26,7 +26,7 @@ os slides (problema, concorrentes, arquitetura, resultados, equipe) ficam em vol
 | 3:20 | Funcionário | Janela do Zé: **"Meus atendimentos"** mostra só o chamado dele, com o **checklist** do serviço; marcar duas etapas, mudar para **Em andamento** e, se der tempo, anexar a **foto do depois** | O funcionário não vê chamado de outras pessoas. O morador acompanha as etapas e vê o antes e o depois. RF04: todo status fica no histórico. |
 | 3:45 | Morador | Janela da Ana: o status mudou **sozinho**; aparece "Responsável: Zé" e a previsão; depois, chamado resolvido: **avaliar** (nota de 1 a 5) | RF05: avisada sem precisar perguntar; fecha o ciclo e o síndico vê a média no painel. |
 | 4:15 | Síndico | Tela **Usuários** (promover/desativar) e a página **Privacidade** | O síndico gerencia quem entra; o morador pode excluir a própria conta (os chamados ficam sem identificação). |
-| 4:30 | PO | Slide de encerramento: números medidos e **o que não fizemos** | 172 testes Java e 20 Python passando, MySQL real testado; regra de dificuldade com 73% de acerto em casos que ela nunca viu. **Não fizemos:** teste de usabilidade com pessoas, e-mail com provedor real, teste de carga. |
+| 4:30 | PO | Slide de encerramento: números medidos e **o que não fizemos** | 191 testes Java e 20 Python passando, MySQL real testado; regra de dificuldade com 73% de acerto em casos que ela nunca viu. **Não fizemos:** teste de usabilidade com pessoas, e-mail com provedor real, teste de carga. |
 
 ## Perguntas que a banca pode fazer (e a resposta curta e verdadeira)
 
@@ -41,7 +41,7 @@ os slides (problema, concorrentes, arquitetura, resultados, equipe) ficam em vol
 - **"O que acontece se o serviço Python cair?"** O Java classifica só pela categoria e marca o chamado como "aproximado". Abrir
   chamado nunca fica bloqueado. Nesse modo **não** há detecção automática de emergência (o morador ainda pode marcar a caixa).
 - **"Como funciona o tempo real? Escala?"** Server-Sent Events: o servidor avisa "algo mudou" e a tela recarrega pela API normal. Se a
-  conexão cair, a tela consulta a cada 15 s. Funciona com **uma instância** da API; para várias seria preciso um barramento (Redis).
+  conexão cair, a tela consulta a cada 15 s. Com várias instâncias da API o banco compartilhado serve de barramento: medimos duas instâncias reais, aviso em 0,3 a 0,75 s.
 - **"E a segurança?"** Senha com bcrypt, bloqueio de tentativas de login, proteção contra CSRF, política de conteúdo restritiva,
   foto validada pelo conteúdo e sem GPS, isolamento entre moradores, zelador só no que é dele, sessão derrubada ao trocar senha ou perfil.
 - **"E a LGPD?"** Coletamos o mínimo (nome, e-mail, unidade, telefone opcional), há política de privacidade e "excluir minha conta". É um

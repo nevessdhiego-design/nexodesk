@@ -15,7 +15,7 @@ Criadas pelo perfil `demo` (`.\iniciar-nexodesk.ps1 -Perfil demo`). **Todas são
 | `bruno.demo@nexodesk.local` | Morador | segundo morador (chamados de exemplo) |
 | `ze.demo@nexodesk.local` | Funcionário · Zelador | "Meus atendimentos" (lixeira do térreo) |
 | `marta.demo@nexodesk.local` | Funcionário · Faxineira | indicada para "Sujeira no chão do pátio" |
-| `eletricista.demo@nexodesk.local` | Funcionário · Eletricista | chamados de elétrica e iluminação |
+| `eletricista.demo@nexodesk.local` | Funcionário · Eletricista | chamados de elétrica e iluminação; **está de férias** nos dados de exemplo, então não aparece como "Indicado" (mostra a regra de ausência) |
 | `encanador.demo@nexodesk.local` | Funcionário · Encanador | "Vazamento no teto da garagem" |
 | `porteiro.demo@nexodesk.local` | Funcionário · Porteiro | portaria, estacionamento, barulho |
 | `seguranca.demo@nexodesk.local` | Funcionário · Segurança | **recebe aviso de toda emergência** |
