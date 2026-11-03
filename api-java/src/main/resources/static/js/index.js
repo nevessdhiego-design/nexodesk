@@ -15,7 +15,7 @@ abaEntrar.addEventListener('click', () => trocarAba(true));
 abaCadastrar.addEventListener('click', () => trocarAba(false));
 
 function irParaPainel(usuario) {
-  window.location.href = paginaDoPerfil(usuario.perfil);
+  window.location.href = usuario.trocarSenha ? '/conta.html?trocar=1' : paginaDoPerfil(usuario.perfil);
 }
 
 async function entrar(email, senha) {
@@ -44,7 +44,8 @@ formCadastrar.addEventListener('submit', async (e) => {
       json: {
         nome: document.getElementById('cad-nome').value,
         email,
-        unidade: document.getElementById('cad-unidade').value,
+        bloco: document.getElementById('cad-bloco').value,
+        apartamento: document.getElementById('cad-apto').value,
         telefone: document.getElementById('cad-telefone').value,
         senha,
       },

@@ -103,6 +103,7 @@ public class RecuperacaoSenhaService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Este link é inválido ou expirou. Peça um novo em \"Esqueci minha senha\".");
         }
         u.setSenhaHash(codificador.encode(novaSenha));
+        u.setSenhaTemporaria(false);
         u.setVersaoSessao(u.getVersaoSessao() + 1); // derruba as sessões abertas (quem roubou a senha antiga sai)
         usuarios.save(u);
         t.setUsadoEm(agora);

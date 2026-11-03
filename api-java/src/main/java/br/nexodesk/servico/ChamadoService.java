@@ -534,6 +534,7 @@ public class ChamadoService {
                 c.isEmergencia(), prioridade.pontuacaoEfetiva(c), prioridade.diasEmEspera(c), prioridade.atrasado(c),
                 ocultar ? "Anônimo" : c.getMorador().getNome(),
                 ocultar ? null : c.getMorador().getUnidade(),
+                ocultar ? null : c.getMorador().getBloco(),
                 c.getCriadoEm(), c.getAtualizadoEm(), c.getVersao(),
                 c.getResponsavel() == null ? null : c.getResponsavel().getId(),
                 c.getResponsavel() == null ? null : c.getResponsavel().getNome(),

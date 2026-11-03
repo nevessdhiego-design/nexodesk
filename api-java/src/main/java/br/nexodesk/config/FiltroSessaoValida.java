@@ -40,10 +40,9 @@ public class FiltroSessaoValida extends OncePerRequestFilter {
         if (sessao != null && autenticacao != null && autenticacao.isAuthenticated()
                 && !(autenticacao instanceof AnonymousAuthenticationToken)) {
             Object guardada = sessao.getAttribute(ATRIBUTO_VERSAO);
+            var situacao = usuarios.situacaoDaSessao(autenticacao.getName());
             boolean valida = guardada instanceof Integer versao
-                    && usuarios.situacaoDaSessao(autenticacao.getName())
-                            .map(s -> s.getAtivo() && s.getVersaoSessao() == versao)
-                            .orElse(false);
+                    && situacao.map(s -> s.getAtivo() && s.getVersaoSessao() == versao).orElse(false);
             if (!valida) {
                 SecurityContextHolder.clearContext();
                 sessao.invalidate();
@@ -54,6 +53,29 @@ public class FiltroSessaoValida extends OncePerRequestFilter {
                 return;
             }
         }
+        // senha temporária: enquanto não trocar a senha, a pessoa só alcança "quem sou eu", trocar a senha e sair
+        if (sessao != null && autenticacao != null && autenticacao.isAuthenticated()
+                && !(autenticacao instanceof AnonymousAuthenticationToken)
+                && usuarios.situacaoDaSessao(autenticacao.getName()).map(s -> s.getSenhaTemporaria()).orElse(false)
+                && !liberadoComSenhaTemporaria(request)) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getOutputStream().write(
+                    "{\"erro\":\"Troque a senha temporária para continuar.\",\"trocarSenha\":true}".getBytes(StandardCharsets.UTF_8));
+            return;
+        }
         chain.doFilter(request, response);
+    }
+
+    /** Páginas (não /api) passam; da API só o necessário para a pessoa escolher a nova senha. */
+    static boolean liberadoComSenhaTemporaria(HttpServletRequest request) {
+        String caminho = request.getRequestURI();
+        if (!caminho.startsWith("/api/")) {
+            return true;
+        }
+        boolean get = "GET".equals(request.getMethod());
+        boolean post = "POST".equals(request.getMethod());
+        return (get && (caminho.equals("/api/auth/me") || caminho.equals("/api/auth/sessao")))
+                || (post && (caminho.equals("/api/auth/senha") || caminho.equals("/api/auth/logout")));
     }
 }

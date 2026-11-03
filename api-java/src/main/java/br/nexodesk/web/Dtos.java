@@ -25,6 +25,8 @@ public final class Dtos {
             @NotBlank(message = "Informe o e-mail.") @Email(message = "E-mail inválido.") @Size(max = 160) String email,
             @Size(max = 20) String telefone,
             @Size(max = 40) String unidade,
+            @Size(max = 20) String bloco,
+            @Size(max = 10) String apartamento,
             // bcrypt só considera os primeiros 72 bytes
             @NotBlank(message = "Informe a senha.")
             @Size(min = 8, max = 72, message = "A senha deve ter de 8 a 72 caracteres.") String senha) {
@@ -48,7 +50,9 @@ public final class Dtos {
     public record AtualizarPerfilRequest(
             @NotBlank(message = "Informe o nome.") @Size(max = 120) String nome,
             @Size(max = 20) String telefone,
-            @Size(max = 40) String unidade) {
+            @Size(max = 40) String unidade,
+            @Size(max = 20) String bloco,
+            @Size(max = 10) String apartamento) {
     }
 
     public record AlterarSenhaRequest(
@@ -110,7 +114,7 @@ public final class Dtos {
     // ---------- saída ----------
 
     public record UsuarioResponse(Long id, String nome, String email, String telefone, String unidade, String perfil,
-                                  String funcao) {
+                                  String funcao, String bloco, String apartamento, boolean trocarSenha) {
     }
 
     public record SessaoResponse(boolean autenticado, UsuarioResponse usuario) {
@@ -146,6 +150,7 @@ public final class Dtos {
             boolean atrasado,
             String moradorNome,
             String moradorUnidade,
+            String moradorBloco,
             LocalDateTime criadoEm,
             LocalDateTime atualizadoEm,
             Long versao,

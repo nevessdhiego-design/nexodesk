@@ -70,8 +70,8 @@ public class DadosDemonstracao implements ApplicationRunner {
             log.info("Perfil demo: o banco já tem chamados, nada foi criado.");
             return;
         }
-        String ana = morador("Ana (demonstração)", "ana.demo@nexodesk.local", "Bloco A, 101");
-        String bruno = morador("Bruno (demonstração)", "bruno.demo@nexodesk.local", "Bloco B, 202");
+        String ana = morador("Ana (demonstração)", "ana.demo@nexodesk.local", "A", "101");
+        String bruno = morador("Bruno (demonstração)", "bruno.demo@nexodesk.local", "B", "202");
 
         ChamadoResponse lampada = abrir(ana, "Lâmpada queimada no corredor do 2º andar",
                 Categoria.ILUMINACAO, "Corredor do 2º andar", "Precisa trocar a lâmpada do corredor, está escuro à noite.", false);
@@ -144,12 +144,14 @@ public class DadosDemonstracao implements ApplicationRunner {
         return email;
     }
 
-    private String morador(String nome, String email, String unidade) {
+    private String morador(String nome, String email, String bloco, String apartamento) {
         if (!usuarios.existsByEmail(email)) {
             Usuario u = new Usuario();
             u.setNome(nome);
             u.setEmail(email);
-            u.setUnidade(unidade);
+            u.setBloco(bloco);
+            u.setApartamento(apartamento);
+            u.setUnidade("Bloco " + bloco + ", " + apartamento);
             u.setSenhaHash(codificador.encode(senhaDemo));
             u.setPerfil(Perfil.MORADOR);
             usuarios.save(u);

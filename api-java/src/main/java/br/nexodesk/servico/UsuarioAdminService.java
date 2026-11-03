@@ -153,6 +153,7 @@ public class UsuarioAdminService {
         }
         String temporaria = gerarSenhaTemporaria();
         alvo.setSenhaHash(codificador.encode(temporaria));
+        alvo.setSenhaTemporaria(true); // a pessoa só consegue trocar a senha até escolher uma nova
         alvo.setVersaoSessao(alvo.getVersaoSessao() + 1);
         usuarios.save(alvo);
         publicador.encerrar(alvo.getEmail());

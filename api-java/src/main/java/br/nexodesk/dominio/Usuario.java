@@ -43,6 +43,21 @@ public class Usuario {
     @Column(length = 30)
     private Funcao funcao;
 
+    /** Bloco e apartamento estruturados (a "unidade" em texto livre continua existindo para contas antigas). */
+    @Column(length = 20)
+    private String bloco;
+
+    @Column(length = 10)
+    private String apartamento;
+
+    /** Dias da semana em que o funcionário trabalha ("1,2,3,4,5"; 1 = segunda). Nulo = todos os dias. */
+    @Column(name = "dias_trabalho", length = 20)
+    private String diasTrabalho;
+
+    /** Verdadeiro depois que o síndico gera uma senha temporária: a pessoa só pode trocar a senha até fazê-lo. */
+    @Column(name = "senha_temporaria", nullable = false)
+    private boolean senhaTemporaria;
+
     @Column(nullable = false)
     private boolean ativo = true;
 
@@ -75,6 +90,14 @@ public class Usuario {
     public void setPerfil(Perfil perfil) { this.perfil = perfil; }
     public Funcao getFuncao() { return funcao; }
     public void setFuncao(Funcao funcao) { this.funcao = funcao; }
+    public String getBloco() { return bloco; }
+    public void setBloco(String bloco) { this.bloco = bloco; }
+    public String getApartamento() { return apartamento; }
+    public void setApartamento(String apartamento) { this.apartamento = apartamento; }
+    public String getDiasTrabalho() { return diasTrabalho; }
+    public void setDiasTrabalho(String diasTrabalho) { this.diasTrabalho = diasTrabalho; }
+    public boolean isSenhaTemporaria() { return senhaTemporaria; }
+    public void setSenhaTemporaria(boolean senhaTemporaria) { this.senhaTemporaria = senhaTemporaria; }
     public boolean isAtivo() { return ativo; }
     public void setAtivo(boolean ativo) { this.ativo = ativo; }
     public int getVersaoSessao() { return versaoSessao; }
