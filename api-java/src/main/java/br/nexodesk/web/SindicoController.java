@@ -10,7 +10,11 @@ import br.nexodesk.web.Dtos.AtribuirResponsavelRequest;
 import br.nexodesk.web.Dtos.AusenciaRequest;
 import br.nexodesk.web.Dtos.AusenciaResponse;
 import br.nexodesk.web.Dtos.EscalaRequest;
+import br.nexodesk.web.Dtos.CategoriaConfigResponse;
+import br.nexodesk.web.Dtos.ChecklistRequest;
+import br.nexodesk.web.Dtos.ConfiguracaoResponse;
 import br.nexodesk.web.Dtos.EquipeResponse;
+import br.nexodesk.web.Dtos.MatrizRequest;
 import br.nexodesk.web.Dtos.FuncaoResponse;
 import br.nexodesk.web.Dtos.SenhaTemporariaResponse;
 import br.nexodesk.web.Dtos.UsuarioAdminResponse;
@@ -41,11 +45,14 @@ public class SindicoController {
     private final ChamadoService chamados;
     private final UsuarioAdminService usuarios;
     private final RelatorioService relatorios;
+    private final br.nexodesk.servico.ConfiguracaoService configuracao;
 
-    public SindicoController(ChamadoService chamados, UsuarioAdminService usuarios, RelatorioService relatorios) {
+    public SindicoController(ChamadoService chamados, UsuarioAdminService usuarios, RelatorioService relatorios,
+                             br.nexodesk.servico.ConfiguracaoService configuracao) {
         this.chamados = chamados;
         this.usuarios = usuarios;
         this.relatorios = relatorios;
+        this.configuracao = configuracao;
     }
 
     /** Fila do mais fácil ao mais difícil. ?status=ativos (padrão) | todos | ABERTO | EM_ANDAMENTO | RESOLVIDO */
@@ -87,9 +94,36 @@ public class SindicoController {
     /** Funções que um funcionário pode ter e as categorias de chamado que cada uma cobre. */
     @GetMapping("/funcoes")
     public List<FuncaoResponse> funcoes() {
+        var matriz = configuracao.matriz();
         return java.util.Arrays.stream(br.nexodesk.dominio.Funcao.values())
-                .map(f -> new FuncaoResponse(f.name(), f.getRotulo(), f.getCategorias().stream().map(Enum::name).toList(), f.recebeEmergencias()))
+                .map(f -> new FuncaoResponse(f.name(), f.getRotulo(), matriz.get(f).stream().map(Enum::name).toList(), f.recebeEmergencias()))
                 .toList();
+    }
+
+    /** Tela de configurações: a matriz função x categoria e o checklist de cada categoria. */
+    @GetMapping("/configuracao")
+    public ConfiguracaoResponse configuracao() {
+        List<CategoriaConfigResponse> categorias = java.util.Arrays.stream(br.nexodesk.dominio.Categoria.values())
+                .map(c -> new CategoriaConfigResponse(c.name(), c.getRotulo(), c.getPrazoHoras(), configuracao.checklist(c))).toList();
+        return new ConfiguracaoResponse(funcoes(), categorias);
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/configuracao/funcoes")
+    public ConfiguracaoResponse salvarMatriz(@Valid @RequestBody MatrizRequest req) {
+        configuracao.salvarMatriz(req.matriz());
+        return configuracao();
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/configuracao/checklists/{categoria}")
+    public ConfiguracaoResponse salvarChecklist(@PathVariable br.nexodesk.dominio.Categoria categoria, @Valid @RequestBody ChecklistRequest req) {
+        configuracao.salvarChecklist(categoria, req.itens());
+        return configuracao();
+    }
+
+    @PostMapping("/configuracao/restaurar")
+    public ConfiguracaoResponse restaurarPadrao() {
+        configuracao.restaurarPadrao();
+        return configuracao();
     }
 
     @GetMapping("/usuarios")

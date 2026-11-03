@@ -221,6 +221,19 @@ public final class Dtos {
                                     List<ContagemResponse> porBloco, List<ContagemResponse> locaisRecorrentes) {
     }
 
+    public record CategoriaConfigResponse(String codigo, String rotulo, int prazoHoras, List<String> checklist) {
+    }
+
+    public record ConfiguracaoResponse(List<FuncaoResponse> funcoes, List<CategoriaConfigResponse> categorias) {
+    }
+
+    /** funcao -> categorias que ela cobre. */
+    public record MatrizRequest(@NotNull(message = "Informe a matriz.") java.util.Map<br.nexodesk.dominio.Funcao, List<Categoria>> matriz) {
+    }
+
+    public record ChecklistRequest(@NotNull(message = "Informe as etapas.") List<String> itens) {
+    }
+
     public record EquipeResponse(Long id, String nome, String perfil, String funcao, String funcaoRotulo,
                                  java.util.List<String> categorias, long cargaAberta,
                                  boolean disponivel, String indisponibilidade) {

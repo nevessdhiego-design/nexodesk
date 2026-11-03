@@ -58,12 +58,14 @@ public class ChamadoService {
     private final PrioridadeFila prioridade;
     private final Clock relogio;
     private final TarefaRepository tarefas;
+    private final ConfiguracaoService configuracao;
 
     public ChamadoService(ChamadoRepository chamados, HistoricoStatusRepository historicos,
                           NotificacaoRepository notificacoes, UsuarioService usuarios,
                           ClassificadorDificuldade classificador, ArmazenamentoImagem imagens,
                           AvaliacaoRepository avaliacoes, ApplicationEventPublisher eventos,
-                          PrioridadeFila prioridade, Clock relogio, TarefaRepository tarefas) {
+                          PrioridadeFila prioridade, Clock relogio, TarefaRepository tarefas,
+                          ConfiguracaoService configuracao) {
         this.chamados = chamados;
         this.historicos = historicos;
         this.notificacoes = notificacoes;
@@ -75,6 +77,7 @@ public class ChamadoService {
         this.prioridade = prioridade;
         this.relogio = relogio;
         this.tarefas = tarefas;
+        this.configuracao = configuracao;
     }
 
     /** RF01 + RF02: cadastra o chamado já classificado por dificuldade. */
@@ -356,7 +359,7 @@ public class ChamadoService {
             return;
         }
         int ordem = 0;
-        for (String texto : ChecklistModelo.itens(c.getCategoria())) {
+        for (String texto : configuracao.checklist(c.getCategoria())) {
             Tarefa t = new Tarefa();
             t.setChamado(c);
             t.setTexto(texto);
