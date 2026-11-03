@@ -67,6 +67,13 @@ public class ChamadoController {
         avaliacoes.avaliar(autenticacao.getName(), id, dados);
     }
 
+    /** O morador reabre um chamado resolvido há até 30 dias, dizendo o que continua errado. */
+    @PostMapping("/chamados/{id}/reabrir")
+    public ChamadoResponse reabrir(@PathVariable Long id, @Valid @RequestBody br.nexodesk.web.Dtos.ReabrirRequest dados,
+                                   Authentication autenticacao) {
+        return chamados.reabrir(autenticacao.getName(), id, dados.motivo());
+    }
+
     /** Foto do serviço pronto (o "depois"); mesma regra de acesso da foto de abertura. */
     @GetMapping("/chamados/{id}/imagem-conclusao")
     public ResponseEntity<Resource> imagemConclusao(@PathVariable Long id, Authentication autenticacao) {

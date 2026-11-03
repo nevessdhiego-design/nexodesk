@@ -87,6 +87,26 @@ public final class Dtos {
             @Size(max = 1000, message = "A mensagem deve ter no máximo 1000 caracteres.") String texto) {
     }
 
+    public record ReabrirRequest(
+            @NotBlank(message = "Conte o que continua errado.")
+            @Size(min = 5, max = 300, message = "O motivo deve ter de 5 a 300 caracteres.") String motivo) {
+    }
+
+    public record AusenciaRequest(
+            @NotNull(message = "Escolha o tipo.") br.nexodesk.dominio.TipoAusencia tipo,
+            @NotNull(message = "Informe o primeiro dia.") java.time.LocalDate de,
+            @NotNull(message = "Informe o último dia.") java.time.LocalDate ate,
+            @Size(max = 120) String observacao) {
+    }
+
+    /** dias: 1 (segunda) a 7 (domingo). Todos os 7 = sem restrição. */
+    public record EscalaRequest(@NotNull(message = "Informe os dias de trabalho.") List<Integer> dias) {
+    }
+
+    public record AusenciaResponse(Long id, Long usuarioId, String nome, String tipo, String tipoRotulo,
+                                   java.time.LocalDate de, java.time.LocalDate ate, String observacao) {
+    }
+
     /** responsavelId nulo remove o responsável. previsao nula remove a previsão. */
     public record AtribuirResponsavelRequest(Long responsavelId, java.time.LocalDate previsao, Long versao) {
     }
@@ -161,6 +181,9 @@ public final class Dtos {
             LocalDateTime prazoLimite,
             /** Minutos até o prazo (negativo = vencido); nulo se resolvido ou sem prazo. */
             Long minutosParaPrazo,
+            int reaberturas,
+            /** Chamados da mesma categoria e do mesmo local nos últimos 90 dias (com este). 3 ou mais = problema que se repete. */
+            long recorrencias,
             Integer notaAvaliacao,
             String comentarioAvaliacao,
             List<TarefaResponse> tarefas,
@@ -173,7 +196,7 @@ public final class Dtos {
     }
 
     public record UsuarioAdminResponse(Long id, String nome, String email, String unidade, String perfil,
-                                       String funcao, String funcaoRotulo, boolean ativo, LocalDateTime criadoEm) {
+                                       String funcao, String funcaoRotulo, boolean ativo, LocalDateTime criadoEm, String diasTrabalho) {
     }
 
     /** A senha temporária só aparece nesta resposta. */
@@ -194,11 +217,13 @@ public final class Dtos {
     public record RelatorioResponse(java.time.LocalDate de, java.time.LocalDate ate, long total, long abertos, long emAndamento,
                                     long resolvidos, long emergencias, Double tempoMedioResolucaoHoras,
                                     Double percentualNoPrazo, long vencidosAgora,
-                                    List<ContagemResponse> porCategoria, List<CargaFuncionarioResponse> porFuncionario) {
+                                    List<ContagemResponse> porCategoria, List<CargaFuncionarioResponse> porFuncionario,
+                                    List<ContagemResponse> porBloco, List<ContagemResponse> locaisRecorrentes) {
     }
 
     public record EquipeResponse(Long id, String nome, String perfil, String funcao, String funcaoRotulo,
-                                 java.util.List<String> categorias, long cargaAberta) {
+                                 java.util.List<String> categorias, long cargaAberta,
+                                 boolean disponivel, String indisponibilidade) {
     }
 
     public record NotificacaoResponse(Long id, Long chamadoId, String mensagem, boolean lida,

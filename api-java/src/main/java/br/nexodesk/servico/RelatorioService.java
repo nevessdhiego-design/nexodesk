@@ -134,6 +134,28 @@ public class RelatorioService {
         }
         equipe.sort(Comparator.comparingLong(CargaFuncionarioResponse::atribuidos).reversed().thenComparing(CargaFuncionarioResponse::nome));
 
+        // por bloco do morador (chamado anônimo não revela o bloco) e problemas que se repetem no mesmo lugar
+        Map<String, Long> porBloco = new HashMap<>();
+        Map<String, Long> repeticoes = new HashMap<>();
+        Map<String, String> rotuloDoLocal = new HashMap<>();
+        for (Chamado c : lista) {
+            String bloco = c.isAnonimo() ? "Anônimo (bloco oculto)"
+                    : c.getMorador().getBloco() == null ? "Não informado" : "Bloco " + c.getMorador().getBloco();
+            porBloco.merge(bloco, 1L, Long::sum);
+            if (c.getLocalOcorrencia() != null && !c.getLocalOcorrencia().isBlank()) {
+                String chave = c.getCategoria().name() + "|" + c.getLocalOcorrencia().trim().toLowerCase();
+                repeticoes.merge(chave, 1L, Long::sum);
+                rotuloDoLocal.putIfAbsent(chave, c.getCategoria().getRotulo() + " · " + c.getLocalOcorrencia().trim());
+            }
+        }
+        List<ContagemResponse> blocos = porBloco.entrySet().stream()
+                .map(e -> new ContagemResponse(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparingLong(ContagemResponse::total).reversed().thenComparing(ContagemResponse::rotulo)).toList();
+        List<ContagemResponse> recorrentes = repeticoes.entrySet().stream().filter(e -> e.getValue() >= 2)
+                .map(e -> new ContagemResponse(rotuloDoLocal.get(e.getKey()), e.getValue()))
+                .sorted(Comparator.comparingLong(ContagemResponse::total).reversed().thenComparing(ContagemResponse::rotulo))
+                .limit(5).toList();
+
         List<ContagemResponse> categorias = porCategoria.entrySet().stream()
                 .map(e -> new ContagemResponse(e.getKey(), e.getValue()))
                 .sorted(Comparator.comparingLong(ContagemResponse::total).reversed().thenComparing(ContagemResponse::rotulo))
@@ -142,7 +164,7 @@ public class RelatorioService {
         return new RelatorioResponse(inicio, fim, lista.size(), abertos, andamento, resolvidos, emergencias,
                 comTempo == 0 ? null : arredondar(somaHoras / comTempo),
                 comPrazo == 0 ? null : arredondar(100.0 * noPrazo / comPrazo),
-                vencidos, categorias, equipe);
+                vencidos, categorias, equipe, blocos, recorrentes);
     }
 
     /** O mesmo relatório em CSV (abre no Excel). Campos que o Excel leria como fórmula são neutralizados. */
@@ -159,6 +181,10 @@ public class RelatorioService {
         sb.append("Fora do prazo agora;").append(r.vencidosAgora()).append("\r\n\r\n");
         sb.append("Categoria;Total\r\n");
         r.porCategoria().forEach(c -> sb.append(ExportadorCsv.campo(c.rotulo())).append(";").append(c.total()).append("\r\n"));
+        sb.append("\r\nBloco;Total\r\n");
+        r.porBloco().forEach(b -> sb.append(ExportadorCsv.campo(b.rotulo())).append(";").append(b.total()).append("\r\n"));
+        sb.append("\r\nProblema que se repete (categoria · local);Chamados\r\n");
+        r.locaisRecorrentes().forEach(b -> sb.append(ExportadorCsv.campo(b.rotulo())).append(";").append(b.total()).append("\r\n"));
         sb.append("\r\nResponsável;Função;Atribuídos;Resolvidos;Média de avaliação\r\n");
         r.porFuncionario().forEach(f -> sb.append(ExportadorCsv.campo(f.nome())).append(";").append(ExportadorCsv.campo(f.funcao()))
                 .append(";").append(f.atribuidos()).append(";").append(f.resolvidos()).append(";").append(numero(f.mediaAvaliacao())).append("\r\n"));

@@ -7,6 +7,9 @@ import br.nexodesk.servico.UsuarioAdminService;
 import br.nexodesk.web.Dtos.RelatorioResponse;
 import br.nexodesk.web.Dtos.AlterarUsuarioRequest;
 import br.nexodesk.web.Dtos.AtribuirResponsavelRequest;
+import br.nexodesk.web.Dtos.AusenciaRequest;
+import br.nexodesk.web.Dtos.AusenciaResponse;
+import br.nexodesk.web.Dtos.EscalaRequest;
 import br.nexodesk.web.Dtos.EquipeResponse;
 import br.nexodesk.web.Dtos.FuncaoResponse;
 import br.nexodesk.web.Dtos.SenhaTemporariaResponse;
@@ -125,6 +128,29 @@ public class SindicoController {
                 .header("Content-Disposition", "attachment; filename=\"nexodesk-relatorio-" + r.de() + "-a-" + r.ate() + ".csv\"")
                 .header("Cache-Control", "no-store")
                 .body(relatorios.csv(r).getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** Ausências em curso ou futuras da equipe. */
+    @GetMapping("/ausencias")
+    public List<AusenciaResponse> ausencias() {
+        return usuarios.listarAusencias();
+    }
+
+    @PostMapping("/usuarios/{id}/ausencias")
+    public AusenciaResponse registrarAusencia(@PathVariable Long id, @Valid @RequestBody AusenciaRequest req) {
+        return usuarios.registrarAusencia(id, req);
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/ausencias/{id}")
+    @org.springframework.web.bind.annotation.ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    public void removerAusencia(@PathVariable Long id) {
+        usuarios.removerAusencia(id);
+    }
+
+    /** Dias da semana em que o funcionário trabalha (1 = segunda ... 7 = domingo). */
+    @org.springframework.web.bind.annotation.PutMapping("/usuarios/{id}/escala")
+    public UsuarioAdminResponse definirEscala(@PathVariable Long id, @Valid @RequestBody EscalaRequest req) {
+        return usuarios.definirEscala(id, req.dias());
     }
 
     @GetMapping("/estatisticas")

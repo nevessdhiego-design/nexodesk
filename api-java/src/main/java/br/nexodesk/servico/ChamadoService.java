@@ -291,6 +291,65 @@ public class ChamadoService {
         return paraResposta(c, true, List.of(), nota);
     }
 
+    static final int DIAS_PARA_REABRIR = 30;
+    static final int DIAS_DA_RECORRENCIA = 90;
+
+    private long recorrenciasDe(Chamado c) {
+        if (c.getLocalOcorrencia() == null || c.getLocalOcorrencia().isBlank()) {
+            return 0;
+        }
+        return chamados.countByCategoriaAndLocalOcorrenciaIgnoreCaseAndCriadoEmGreaterThanEqual(
+                c.getCategoria(), c.getLocalOcorrencia(), LocalDateTime.now(relogio).minusDays(DIAS_DA_RECORRENCIA));
+    }
+
+    /**
+     * O morador reabre um chamado dele que foi resolvido há até {@value #DIAS_PARA_REABRIR} dias, dizendo o que continua errado.
+     * O prazo recomeça, o histórico registra o motivo e o síndico e o responsável são avisados.
+     */
+    @Transactional
+    public ChamadoResponse reabrir(String email, Long id, String motivo) {
+        Usuario quem = usuarios.buscarPorEmail(email);
+        Chamado c = chamados.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Chamado não encontrado."));
+        if (!c.getMorador().getId().equals(quem.getId())) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Chamado não encontrado.");
+        }
+        if (c.getStatus() != StatusChamado.RESOLVIDO) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Só dá para reabrir um chamado que foi resolvido.");
+        }
+        LocalDateTime agora = LocalDateTime.now(relogio);
+        if (c.getAtualizadoEm().isBefore(agora.minusDays(DIAS_PARA_REABRIR))) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Já passaram mais de " + DIAS_PARA_REABRIR + " dias desde a resolução. Abra um novo chamado.");
+        }
+        String razao = motivo == null ? "" : motivo.trim();
+        if (razao.length() < 5) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Conte o que continua errado (mínimo de 5 caracteres).");
+        }
+        c.setStatus(StatusChamado.ABERTO);
+        c.setReaberturas(c.getReaberturas() + 1);
+        c.setPrazoLimite(agora.plusHours(c.isEmergencia() ? Categoria.PRAZO_EMERGENCIA_HORAS : c.getCategoria().getPrazoHoras()));
+        c.setAlertaPrazoEnviado(false);
+        chamados.saveAndFlush(c);
+        registrarHistorico(c, StatusChamado.RESOLVIDO, StatusChamado.ABERTO, quem, "Reaberto pelo morador: " + truncar(razao, 400));
+
+        Set<String> emails = new java.util.HashSet<>();
+        String aviso = truncar("O chamado #" + c.getId() + " \"" + truncar(c.getTitulo(), 50) + "\" foi REABERTO pelo morador: "
+                + truncar(razao, 160), 300);
+        java.util.List<Usuario> avisados = new java.util.ArrayList<>(usuarios.sindicosAtivos());
+        if (c.getResponsavel() != null && c.getResponsavel().isAtivo()) {
+            avisados.add(c.getResponsavel());
+        }
+        for (Usuario u : avisados.stream().distinct().toList()) {
+            avisar(u, c, aviso);
+            emails.add(u.getEmail());
+        }
+        emails.add(c.getMorador().getEmail());
+        eventos.publishEvent(new ChamadoAtribuidoEvent(c.getId(), emails));
+        Avaliacao nota = avaliacoes.buscarDosChamados(List.of(c)).stream().findFirst().orElse(null);
+        return paraResposta(c, false, List.of(), nota);
+    }
+
     /** O checklist nasce do modelo da categoria na primeira atribuição e não é recriado depois. */
     private void criarChecklistSeNecessario(Chamado c) {
         if (tarefas.existsByChamado(c)) {
@@ -543,6 +602,8 @@ public class ChamadoService {
                 c.getPrazoLimite(),
                 c.getPrazoLimite() == null || c.getStatus() == StatusChamado.RESOLVIDO ? null
                         : Duration.between(LocalDateTime.now(relogio), c.getPrazoLimite()).toMinutes(),
+                c.getReaberturas(),
+                recorrenciasDe(c),
                 avaliacao == null ? null : avaliacao.getNota(),
                 avaliacao == null ? null : avaliacao.getComentario(),
                 tarefas.findByChamadoOrderByOrdemAscIdAsc(c).stream()

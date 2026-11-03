@@ -3,13 +3,21 @@ package br.nexodesk.servico;
 import br.nexodesk.dominio.Funcao;
 import br.nexodesk.dominio.Perfil;
 import br.nexodesk.dominio.Usuario;
+import br.nexodesk.dominio.Ausencia;
+import br.nexodesk.repositorio.AusenciaRepository;
 import br.nexodesk.repositorio.ChamadoRepository;
+import br.nexodesk.web.Dtos.AusenciaRequest;
+import br.nexodesk.web.Dtos.AusenciaResponse;
 import br.nexodesk.repositorio.UsuarioRepository;
 import br.nexodesk.web.Dtos.AlterarUsuarioRequest;
 import br.nexodesk.web.Dtos.EquipeResponse;
 import br.nexodesk.web.Dtos.SenhaTemporariaResponse;
 import br.nexodesk.web.Dtos.UsuarioAdminResponse;
 import java.security.SecureRandom;
+import java.time.Clock;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,14 +49,18 @@ public class UsuarioAdminService {
     private final ChamadoRepository chamados;
     private final PublicadorEventos publicador;
     private final PasswordEncoder codificador;
+    private final AusenciaRepository ausencias;
+    private final Clock relogio;
     private final SecureRandom aleatorio = new SecureRandom();
 
     public UsuarioAdminService(UsuarioRepository usuarios, ChamadoRepository chamados, PublicadorEventos publicador,
-                               PasswordEncoder codificador) {
+                               PasswordEncoder codificador, AusenciaRepository ausencias, Clock relogio) {
         this.usuarios = usuarios;
         this.chamados = chamados;
         this.publicador = publicador;
         this.codificador = codificador;
+        this.ausencias = ausencias;
+        this.relogio = relogio;
     }
 
     /** Lista para a tela de gestão. Não traz telefone nem senha: o síndico só precisa saber quem é quem. */
@@ -64,13 +76,20 @@ public class UsuarioAdminService {
         for (Object[] linha : chamados.cargaPorResponsavel(br.nexodesk.dominio.StatusChamado.RESOLVIDO)) {
             carga.put((Long) linha[0], (Long) linha[1]);
         }
+        LocalDate hoje = LocalDate.now(relogio);
+        Map<Long, Ausencia> ausentes = new HashMap<>();
+        for (Ausencia a : ausencias.findByDeLessThanEqualAndAteGreaterThanEqual(hoje, hoje)) {
+            ausentes.putIfAbsent(a.getUsuario().getId(), a);
+        }
         return usuarios.findByPerfilInAndAtivoTrueOrderByNomeAsc(List.of(Perfil.SINDICO, Perfil.FUNCIONARIO)).stream()
                 .map(u -> new EquipeResponse(u.getId(), u.getNome(), u.getPerfil().name(),
                         u.getFuncao() == null ? null : u.getFuncao().name(),
                         u.getFuncao() == null ? null : u.getFuncao().getRotulo(),
                         u.getFuncao() == null ? List.<String>of()
                                 : u.getFuncao().getCategorias().stream().map(Enum::name).toList(),
-                        carga.getOrDefault(u.getId(), 0L)))
+                        carga.getOrDefault(u.getId(), 0L),
+                        indisponibilidade(u, ausentes.get(u.getId()), hoje) == null,
+                        indisponibilidade(u, ausentes.get(u.getId()), hoje)))
                 .toList();
     }
 
@@ -171,9 +190,88 @@ public class UsuarioAdminService {
         return sb.toString();
     }
 
+    private static final DateTimeFormatter DIA_MES = DateTimeFormatter.ofPattern("dd/MM");
+
+    /** Texto do motivo se a pessoa não está disponível hoje (ausência registrada ou folga da escala); nulo se está. */
+    static String indisponibilidade(Usuario u, Ausencia ausencia, LocalDate hoje) {
+        if (ausencia != null) {
+            return ausencia.getTipo().getRotulo() + " até " + ausencia.getAte().format(DIA_MES);
+        }
+        if (u.getDiasTrabalho() != null && !u.getDiasTrabalho().isBlank()
+                && !List.of(u.getDiasTrabalho().split(",")).contains(String.valueOf(hoje.getDayOfWeek().getValue()))) {
+            return "Folga hoje (escala)";
+        }
+        return null;
+    }
+
+    private Usuario funcionario(Long id) {
+        Usuario alvo = usuarios.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
+        if (alvo.getPerfil() != Perfil.FUNCIONARIO) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Ausência e escala valem só para funcionários.");
+        }
+        return alvo;
+    }
+
+    /** O síndico registra férias, folga ou atestado de um funcionário: enquanto durar, o painel não o indica. */
+    @Transactional
+    public AusenciaResponse registrarAusencia(Long usuarioId, AusenciaRequest req) {
+        Usuario alvo = funcionario(usuarioId);
+        if (req.ate().isBefore(req.de())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "O último dia deve ser igual ou depois do primeiro.");
+        }
+        if (req.de().plusDays(365).isBefore(req.ate())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "A ausência pode ter no máximo um ano.");
+        }
+        Ausencia a = new Ausencia();
+        a.setUsuario(alvo);
+        a.setTipo(req.tipo());
+        a.setDe(req.de());
+        a.setAte(req.ate());
+        a.setObservacao(req.observacao() == null || req.observacao().isBlank() ? null : req.observacao().trim());
+        return paraResposta(ausencias.save(a));
+    }
+
+    @Transactional(readOnly = true)
+    public List<AusenciaResponse> listarAusencias() {
+        return ausencias.findByAteGreaterThanEqualOrderByDeAscIdAsc(LocalDate.now(relogio)).stream()
+                .map(UsuarioAdminService::paraResposta).toList();
+    }
+
+    @Transactional
+    public void removerAusencia(Long id) {
+        if (!ausencias.existsById(id)) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Ausência não encontrada.");
+        }
+        ausencias.deleteById(id);
+    }
+
+    /** Escala semanal: os dias em que o funcionário trabalha. Marcar os sete dias tira a restrição. */
+    @Transactional
+    public UsuarioAdminResponse definirEscala(Long usuarioId, List<Integer> dias) {
+        Usuario alvo = funcionario(usuarioId);
+        java.util.TreeSet<Integer> unicos = new java.util.TreeSet<>();
+        for (Integer d : dias) {
+            if (d == null || d < 1 || d > 7) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Os dias vão de 1 (segunda) a 7 (domingo).");
+            }
+            unicos.add(d);
+        }
+        if (unicos.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Marque pelo menos um dia de trabalho.");
+        }
+        alvo.setDiasTrabalho(unicos.size() == 7 ? null
+                : unicos.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(",")));
+        return paraResposta(usuarios.save(alvo));
+    }
+
+    private static AusenciaResponse paraResposta(Ausencia a) {
+        return new AusenciaResponse(a.getId(), a.getUsuario().getId(), a.getUsuario().getNome(), a.getTipo().name(),
+                a.getTipo().getRotulo(), a.getDe(), a.getAte(), a.getObservacao());
+    }
+
     private static UsuarioAdminResponse paraResposta(Usuario u) {
         return new UsuarioAdminResponse(u.getId(), u.getNome(), u.getEmail(), u.getUnidade(),
                 u.getPerfil().name(), u.getFuncao() == null ? null : u.getFuncao().name(),
-                u.getFuncao() == null ? null : u.getFuncao().getRotulo(), u.isAtivo(), u.getCriadoEm());
+                u.getFuncao() == null ? null : u.getFuncao().getRotulo(), u.isAtivo(), u.getCriadoEm(), u.getDiasTrabalho());
     }
 }

@@ -94,6 +94,10 @@ public class Chamado {
     @Column(name = "alerta_prazo_enviado", nullable = false)
     private boolean alertaPrazoEnviado;
 
+    /** Quantas vezes o morador reabriu o chamado depois de resolvido. */
+    @Column(nullable = false)
+    private int reaberturas;
+
     /** Foto do serviço pronto ("depois"), enviada pelo funcionário responsável ou pelo síndico. */
     @Column(name = "imagem_conclusao", length = 100)
     private String imagemConclusao;
@@ -150,6 +154,9 @@ public class Chamado {
     public LocalDateTime getPrazoLimite() { return prazoLimite; }
     public void setPrazoLimite(LocalDateTime prazoLimite) { this.prazoLimite = prazoLimite; }
     public boolean isAlertaPrazoEnviado() { return alertaPrazoEnviado; }
+    public void setAlertaPrazoEnviado(boolean alertaPrazoEnviado) { this.alertaPrazoEnviado = alertaPrazoEnviado; }
+    public int getReaberturas() { return reaberturas; }
+    public void setReaberturas(int reaberturas) { this.reaberturas = reaberturas; }
     public String getImagemConclusao() { return imagemConclusao; }
     public void setImagemConclusao(String imagemConclusao) { this.imagemConclusao = imagemConclusao; }
     public Long getVersao() { return versao; }
