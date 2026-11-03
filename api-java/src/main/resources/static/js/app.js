@@ -230,7 +230,7 @@ function vazio(texto) {
 const MENUS = {
   MORADOR: [['/morador.html', 'chamados', 'Meus chamados'], ['/conta.html', 'conta', 'Minha conta']],
   SINDICO: [['/sindico.html', 'casa', 'Painel'], ['/relatorios.html', 'relatorio', 'Relatórios'],
-    ['/usuarios.html', 'usuarios', 'Usuários'], ['/conta.html', 'conta', 'Minha conta']],
+    ['/usuarios.html', 'usuarios', 'Usuários'], ['/configuracoes.html', 'ferramenta', 'Configurações'], ['/conta.html', 'conta', 'Minha conta']],
   FUNCIONARIO: [['/funcionario.html', 'ferramenta', 'Meus atendimentos'], ['/conta.html', 'conta', 'Minha conta']],
 };
 

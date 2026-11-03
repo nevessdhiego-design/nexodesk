@@ -246,6 +246,9 @@ input[type=date] { width: 100%; padding: .6rem .7rem; border: 1px solid var(--bo
 .dias-semana .dia { margin: 0; }
 .reabrir { margin-top: .5rem; }
 .reabrir summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .9rem; }
+table.matriz th[scope=row] { white-space: normal; min-width: 180px; }
+table.matriz td { text-align: center; }
+table.matriz th[scope=col] { text-transform: none; text-align: center; font-size: .8rem; }
 button.secundario-escuro { background: var(--secondary); }
 button.perigo { background: var(--danger); }
 button.perigo:hover { background: #8f2525; }

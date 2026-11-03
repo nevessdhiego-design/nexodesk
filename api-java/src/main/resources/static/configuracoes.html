@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NexoDesk - Configurações</title>
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/acessibilidade.css">
+  <script src="/js/acessibilidade.js"></script>
+</head>
+<body>
+  <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="marca">Nexo<span>Desk</span></div>
+    <div class="espaco"></div>
+    <span class="usuario" id="usuario"></span>
+    <button type="button" class="secundario" id="botao-sair">Sair</button>
+  </header>
+  <nav id="menu" class="menu nao-imprimir" aria-label="Menu principal"></nav>
+
+  <main class="pagina" id="conteudo" tabindex="-1">
+    <h1 class="somente-leitor">Configurações da equipe e dos serviços</h1>
+    <div id="mensagem" class="mensagem hidden" role="alert"></div>
+
+    <section class="cartao">
+      <h2>Quem cobre cada tipo de serviço</h2>
+      <p class="muted">É o que o painel usa para marcar <strong>Indicado</strong> ao escolher o responsável de um chamado. Marque as funções que costumam atender cada categoria. <strong>É só uma sugestão: quem atribui é você.</strong> Toda categoria precisa de pelo menos uma função.</p>
+      <div class="tabela-rolavel">
+        <table class="usuarios matriz" id="tabela-matriz">
+          <caption class="somente-leitor">Funções que cobrem cada categoria de chamado</caption>
+          <thead id="matriz-cabecalho"></thead>
+          <tbody id="matriz-corpo"></tbody>
+        </table>
+      </div>
+      <div class="acoes"><button type="button" id="salvar-matriz">Salvar quem cobre cada serviço</button></div>
+    </section>
+
+    <section class="cartao">
+      <h2>Etapas do serviço (checklist)</h2>
+      <p class="muted">Cada categoria tem um modelo de etapas, criado quando o chamado recebe um responsável. Escreva <strong>uma etapa por linha</strong> (até 12, com até 120 caracteres). Chamados que já têm checklist não mudam.</p>
+      <label for="categoria-checklist">Categoria</label>
+      <select id="categoria-checklist"></select>
+      <label for="texto-checklist">Etapas (uma por linha)</label>
+      <textarea id="texto-checklist" rows="7" maxlength="1600"></textarea>
+      <p class="muted" id="prazo-categoria"></p>
+      <div class="acoes"><button type="button" id="salvar-checklist">Salvar etapas</button></div>
+    </section>
+
+    <section class="cartao">
+      <h2>Voltar ao padrão</h2>
+      <p class="muted">Restaura a matriz e todos os checklists para o padrão do sistema. Não altera chamados nem checklists já criados.</p>
+      <div class="acoes"><button type="button" class="perigo" id="restaurar">Restaurar o padrão</button></div>
+    </section>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/configuracoes.js"></script>
+</body>
+</html>

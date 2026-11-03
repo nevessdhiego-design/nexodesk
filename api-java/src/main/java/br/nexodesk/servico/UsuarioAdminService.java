@@ -4,6 +4,7 @@ import br.nexodesk.dominio.Funcao;
 import br.nexodesk.dominio.Perfil;
 import br.nexodesk.dominio.Usuario;
 import br.nexodesk.dominio.Ausencia;
+import br.nexodesk.dominio.Categoria;
 import br.nexodesk.repositorio.AusenciaRepository;
 import br.nexodesk.repositorio.ChamadoRepository;
 import br.nexodesk.web.Dtos.AusenciaRequest;
@@ -51,16 +52,19 @@ public class UsuarioAdminService {
     private final PasswordEncoder codificador;
     private final AusenciaRepository ausencias;
     private final Clock relogio;
+    private final ConfiguracaoService configuracao;
     private final SecureRandom aleatorio = new SecureRandom();
 
     public UsuarioAdminService(UsuarioRepository usuarios, ChamadoRepository chamados, PublicadorEventos publicador,
-                               PasswordEncoder codificador, AusenciaRepository ausencias, Clock relogio) {
+                               PasswordEncoder codificador, AusenciaRepository ausencias, Clock relogio,
+                               ConfiguracaoService configuracao) {
         this.usuarios = usuarios;
         this.chamados = chamados;
         this.publicador = publicador;
         this.codificador = codificador;
         this.ausencias = ausencias;
         this.relogio = relogio;
+        this.configuracao = configuracao;
     }
 
     /** Lista para a tela de gestão. Não traz telefone nem senha: o síndico só precisa saber quem é quem. */
@@ -77,6 +81,7 @@ public class UsuarioAdminService {
             carga.put((Long) linha[0], (Long) linha[1]);
         }
         LocalDate hoje = LocalDate.now(relogio);
+        var matriz = configuracao.matriz();
         Map<Long, Ausencia> ausentes = new HashMap<>();
         for (Ausencia a : ausencias.findByDeLessThanEqualAndAteGreaterThanEqual(hoje, hoje)) {
             ausentes.putIfAbsent(a.getUsuario().getId(), a);
@@ -86,7 +91,7 @@ public class UsuarioAdminService {
                         u.getFuncao() == null ? null : u.getFuncao().name(),
                         u.getFuncao() == null ? null : u.getFuncao().getRotulo(),
                         u.getFuncao() == null ? List.<String>of()
-                                : u.getFuncao().getCategorias().stream().map(Enum::name).toList(),
+                                : matriz.get(u.getFuncao()).stream().map(Enum::name).toList(),
                         carga.getOrDefault(u.getId(), 0L),
                         indisponibilidade(u, ausentes.get(u.getId()), hoje) == null,
                         indisponibilidade(u, ausentes.get(u.getId()), hoje)))
