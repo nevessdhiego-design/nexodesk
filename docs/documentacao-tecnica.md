@@ -1,6 +1,6 @@
 # NexoDesk: Documentação técnica
 
-Projeto A3, Projeto e Engenharia de Software. Versão do documento: 22/10/2026 (fase 3: equipe por função, prazos, relatórios e nova aparência).
+Projeto A3, Projeto e Engenharia de Software. Versão do documento: 03/11/2026 (fase 3: equipe por função, prazos, relatórios, nova aparência e a rodada de melhorias de 03/11).
 Código: este repositório (passo a passo de execução em [`../README.md`](../README.md); do protótipo antigo
 para este, em [`migracao-do-aa.md`](migracao-do-aa.md)). Documentos irmãos: [`casos-de-prioridade.md`](casos-de-prioridade.md)
 , [`roteiro-demonstracao.md`](roteiro-demonstracao.md), [`indicadores-medidos.md`](indicadores-medidos.md) e
@@ -52,6 +52,13 @@ usuários). Só o síndico cria outros perfis, promovendo uma conta existente.
 | **Relatórios do síndico** (período, categorias, tempo médio, % dentro do prazo, por responsável), CSV e impressão | `RelatorioService`, `relatorios.html` | verificado |
 | **Recuperação de senha por e-mail** (token de uso único, 30 min; o banco guarda só o hash) | `RecuperacaoSenhaService`, `EmailRecuperacao` | verificado contra servidor de e-mail falso; **nunca com provedor real** |
 | **Contas de demonstração** (uma por função) e botões "Entrar como..." no login do perfil `demo` (sem senha) | `DadosDemonstracao`, `DemoController`, [`contas-demonstracao.md`](contas-demonstracao.md) | verificado |
+| **Troca de senha obrigatória** depois de senha temporária (o servidor só deixa ver "quem sou", trocar a senha e sair) | `FiltroSessaoValida`, `usuarios.senha_temporaria` | verificado |
+| **Bloco e apartamento** estruturados no cadastro (filtro por bloco no relatório; a "unidade" em texto livre continua valendo em contas antigas) | `UsuarioService`, `conta.html` | verificado |
+| **Reabrir chamado** (o morador reabre um chamado resolvido há até 30 dias, dizendo o que continua errado; o prazo recomeça e a equipe é avisada) | `ChamadoService.reabrir` | verificado |
+| **Problema que se repete** (mesma categoria e mesmo local 3 vezes em 90 dias: selo no painel; relatório lista os locais) | `ChamadoService.recorrenciasDe`, `RelatorioService` | verificado |
+| **Ausências e escala semanal** (férias, folga, atestado; quem está ausente deixa de ser indicado e o painel pede confirmação ao atribuir) | `UsuarioAdminService`, `usuarios.html` | verificado |
+| **Configurações editáveis** (matriz função × categoria e checklist por categoria; padrão de fábrica restaurável) | `ConfiguracaoService`, `configuracoes.html` | verificado |
+| **Tempo real com várias instâncias** (sem Redis, pelo banco) | `BarramentoEventos` | verificado em teste automático e com 2 instâncias reais no MySQL |
 | **Nova aparência** (menu por perfil, ícones e logotipo próprios, gráficos, passos do andamento, login com destaque) | `css/app.css`, `js/app.js` | contraste AA conferido por script (login, painel do síndico, relatórios, funcionário e morador) |
 | **Gestão de usuários** (promover a funcionário com função ou a síndico, desativar, reativar, redefinir senha; nunca a própria conta nem o último síndico) | `UsuarioAdminService`, `usuarios.html` | verificado |
 | **Busca e paginação da fila** do síndico (texto, categoria, 20 por vez; a posição exibida é a real na fila) | `sindico.js` | verificado no navegador com 37 chamados |
@@ -93,7 +100,7 @@ pela categoria (`ClassificadorLocal`, **sem** detecção de emergência) e marca
 
 **Decisão de projeto: SSE e não WebSocket.** Só o servidor fala; a conexão usa o mesmo cookie de sessão e a CSP não muda.
 O aviso não leva conteúdo: o navegador recarrega pela API normal, que já confere quem pode ver o quê. Os avisos saem só
-**depois do commit** do banco. Limite assumido: vale para **uma instância** da API (várias exigiriam um barramento, como Redis).
+**depois do commit** do banco. Com **várias instâncias** da API, o banco compartilhado serve de barramento (`BarramentoEventos`, tabela `eventos_tempo_real`, leitura a cada 1 s): medido com duas instâncias reais no MySQL, o aviso chegou em **0,3 a 0,75 s**; sem o barramento, em 5 de 5 tentativas nada chegou. Limite: depende de as instâncias usarem o mesmo banco.
 
 ## 4. Modelo de dados
 
@@ -110,6 +117,9 @@ Migrações (Flyway): `api-java/src/main/resources/db/migration/`:
 | V7 | `chamados.prazo_limite` e `alerta_prazo_enviado` (prazo por categoria) |
 | V8 | `chamados.imagem_conclusao` e tabela `tarefas` (checklist) |
 | V9 | tabela `tokens_senha` (recuperação de senha; só o hash do token) |
+| V10 | `usuarios.senha_temporaria`, `bloco`, `apartamento`, `dias_trabalho`; `chamados.reaberturas`; tabela `ausencias` |
+| V11 | tabelas `funcao_categorias` e `checklist_modelos` (matriz e checklists editáveis, com o padrão de fábrica) |
+| V12 | tabela `eventos_tempo_real` (barramento entre instâncias) |
 
 Rodam sozinhas na inicialização; bancos criados antes do Flyway entram com baseline na versão 1.
 Regra de ouro: **migração publicada nunca é editada**, só se cria uma nova (um teste confere o V1).
@@ -281,7 +291,10 @@ A tabela de pontuação base existe também em `dominio/Categoria.java` (modo de
 | `POST /api/funcionario/chamados/{id}/conclusao`, `POST /api/sindico/chamados/{id}/conclusao` | funcionário responsável / síndico | foto do serviço pronto (multipart, campo `imagem`) |
 | `GET /api/chamados/{id}/imagem-conclusao` | dono, síndico ou funcionário responsável | foto do "depois" |
 | `PATCH /api/funcionario/tarefas/{id}`, `PATCH /api/sindico/tarefas/{id}` | funcionário responsável / síndico | marca ou desmarca uma etapa do checklist |
-| `GET /api/sindico/funcoes` | síndico | funções e as categorias que cada uma cobre |
+| `GET /api/sindico/funcoes` | síndico | funções e as categorias que cada uma cobre (a matriz editável) |
+| `GET /api/sindico/configuracao`, `PUT .../configuracao/funcoes`, `PUT .../configuracao/checklists/{categoria}`, `POST .../configuracao/restaurar` | síndico | matriz função × categoria e checklists |
+| `POST /api/chamados/{id}/reabrir` | dono do chamado | reabre um chamado resolvido há até 30 dias |
+| `GET /api/sindico/ausencias`, `POST /api/sindico/usuarios/{id}/ausencias`, `DELETE /api/sindico/ausencias/{id}`, `PUT /api/sindico/usuarios/{id}/escala` | síndico | ausências e escala semanal da equipe |
 | `GET /api/sindico/relatorio?de=&ate=`, `GET /api/sindico/relatorio.csv` | síndico | relatório do período (padrão 30 dias; máximo 366) |
 | `POST /api/auth/esqueci-senha`, `POST /api/auth/redefinir-senha` | público | recuperação de senha por e-mail (resposta sempre igual; com freio de pedidos) |
 | `GET /api/demo/contas` | público, **só no perfil `demo`** | contas de exemplo para o login (nunca devolve senha) |
@@ -323,6 +336,10 @@ Erros saem sempre como JSON `{"erro": "...", "campos": {...}}`, sem detalhes int
 |---|---|---|
 | Java `FluxoChamadoTest` | 43 | cadastro, login, bloqueio por tentativas, sessão, CSRF, abertura e classificação, fila, emergência, envelhecimento, anonimato, status + aviso, conversa, avaliação, minha conta, troca de senha e sessões, concorrência (409), CSV, e-mail, isolamento, upload |
 | Java `EquipeEResponsavelTest` | 23 | promover, rebaixar e desativar; funções (equipe com carga e categorias, só mudar a função não derruba a sessão, aviso à Segurança em emergência, "O eletricista respondeu"); redefinir a senha de morador ou funcionário (síndico não, nem a própria conta); atribuir responsável e previsão (avisos, limites, 409); área do funcionário (só os chamados dele, anonimato, 403 nas rotas dos outros perfis) |
+| Java `ReaberturaAusenciaRecorrenciaTest` | 6 | reabrir (regras, 30 dias, prazo novo, aviso), problema que se repete, férias e escala tiram o "Indicado", relatório por bloco |
+| Java `SenhaTemporariaEBlocoTest` | 3 | senha temporária só deixa trocar a senha, cadastro com bloco e apartamento |
+| Java `ConfiguracaoEditavelTest` | 5 | padrão de fábrica do banco igual ao do código, editar matriz e checklist, limites, restaurar |
+| Java `BarramentoEventosTest` | 5 | aviso de uma instância chega à outra, sem duplicar, encerrar fluxo em outra instância, falha do banco não derruba o aviso local |
 | Java `RecuperacaoSenhaTest` | 5 | fluxo completo, resposta igual para qualquer e-mail, token de uso único, expirado ou inventado, link novo invalida o anterior, freio de pedidos |
 | Java `RelatorioTest` | 3 | números do relatório conferidos contra dados criados pelo teste, período vazio e inválido, só o síndico |
 | Java `ChecklistEConclusaoTest` | 3 | checklist criado uma vez, quem pode marcar etapas, foto do depois sem acesso de estranhos e arquivo falso recusado |
@@ -344,7 +361,7 @@ Erros saem sempre como JSON `{"erro": "...", "campos": {...}}`, sem detalhes int
 | Java `CookieSeguroProdTest`, `ImagemOrfaTest`, `RegrasTest` | 2, 1, 3 | cookie `Secure` no `prod`; foto apagada se o banco recusa; pontuação base Java = Python |
 | Python `test_regras.py` e `test_casos.py` | 20 | regras de dificuldade, emergência (com alarme falso), endpoint `/classificar`, os 27 casos de ajuste e os 15 de validação |
 
-Total: **172 testes Java e 20 Python, todos passando (22/10/2026).** A suíte Java passou **nos dois bancos**: H2 em
+Total: **191 testes Java e 20 Python, todos passando (03/11/2026).** A suíte Java passou **nos dois bancos**: H2 em
 memória (padrão, ~65 s) e **MySQL 8.4.9** real, a partir de banco vazio (Flyway V1 a V5; variáveis `NEXODESK_TEST_DB_*`, ver README). Nos dois, o Hibernate roda com `ddl-auto=validate`, ou seja,
 recusa subir se as entidades não baterem com as migrações. Além deles, foram executados por HTTP e pelo navegador: o fluxo
 completo com os dois serviços no ar, o perfil `demo`, o zelador (login, lista, mudança de status) e o tempo real com **dois
@@ -371,12 +388,11 @@ Defeito real achado e corrigido nesta fase: ao desligar a API com navegadores co
   e nenhum slide deve afirmar "alta aceitação".
 - **Regra de dificuldade:** 73% em casos que ela nunca viu (15 casos escritos por uma pessoa só); as expectativas ainda não foram
   validadas por um síndico real. Detecção de emergência só no Python (a reserva em Java não detecta).
-- **Tempo real:** as conexões ficam na memória de **uma instância** da API; para várias instâncias seria preciso um barramento (Redis).
+- **Tempo real entre instâncias:** vale para instâncias que **compartilham o mesmo banco** (MySQL); o atraso é de cerca de 1 s e cada instância faz uma leitura por segundo. Com H2 em arquivo, só uma instância.
 - **E-mail (RF05):** implementado e testado contra um servidor SMTP falso, mas vem **desligado** e nunca foi testado com um
   provedor real (Gmail etc.). Ligar exige o perfil `email` e variáveis de ambiente (ver README).
-- **RNF01:** medido só em `localhost`, com banco pequeno e uma pessoa por vez. Não há teste de carga (muitos usuários ao mesmo
-  tempo) nem medição com o banco em outra máquina.
-- **Checklist e foto:** o checklist é um modelo por categoria (não editável pelo síndico) e não bloqueia a conclusão; a foto do depois tem o mesmo tratamento da de abertura.
+- **RNF01 e carga:** o teste de carga (`scripts/teste-carga.py`) com **50 moradores e 3 síndicos ao mesmo tempo** teve pior p95 de **0,52 s no H2 e 0,68 s no MySQL real**, sem erros. **Cliente e servidor ficaram na mesma máquina**, com banco pequeno: não vale como prova de capacidade em produção, nem para o banco em outra máquina.
+- **Checklist e foto:** o checklist (editável pelo síndico) vale para os próximos chamados e não bloqueia a conclusão; a foto do depois tem o mesmo tratamento da de abertura.
 - **LGPD:** a página de privacidade e a exclusão de conta atendem o mínimo do projeto, mas **não foram revisadas por advogado**. O
   texto digitado em chamados e mensagens permanece depois da exclusão; não há prazo automático para apagar chamados antigos; o
   "li a política" do cadastro é uma confirmação na tela, não é registrada no banco.

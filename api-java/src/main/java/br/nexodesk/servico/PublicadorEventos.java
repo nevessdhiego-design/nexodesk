@@ -38,10 +38,17 @@ public class PublicadorEventos {
 
     private final Map<String, List<SseEmitter>> porUsuario = new ConcurrentHashMap<>();
     private final Supplier<SseEmitter> fabrica;
+    private volatile BarramentoEventos barramento;
 
     @Autowired
     public PublicadorEventos() {
         this(() -> new SseEmitter(TEMPO_LIMITE_MS));
+    }
+
+    /** Liga o barramento entre instâncias (opcional; @Lazy evita a dependência circular, o barramento também usa este publicador). */
+    @Autowired(required = false)
+    public void setBarramento(@org.springframework.context.annotation.Lazy BarramentoEventos barramento) {
+        this.barramento = barramento;
     }
 
     /** Permite ao teste trocar o emissor por um que anota o que foi enviado. */
@@ -71,8 +78,17 @@ public class PublicadorEventos {
         return emissor;
     }
 
-    /** Avisa UM usuário. {@code tipo} é um texto fixo do sistema (nunca digitado por usuário). */
+    /** Avisa UM usuário, nesta instância e (pelo barramento) nas outras. {@code tipo} é um texto fixo do sistema. */
     public void notificar(String email, String tipo, Long chamadoId) {
+        notificarLocal(email, tipo, chamadoId);
+        BarramentoEventos b = barramento;
+        if (b != null) {
+            b.publicar(email, tipo, chamadoId);
+        }
+    }
+
+    /** Só às conexões desta instância (usado também quando o aviso veio de outra instância). */
+    void notificarLocal(String email, String tipo, Long chamadoId) {
         List<SseEmitter> lista = porUsuario.get(email);
         if (lista == null) {
             return;
@@ -96,6 +112,14 @@ public class PublicadorEventos {
      * não pode continuar recebendo avisos. O navegador legítimo reconecta e passa pela checagem de sessão de novo.
      */
     public void encerrar(String email) {
+        encerrarLocal(email);
+        BarramentoEventos b = barramento;
+        if (b != null) {
+            b.publicar(email, BarramentoEventos.ENCERRAR, 0L);
+        }
+    }
+
+    void encerrarLocal(String email) {
         List<SseEmitter> lista = porUsuario.remove(email);
         if (lista != null) {
             lista.forEach(PublicadorEventos::fechar);

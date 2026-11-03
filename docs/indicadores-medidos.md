@@ -11,20 +11,20 @@ eu não tenho como medi-los a partir do código, então não os inventei. **Nada
 |---|---|---|
 | Requisitos funcionais implementados e testados | **5 de 5** (RF01 a RF05; RF05 por aviso no sistema, e-mail só testado contra servidor falso) | tabela da seção 2 de `documentacao-tecnica.md` |
 | Requisitos não funcionais atendidos | **3 de 3**, mais o "tempo real" que os slides de 20/08 prometiam (RNF01 medido na seção 2 abaixo) | idem |
-| Testes automáticos Java | **172**, 0 falhas no H2 **e** no MySQL 8.4.9 real, a partir de banco vazio (Flyway V1 a V9) | `cd api-java; .\mvnw.cmd clean test` |
+| Testes automáticos Java | **191**, 0 falhas no H2 **e** no MySQL 8.4.9 real, a partir de banco vazio (Flyway V1 a V12) | `cd api-java; .\mvnw.cmd clean test` |
 | Testes automáticos Python | **20**, 0 falhas | `cd servico-prioridade; .\.venv\Scripts\python.exe -m pytest -q` |
 | Tempo da suíte Java (H2) | **~65 s** (era ~3,5 min antes de corrigir o desligamento com SSE aberto) | idem |
 | Casos de uso implementados | **10** (o relatório da 2ª parcial diz 5; ver nota abaixo) | seção 10.1 da documentação técnica |
 | Perfis de usuário / funções de funcionário | **3** perfis (morador, funcionário, síndico) e **8** funções | `dominio/Perfil.java`, `dominio/Funcao.java` |
 | Diagramas (em Mermaid, no repositório) | **6**: 4 UML (casos de uso, classes, 2 de sequência), o modelo entidade-relacionamento e a arquitetura | seções 3, 4 e 10 da documentação técnica |
-| Tabelas no banco | **8** (`usuarios`, `chamados`, `historico_status`, `notificacoes`, `avaliacoes`, `mensagens`, `tarefas`, `tokens_senha`) | `cat api-java/src/main/resources/db/migration/V*.sql \| grep -c -i "^CREATE TABLE"` |
-| Migrações de banco (Flyway) | **9** (V1 a V9), testadas em H2 e MySQL, inclusive em banco criado antes do Flyway e em banco da V5 com zelador | `api-java/src/main/resources/db/migration/` |
-| Endpoints REST (mapeamentos) | **38** (+ logout do Spring Security) | seção 6 da documentação técnica |
+| Tabelas no banco | **12** (`usuarios`, `chamados`, `historico_status`, `notificacoes`, `avaliacoes`, `mensagens`, `tarefas`, `tokens_senha`, `ausencias`, `funcao_categorias`, `checklist_modelos`, `eventos_tempo_real`) | `cat api-java/src/main/resources/db/migration/V*.sql \| grep -c -i "^CREATE TABLE"` |
+| Migrações de banco (Flyway) | **12** (V1 a V12), testadas em H2 e MySQL, inclusive em banco criado antes do Flyway e em banco da V5 com zelador | `api-java/src/main/resources/db/migration/` |
+| Endpoints REST (mapeamentos) | **43** (+ logout do Spring Security) | seção 6 da documentação técnica |
 | Categorias de chamado | **13** | `dominio/Categoria.java` |
-| Linhas de código Java (produção / testes) | **4.959 / 4.009** | `git ls-files` + contagem de linhas |
+| Linhas de código Java (produção / testes) | **5.583 / 4.553** | `git ls-files` + contagem de linhas |
 | Linhas Python (produção / testes) | **176 / 235** | idem |
-| Telas (HTML, CSS, JS, SVG) | **28 arquivos, 2.607 linhas**; 10 páginas | `api-java/src/main/resources/static` |
-| Commits no repositório | **26**; os da fase 3 (22/10) ainda **sem push** (conferir com `git status -sb`) | `git rev-list --count HEAD`; `git status -sb` |
+| Telas (HTML, CSS, JS, SVG) | **30 arquivos, 2.922 linhas**; 11 páginas | `api-java/src/main/resources/static` |
+| Commits no repositório | **30**; os de 03/11 ainda **sem push** (conferir com `git status -sb`) | `git rev-list --count HEAD`; `git status -sb` |
 | Casos da regra de dificuldade | ajuste: **27 de 27** (100%, foi ajustada neles: não prova nada); **validação: 11 de 15 (73%)** em casos que ela nunca viu. **Cite os 73%** | `docs/casos-de-prioridade.md` |
 | Contraste de cores (WCAG AA, 4,5:1) | 0 falhas no login, painel do síndico, relatórios, funcionário e morador, em tema claro, escuro e alto contraste, depois da nova aparência (script de medição, não leitor de tela). Usuários e conta não foram refeitos depois da fase 3 | seção 9 da documentação técnica |
 
@@ -63,6 +63,26 @@ Não foi medida a latência exata do aviso: o teste de HTTP real (`TempoRealHttp
 representa internet, muitos usuários simultâneos nem MySQL em outra máquina. Prova que o sistema não tem lentidão própria
 do código, não que aguenta uma carga real.
 
+### 2.1 Carga e tempo real entre instâncias (medido em 03/11/2026)
+
+**Teste de carga** (`scripts/teste-carga.py`, só biblioteca padrão do Python): N moradores e 3 síndicos ao mesmo tempo, cada um com
+3 rodadas (login, meus chamados, avisos, abrir chamado com a chamada ao Python, detalhe; o síndico vê fila, estatísticas e relatório).
+**Cliente e servidor na mesma máquina**, banco pequeno.
+
+| Cenário | Requisições | Vazão | Pior p95 | Erros |
+|---|---|---|---|---|
+| H2, 10 moradores | 160 | 97 req/s | 0,43 s (login, bcrypt) | 0 |
+| H2, 25 moradores | 355 | 141 req/s | 0,46 s | 0 |
+| H2, 50 moradores | 680 | 165 req/s | 0,52 s | 0 |
+| **MySQL 8.4.9 real, 25 moradores** | 355 | 114 req/s | 0,67 s (abrir chamado) | 0 |
+| **MySQL 8.4.9 real, 50 moradores** | 680 | 107 req/s | 0,68 s (abrir chamado) | 0 |
+
+Limite do requisito: 3 s. **Não prova** capacidade em produção: sem rede, sem banco em outra máquina, poucas centenas de requisições.
+
+**Tempo real com duas instâncias reais da API no mesmo MySQL** (portas 8081 e 8082; o síndico muda o status na A e a Ana está
+conectada por SSE na B): **5 de 5 avisos chegaram, em 0,30 a 0,75 s** (média 0,64 s). Controle: com o barramento desligado na B,
+**0 de 5** chegaram.
+
 ## 3. Números que dependem do grupo (não medidos por mim)
 
 O relatório da 2ª parcial traz estes valores; confirmem com o Kanban antes de repeti-los na entrega final:
@@ -78,7 +98,7 @@ O relatório da 2ª parcial traz estes valores; confirmem com o Kanban antes de 
 
 ```powershell
 git clone <url do repositório>; cd nexodesk-app
-cd api-java;           .\mvnw.cmd clean test           # 172 testes, ~1 min
+cd api-java;           .\mvnw.cmd clean test           # 191 testes, ~1 min
 cd ..\servico-prioridade; python -m venv .venv; .\.venv\Scripts\python.exe -m pip install -r requirements.txt
                        .\.venv\Scripts\python.exe -m pytest -q   # 20 testes
 cd ..;                 .\iniciar-nexodesk.ps1 -Perfil demo        # sistema inteiro com dados de exemplo

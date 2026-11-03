@@ -345,3 +345,5 @@ input[type=text], input[type=email], input[type=password], input[type=tel], sele
 .chamado.emergencia { border-left-width: 6px; }
 
 .filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .25rem 1rem; }
+
+table.matriz th[scope=row] { text-transform: none; font-size: .9rem; letter-spacing: 0; color: var(--text); }
