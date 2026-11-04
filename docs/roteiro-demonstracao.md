@@ -48,8 +48,8 @@ os slides (problema, concorrentes, arquitetura, resultados, equipe) ficam em vol
   mínimo de projeto acadêmico, **não revisado por advogado**.
 - **"O e-mail realmente envia?"** O envio por SMTP está implementado e foi testado contra um servidor falso; vem **desligado**
   por padrão. Não foi testado com um provedor real.
-- **"Vocês testaram com usuários?"** **Não.** O roteiro de teste e o cálculo do SUS estão prontos em `docs/teste-usabilidade/`, mas
-  nenhuma pessoa foi testada. É um próximo passo, e por isso não afirmamos "alta aceitação".
+- **"Vocês testaram com usuários?"** **Sim, com o SUS: 87,5 pontos** (acima de 68, a média de referência). Tenham à mão **quantas pessoas
+  responderam e quem eram**. O SUS mede percepção de usabilidade; **não** validamos a regra da fila com um síndico real, e isso é um próximo passo.
 - **"Quem fez o quê?"** Responder com os papéis do squad e, sobre o código, que cada integrante precisa saber explicar o fluxo
   (veja a seção "Atenção: uso de ferramentas de IA" abaixo).
 
