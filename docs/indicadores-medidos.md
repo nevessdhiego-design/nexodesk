@@ -3,7 +3,7 @@
 Medidos em **20 e 22/10/2026**, no commit mais recente deste repositório, na máquina de desenvolvimento (Windows 11,
 JDK 21, Python 3.12, MySQL 8.4.9). Cada número tem o comando ou a fonte para qualquer integrante reproduzir.
 Números que o relatório já traz e **dependem do grupo** (sprints, cards no Kanban, % de conclusão) estão na seção 3:
-eu não tenho como medi-los a partir do código, então não os inventei. **Nada aqui vem de teste com usuários**: não houve.
+eu não tenho como medi-los a partir do código, então não os inventei. **Os números do código não vêm de teste com usuários**; a única medida com pessoas é o SUS (linha própria abaixo), informado pelo grupo.
 
 ## 1. O que o código comprova
 
@@ -14,7 +14,8 @@ eu não tenho como medi-los a partir do código, então não os inventei. **Nada
 | Testes automáticos Java | **191**, 0 falhas no H2 **e** no MySQL 8.4.9 real, a partir de banco vazio (Flyway V1 a V12) | `cd api-java; .\mvnw.cmd clean test` |
 | Testes automáticos Python | **20**, 0 falhas | `cd servico-prioridade; .\.venv\Scripts\python.exe -m pytest -q` |
 | Tempo da suíte Java (H2) | **~65 s** (era ~3,5 min antes de corrigir o desligamento com SSE aberto) | idem |
-| Casos de uso implementados | **10** (o relatório da 2ª parcial diz 5; ver nota abaixo) | seção 10.1 da documentação técnica |
+| Casos de uso modelados | **17** no diagrama de 29/10 (o relatório da 2ª parcial diz 5; o diagrama Mermaid da seção 10.1 ainda mostra os 10 da fase 2) | `PROJETOS/nexodesk/entregas/2026-10-29_uml-casos-de-uso.png` |
+| **Usabilidade (SUS)** | **87,5 pontos**, informado pelo grupo em 04/11/2026. Participantes e respostas individuais **não estão no repositório** | `docs/teste-usabilidade/` (a preencher) |
 | Perfis de usuário / funções de funcionário | **3** perfis (morador, funcionário, síndico) e **8** funções | `dominio/Perfil.java`, `dominio/Funcao.java` |
 | Diagramas (em Mermaid, no repositório) | **6**: 4 UML (casos de uso, classes, 2 de sequência), o modelo entidade-relacionamento e a arquitetura | seções 3, 4 e 10 da documentação técnica |
 | Tabelas no banco | **12** (`usuarios`, `chamados`, `historico_status`, `notificacoes`, `avaliacoes`, `mensagens`, `tarefas`, `tokens_senha`, `ausencias`, `funcao_categorias`, `checklist_modelos`, `eventos_tempo_real`) | `cat api-java/src/main/resources/db/migration/V*.sql \| grep -c -i "^CREATE TABLE"` |
@@ -90,7 +91,7 @@ O relatório da 2ª parcial traz estes valores; confirmem com o Kanban antes de 
 | Indicador do relatório | Situação |
 |---|---|
 | Sprints concluídas / total ("2 / 3") | só o grupo sabe; o Kanban (GitHub Projects) deve mostrar |
-| Tarefas concluídas no Kanban ("16") | **conferir:** no GitHub havia 20 cards (issues), 14 fechados e 6 abertos em 15/10 (não reconferido em 20/10); 14 e 16 não são o mesmo número |
+| Tarefas concluídas no Kanban ("16") | **conferido em 04/11/2026** (`gh issue list`): **20 cards, 14 fechados e 6 abertos**; o relatório diz 16, então 14 e 16 não são o mesmo número. Os 6 abertos (#15 a #20) são itens do plano da 1ª parcial: parte já foi feita (documentação técnica, testes de integração, refino da priorização) e os cards não foram fechados |
 | Bugs em aberto ("2 de interface") | os cards #15 e #16 existem **sem descrição**; um defeito real de interface foi achado e corrigido em 14/10 (rolagem horizontal no celular, commit `8bc8040`). Descrevam os bugs reais ou fechem os cards |
 | % de conclusão estimado | estimativa do grupo |
 

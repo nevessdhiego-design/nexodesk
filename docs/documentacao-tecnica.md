@@ -383,9 +383,8 @@ Defeito real achado e corrigido nesta fase: ao desligar a API com navegadores co
 - **E-mail de recuperação de senha:** testado contra servidor falso; com provedor real nunca. Sem e-mail configurado o link só aparece no log do perfil `demo`.
 - **Emergência:** o sistema **não aciona** bombeiros, SAMU nem polícia; mostra os números e avisa a equipe interna. O "Indicado" é só sugestão (a regra função × categoria é uma tabela em código, não validada por síndico).
 - **Aparência:** sem fonte própria (usa a do sistema, por causa da CSP e para não baixar arquivos); verificada em 375 px no morador, por script de contraste nas telas citadas; leitor de tela real não usado.
-- **Sem teste de usabilidade com pessoas reais.** O roteiro e a planilha de cálculo do SUS estão prontos em
-  [`teste-usabilidade/`](teste-usabilidade/roteiro.md), mas **nenhum teste foi aplicado**: não existe resultado de usabilidade
-  e nenhum slide deve afirmar "alta aceitação".
+- **Teste de usabilidade (SUS): 87,5 pontos**, resultado informado pelo grupo em 04/11/2026 (acima de 68, a média de referência da escala). O número de participantes, o perfil deles e as respostas individuais **não estão no repositório**: registrem em `docs/teste-usabilidade/` antes de apresentar, porque a banca vai perguntar. O SUS mede a **percepção** de usabilidade; não valida a regra da fila nem a atribuição por função com um síndico real
+  (isso continua pendente). O roteiro e a planilha de cálculo estão em [`teste-usabilidade/`](teste-usabilidade/roteiro.md).
 - **Regra de dificuldade:** 73% em casos que ela nunca viu (15 casos escritos por uma pessoa só); as expectativas ainda não foram
   validadas por um síndico real. Detecção de emergência só no Python (a reserva em Java não detecta).
 - **Tempo real entre instâncias:** vale para instâncias que **compartilham o mesmo banco** (MySQL); o atraso é de cerca de 1 s e cada instância faz uma leitura por segundo. Com H2 em arquivo, só uma instância.
@@ -444,6 +443,8 @@ flowchart LR
 ```
 
 > O relatório fala em 5 casos de uso; o código implementa os 10 acima (os 6 da fase 1 e 4 novos: conversar, atribuir, gerenciar usuários e meus atendimentos).
+>
+> **Atenção:** este diagrama é o da fase 2. O diagrama **atual** é o da entrega de 29/10, com **17 casos de uso e 6 atores** (`PROJETOS/nexodesk/entregas/2026-10-29_uml-casos-de-uso.png`), que acrescenta recuperar senha, avaliar, avisar emergência, gerar relatório e registrar conclusão.
 
 ### 10.2 Classes (domínio)
 
