@@ -1,7 +1,7 @@
 # Como contribuir com o NexoDesk (política de versionamento)
 
 Política de gerência de configuração do projeto (Sommerville, cap. 25). **Vale a partir de 04/11/2026.** Até 03/11 o trabalho
-foi feito direto na `main` (32 commits, uma só branch); isso é um fato do histórico, não um modelo a seguir.
+foi feito direto na `main` (32 commits, uma só branch), com a revisão entre pares feita **fora do GitHub, sem pull request** (relato do Dhiego em 04/11). A mudança de agora é só tornar a revisão **visível e registrada** no pull request.
 
 ## Regras
 
