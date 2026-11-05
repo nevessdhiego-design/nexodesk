@@ -187,6 +187,33 @@ function telefonesEmergencia() {
     TELEFONES_EMERGENCIA.map((t) => el('a', { class: 'telefone', href: 'tel:' + t.numero, text: t.numero + ' ' + t.nome })));
 }
 
+/** "Boa noite, Dhiego" no cabeçalho da página: só texto, pelo primeiro nome. */
+function saudar(eu) {
+  const alvo = document.querySelector('.cabecalho-pagina > div');
+  if (!alvo || !eu || !eu.nome || alvo.querySelector('.saudacao')) return;
+  const hora = new Date().getHours();
+  const periodo = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+  alvo.prepend(el('span', { class: 'saudacao', text: periodo + ', ' + eu.nome.split(' ')[0] }));
+}
+
+/** Número que sobe até o valor (só na primeira vez; sem animação para quem pediu menos movimento). */
+function contar(no, valor) {
+  const alvo = Number(valor);
+  const reduzido = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!Number.isFinite(alvo) || alvo <= 0 || reduzido || document.documentElement.classList.contains('a11y-sem-movimento')) {
+    no.textContent = String(valor);
+    return;
+  }
+  const inicio = performance.now();
+  const duracao = 700;
+  const passo = (agora) => {
+    const t = Math.min(1, (agora - inicio) / duracao);
+    no.textContent = String(Math.round(alvo * (1 - Math.pow(1 - t, 3))));
+    if (t < 1) requestAnimationFrame(passo);
+  };
+  requestAnimationFrame(passo);
+}
+
 /** Garante usuário logado com o perfil esperado; senão manda para o login. */
 async function exigirPerfil(perfil) {
   try {
@@ -200,6 +227,7 @@ async function exigirPerfil(perfil) {
       return null;
     }
     montarMenu(eu.perfil);
+    saudar(eu);
     return eu;
   } catch (e) {
     window.location.href = '/index.html';
