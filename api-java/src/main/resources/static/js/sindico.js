@@ -135,20 +135,48 @@ function cartaoChamado(c, posicao) {
       salvar));
 }
 
-/** Barra empilhada com legenda. O tamanho de cada trecho vem do valor (CSSOM, permitido pela CSP); a legenda diz os números por extenso. */
-function barraEmpilhada(titulo, partes) {
+/** Rosca (gráfico de anel) com o total no centro e legenda. É SVG desenhado por atributos (a CSP não aceita estilo inline); a legenda diz os números por extenso. */
+function rosca(titulo, partes) {
+  const NS = 'http://www.w3.org/2000/svg';
   const total = partes.reduce((soma, p) => soma + p[1], 0);
   const resumo = titulo + ': ' + partes.map((p) => p[1] + ' ' + p[0].toLowerCase()).join(', ');
-  const barra = el('div', { class: 'barra-empilhada', role: 'img', 'aria-label': resumo });
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 120 120');
+  svg.setAttribute('class', 'rosca');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', resumo);
+  const anel = (classe) => {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', '60'); c.setAttribute('cy', '60'); c.setAttribute('r', '48'); c.setAttribute('fill', 'none');
+    c.setAttribute('class', classe);
+    return c;
+  };
+  svg.append(anel('rosca-fundo'));
+  const volta = 2 * Math.PI * 48;
+  let acumulado = 0;
   partes.filter((p) => p[1] > 0).forEach((p) => {
-    const trecho = el('div', { class: 'trecho ' + p[2] });
-    trecho.style.flexGrow = String(p[1]);
-    barra.append(trecho);
+    const trecho = anel('rosca-trecho ' + p[2]);
+    const tamanho = volta * p[1] / total;
+    const visivel = Math.max(tamanho - (partes.filter((q) => q[1] > 0).length > 1 ? 2 : 0), 0.5);
+    trecho.setAttribute('stroke-dasharray', visivel + ' ' + (volta - visivel));
+    trecho.setAttribute('stroke-dashoffset', String(-acumulado));
+    trecho.setAttribute('transform', 'rotate(-90 60 60)');
+    svg.append(trecho);
+    acumulado += tamanho;
   });
-  if (!total) barra.append(el('div', { class: 'trecho vazio-trecho' }));
-  return el('div', { class: 'grafico' }, el('h3', { text: titulo }), barra,
-    el('ul', { class: 'legenda' }, partes.map((p) => el('li', {}, el('span', { class: 'ponto ' + p[2] }), el('span', { text: p[0] + ': ' + p[1] })))));
+  const numero = document.createElementNS(NS, 'text');
+  numero.setAttribute('x', '60'); numero.setAttribute('y', '62'); numero.setAttribute('text-anchor', 'middle'); numero.setAttribute('class', 'rosca-total');
+  numero.textContent = String(total);
+  const rotulo = document.createElementNS(NS, 'text');
+  rotulo.setAttribute('x', '60'); rotulo.setAttribute('y', '78'); rotulo.setAttribute('text-anchor', 'middle'); rotulo.setAttribute('class', 'rosca-rotulo');
+  rotulo.textContent = total === 1 ? 'chamado' : 'chamados';
+  svg.append(numero, rotulo);
+  return el('div', { class: 'grafico' }, el('h3', { text: titulo }),
+    el('div', { class: 'grafico-rosca' }, svg,
+      el('ul', { class: 'legenda legenda-coluna' }, partes.map((p) => el('li', {}, el('span', { class: 'ponto ' + p[2] }), el('span', { text: p[0] + ': ' + p[1] }))))));
 }
+
+let estatisticasJaApareceram = false;   // o número só "sobe" na primeira vez; as atualizações em tempo real não repetem a animação
 
 async function carregarEstatisticas() {
   const e = await api('/api/sindico/estatisticas');
@@ -164,9 +192,13 @@ async function carregarEstatisticas() {
       icone(nomeIcone, 'icone-estatistica'),
       el('div', { class: 'valor', text: String(valor) }),
       el('div', { class: 'rotulo', text: rotulo }))));
+  if (!estatisticasJaApareceram) {
+    estatisticasJaApareceram = true;
+    document.querySelectorAll('#estatisticas .valor').forEach((no) => contar(no, no.textContent));
+  }
   document.getElementById('graficos').replaceChildren(
-    barraEmpilhada('Chamados por situação', [['Abertos', e.abertos, 'c-aberto'], ['Em andamento', e.emAndamento, 'c-andamento'], ['Resolvidos', e.resolvidos, 'c-resolvido']]),
-    barraEmpilhada('Pendentes por dificuldade', [['Fáceis', e.pendentesFaceis, 'c-facil'], ['Médios', e.pendentesMedios, 'c-medio'], ['Difíceis', e.pendentesDificeis, 'c-dificil']]));
+    rosca('Chamados por situação', [['Abertos', e.abertos, 'c-aberto'], ['Em andamento', e.emAndamento, 'c-andamento'], ['Resolvidos', e.resolvidos, 'c-resolvido']]),
+    rosca('Pendentes por dificuldade', [['Fáceis', e.pendentesFaceis, 'c-facil'], ['Médios', e.pendentesMedios, 'c-medio'], ['Difíceis', e.pendentesDificeis, 'c-dificil']]));
 }
 
 async function carregar() {
