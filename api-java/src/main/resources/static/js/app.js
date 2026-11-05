@@ -304,20 +304,6 @@ document.addEventListener('pointerdown', (ev) => {
   onda.addEventListener('animationend', () => onda.remove());
 });
 
-/** Foco de luz que acompanha o mouse nos cartões de resumo e nos chamados. */
-let quadroLuz = 0;
-document.addEventListener('pointermove', (ev) => {
-  if (quadroLuz || ev.pointerType === 'touch') return;
-  const alvo = ev.target.closest && ev.target.closest('.estatistica, .chamado');
-  if (!alvo || semMovimento()) return;
-  quadroLuz = requestAnimationFrame(() => {
-    quadroLuz = 0;
-    const caixa = alvo.getBoundingClientRect();
-    alvo.style.setProperty('--mx', (ev.clientX - caixa.left) + 'px');
-    alvo.style.setProperty('--my', (ev.clientY - caixa.top) + 'px');
-  });
-});
-
 /** Na primeira vez que a lista de chamados aparece, os cartões entram um depois do outro. As atualizações em tempo real não repetem. */
 (function entradaEscalonada() {
   const lista = document.getElementById('lista-chamados');
