@@ -196,7 +196,7 @@ html.a11y-contraste .chamado { border-left-color: #000; }
 /* ---------- fase 5: layout mais visual nos modos escuro e de alto contraste ---------- */
 html.a11y-escuro .topo { background: linear-gradient(120deg, #061225, #0b2850); }
 html.a11y-escuro .menu a[aria-current="page"] { background: #1f3c68; }
-html.a11y-escuro .cabecalho-pagina { background: linear-gradient(100deg, rgba(4, 12, 26, .97) 0%, rgba(11, 40, 80, .88) 46%, rgba(11, 40, 80, .3) 100%), url(/img/predio-fachada.jpg) center 38% / cover; }
+html.a11y-escuro .cabecalho-pagina { background: linear-gradient(100deg, rgba(4, 12, 26, .97) 0%, rgba(11, 40, 80, .88) 46%, rgba(11, 40, 80, .3) 100%), var(--foto, url(/img/predio-fachada.jpg)) center 38% / cover; }
 html.a11y-escuro .estatistica .icone-estatistica { background: rgba(255, 255, 255, .08); color: var(--highlight); }
 html.a11y-escuro .estatistica .valor { color: var(--text); }
 html.a11y-escuro .estatistica.urgente .icone-estatistica { background: rgba(255, 122, 122, .15); }
