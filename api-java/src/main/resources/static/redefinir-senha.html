@@ -7,24 +7,40 @@
   <title>NexoDesk - Nova senha</title>
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
   <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/entrar.css">
   <link rel="stylesheet" href="/css/acessibilidade.css">
   <script src="/js/acessibilidade.js"></script>
 </head>
 <body>
   <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
-  <main class="login" id="conteudo" tabindex="-1">
-    <h1 class="marca-grande">Nexo<span>Desk</span></h1>
-    <div class="cartao">
-      <h2>Escolha uma nova senha</h2>
+  <main class="login-pagina" id="conteudo" tabindex="-1">
+    <section class="login-destaque">
+      <img class="hero-logo" src="/img/logo.svg" alt="" width="64" height="64">
+      <h1 class="marca-grande">Nexo<span>Desk</span></h1>
+      <p class="lead">Quase lá: escolha uma nova senha.</p>
+      <ul class="vantagens">
+        <li><span data-icone="escudo"></span> De 8 a 72 caracteres</li>
+        <li><span data-icone="check"></span> Repita a senha para confirmar</li>
+        <li><span data-icone="raio"></span> Depois, é só entrar normalmente</li>
+      </ul>
+    </section>
+
+    <div class="login">
       <div id="mensagem" class="mensagem hidden" role="alert"></div>
-      <form id="form-redefinir">
-        <label for="nova">Nova senha (de 8 a 72 caracteres)</label>
-        <input id="nova" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
-        <label for="confirmacao">Repita a nova senha</label>
-        <input id="confirmacao" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
-        <div class="acoes"><button type="submit">Salvar a nova senha</button></div>
-      </form>
-      <p class="muted"><a href="/esqueci-senha.html">Pedir um novo link</a> · <a href="/index.html">Voltar ao login</a></p>
+      <div class="cartao">
+        <div class="entrar-topo">
+          <h2>Escolha uma nova senha</h2>
+          <p class="muted">Use de 8 a 72 caracteres. Anote em um lugar seguro.</p>
+        </div>
+        <form id="form-redefinir">
+          <label for="nova">Nova senha <span class="muted rotulo-extra">(de 8 a 72 caracteres)</span></label>
+          <div class="campo"><span class="campo-icone" data-icone="escudo"></span><input id="nova" type="password" autocomplete="new-password" minlength="8" maxlength="72" required></div>
+          <label for="confirmacao">Repita a nova senha</label>
+          <div class="campo"><span class="campo-icone" data-icone="escudo"></span><input id="confirmacao" type="password" autocomplete="new-password" minlength="8" maxlength="72" required></div>
+          <div class="acoes"><button type="submit" class="principal">Salvar a nova senha</button></div>
+        </form>
+        <p class="muted rodape-entrar"><a href="/esqueci-senha.html">Pedir um novo link</a> · <a href="/index.html">Voltar ao login</a></p>
+      </div>
     </div>
   </main>
   <script src="/js/app.js"></script>
