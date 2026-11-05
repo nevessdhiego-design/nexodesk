@@ -194,6 +194,8 @@ function saudar(eu) {
   const hora = new Date().getHours();
   const periodo = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
   alvo.prepend(el('span', { class: 'saudacao', text: periodo + ', ' + eu.nome.split(' ')[0] }));
+  const quem = document.getElementById('usuario');   // bolinha com a inicial no topo (o CSS lê data-inicial)
+  if (quem) quem.dataset.inicial = eu.nome.trim().charAt(0);
 }
 
 /** Quem pediu menos movimento (no sistema ou no painel de acessibilidade) não vê animações feitas por script. */
