@@ -6,6 +6,7 @@
   <title>NexoDesk - Entrar</title>
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
   <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/entrar.css">
   <link rel="stylesheet" href="/css/acessibilidade.css">
   <script src="/js/acessibilidade.js"></script>
 </head>
@@ -13,6 +14,7 @@
   <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
   <main class="login-pagina" id="conteudo" tabindex="-1">
     <section class="login-destaque">
+      <img class="hero-logo" src="/img/logo.svg" alt="" width="64" height="64">
       <h1 class="marca-grande">Nexo<span>Desk</span></h1>
       <p class="lead">Os chamados do seu condomínio em um só lugar.</p>
       <ul class="vantagens">
@@ -22,49 +24,78 @@
         <li><span data-icone="escudo"></span> Dados protegidos, com opção de anonimato</li>
       </ul>
     </section>
+
     <div class="login">
-    <div class="cartao">
-      <p class="muted">Chamados do seu condomínio em um só lugar: abra, acompanhe e receba avisos.</p>
-
-      <div class="abas" role="tablist">
-        <button type="button" id="aba-entrar" class="ativa" role="tab">Entrar</button>
-        <button type="button" id="aba-cadastrar" role="tab">Criar conta</button>
-      </div>
-
       <div id="mensagem" class="mensagem hidden" role="alert"></div>
+      <div class="cartao">
+        <div class="entrar-topo">
+          <h2 id="titulo-cartao">Bem-vindo de volta</h2>
+          <p class="muted" id="subtitulo-cartao">Entre para abrir e acompanhar chamados.</p>
+        </div>
 
-      <section id="contas-demo" class="contas-demo hidden" aria-labelledby="titulo-contas-demo">
-        <h2 id="titulo-contas-demo">Contas de demonstração</h2>
-        <p class="muted">Escolha uma conta para preencher o e-mail. A senha é a definida para a demonstração.</p>
-        <div id="botoes-contas-demo"></div>
-      </section>
+        <div class="abas" id="abas" role="tablist" aria-label="Entrar ou criar conta" data-ativa="entrar">
+          <button type="button" id="aba-entrar" class="secundario ativa" role="tab" aria-selected="true" aria-controls="form-entrar">Entrar</button>
+          <button type="button" id="aba-cadastrar" class="secundario" role="tab" aria-selected="false" aria-controls="form-cadastrar">Criar conta</button>
+        </div>
 
-      <form id="form-entrar">
-        <label for="login-email">E-mail</label>
-        <input id="login-email" type="email" autocomplete="username" required>
-        <label for="login-senha">Senha</label>
-        <input id="login-senha" type="password" autocomplete="current-password" required>
-        <div class="acoes"><button type="submit">Entrar</button> <a href="/esqueci-senha.html">Esqueci minha senha</a></div>
-      </form>
+        <div class="paineis">
+          <form id="form-entrar" role="tabpanel" aria-labelledby="aba-entrar">
+            <details id="contas-demo" class="contas-demo hidden">
+              <summary>Entrar com uma conta de demonstração</summary>
+              <div class="demo-painel">
+                <p class="muted">Toque numa conta para preencher o e-mail. A senha é a da demonstração.</p>
+                <div id="botoes-contas-demo"></div>
+              </div>
+            </details>
+            <label for="login-email">E-mail</label>
+            <div class="campo"><span class="campo-icone" data-icone="conversa"></span><input id="login-email" type="email" autocomplete="username" required></div>
+            <label for="login-senha">Senha</label>
+            <div class="campo">
+              <span class="campo-icone" data-icone="escudo"></span>
+              <input id="login-senha" type="password" autocomplete="current-password" required>
+              <span class="caps-selo hidden" id="aviso-caps" role="status">Caps Lock ligado</span>
+              <button type="button" class="link ver-senha" id="ver-login-senha" aria-pressed="false" aria-controls="login-senha">Mostrar</button>
+            </div>
+            <div class="acoes"><button type="submit" class="principal">Entrar</button> <a href="/esqueci-senha.html">Esqueci minha senha</a></div>
+          </form>
 
-      <form id="form-cadastrar" class="hidden">
-        <label for="cad-nome">Nome</label>
-        <input id="cad-nome" type="text" autocomplete="name" maxlength="120" required>
-        <label for="cad-email">E-mail</label>
-        <input id="cad-email" type="email" autocomplete="email" maxlength="160" required>
-        <label for="cad-bloco">Bloco (opcional)</label>
-        <input id="cad-bloco" type="text" maxlength="20" placeholder="Ex.: A">
-        <label for="cad-apto">Apartamento (opcional)</label>
-        <input id="cad-apto" type="text" maxlength="10" placeholder="Ex.: 101">
-        <label for="cad-telefone">Telefone (opcional)</label>
-        <input id="cad-telefone" type="tel" autocomplete="tel" maxlength="20">
-        <label for="cad-senha">Senha (de 8 a 72 caracteres)</label>
-        <input id="cad-senha" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
-        <label class="check"><input id="cad-privacidade" type="checkbox" required> Li e entendi a <a href="/privacidade.html" target="_blank" rel="noopener">política de privacidade</a></label>
-        <div class="acoes"><button type="submit">Criar conta</button></div>
-      </form>
-      <p class="muted"><a href="/privacidade.html">Privacidade: quais dados guardamos e como excluir a sua conta</a></p>
-    </div>
+          <form id="form-cadastrar" class="hidden" role="tabpanel" aria-labelledby="aba-cadastrar" novalidate>
+            <ol class="etapas" aria-label="Etapas do cadastro">
+              <li class="atual" id="etapa-1" aria-current="step"><span>1</span> Seus dados</li>
+              <li id="etapa-2"><span>2</span> Sua unidade</li>
+            </ol>
+            <div class="passo" id="passo-1">
+              <label for="cad-nome">Nome</label>
+              <div class="campo"><span class="campo-icone" data-icone="conta"></span><input id="cad-nome" type="text" autocomplete="name" maxlength="120" required></div>
+              <label for="cad-email">E-mail</label>
+              <div class="campo"><span class="campo-icone" data-icone="conversa"></span><input id="cad-email" type="email" autocomplete="email" maxlength="160" required></div>
+              <label for="cad-senha">Senha <span class="muted rotulo-extra">(de 8 a 72 caracteres)</span></label>
+              <div class="campo">
+                <span class="campo-icone" data-icone="escudo"></span>
+                <input id="cad-senha" type="password" autocomplete="new-password" minlength="8" maxlength="72" required aria-describedby="forca-texto">
+                <button type="button" class="link ver-senha" id="ver-cad-senha" aria-pressed="false" aria-controls="cad-senha">Mostrar</button>
+              </div>
+              <div class="forca-linha"><div class="forca" id="forca" aria-hidden="true"><i></i><i></i><i></i><i></i></div><span class="forca-texto" id="forca-texto" role="status"></span></div>
+            </div>
+            <div class="passo hidden" id="passo-2">
+              <div class="duas-colunas">
+                <div><label for="cad-bloco">Bloco <span class="muted rotulo-extra">(opcional)</span></label>
+                <div class="campo"><span class="campo-icone" data-icone="casa"></span><input id="cad-bloco" type="text" maxlength="20" placeholder="Ex.: A"></div></div>
+                <div><label for="cad-apto">Apartamento <span class="muted rotulo-extra">(opcional)</span></label>
+                <div class="campo"><span class="campo-icone" data-icone="casa"></span><input id="cad-apto" type="text" maxlength="10" placeholder="Ex.: 101"></div></div>
+              </div>
+              <label for="cad-telefone">Telefone <span class="muted rotulo-extra">(opcional)</span></label>
+              <div class="campo"><span class="campo-icone" data-icone="telefone"></span><input id="cad-telefone" type="tel" autocomplete="tel" maxlength="20"></div>
+              <label class="check"><input id="cad-privacidade" type="checkbox" required> <span>Li e entendi a <a href="/privacidade.html" target="_blank" rel="noopener">política de privacidade</a></span></label>
+            </div>
+            <div class="acoes">
+              <button type="button" class="secundario-escuro hidden" id="cad-voltar">Voltar</button>
+              <button type="submit" class="principal" id="cad-avancar">Continuar</button>
+            </div>
+          </form>
+        </div>
+        <p class="muted rodape-entrar"><a href="/privacidade.html">Privacidade: quais dados guardamos e como excluir a sua conta</a></p>
+      </div>
     </div>
   </main>
   <script src="/js/app.js"></script>

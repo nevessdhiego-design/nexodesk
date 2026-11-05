@@ -630,3 +630,92 @@ html.a11y-contraste .login-destaque::after, html.a11y-contraste .cabecalho-pagin
 .passos li.atual .bolinha { background: var(--highlight); border-color: var(--highlight); color: #fff; box-shadow: 0 0 0 4px rgba(47, 127, 214, .2); }
 html.a11y-escuro .passos li.atual .bolinha { color: #061933; }
 html.a11y-contraste .passos li.atual .bolinha { background: #000; color: #fff; box-shadow: none; }
+
+/* =====================================================================
+   Fase 6c: movimento. Cidade que desliza em camadas, céu com lua e estrela cadente,
+   foco de luz que segue o mouse, onda nos botões, sirene na emergência, sino que balança,
+   transição suave entre páginas. Tudo desligado por prefers-reduced-motion e pela opção
+   "reduzir movimento" do painel de acessibilidade (que troca as ilustrações por versões paradas).
+   ===================================================================== */
+
+/* ---- ilustrações: base estática (vale também sem movimento) ---- */
+.cabecalho-pagina::after { background: url(/img/skyline.svg) 0 100% / auto 140px repeat-x; }
+.login-destaque::before { content: ""; position: absolute; inset: 0; background: url(/img/ceu.svg) right top / auto 400px no-repeat; opacity: .95; pointer-events: none; z-index: 0; }
+.login-destaque::after { background: url(/img/skyline.svg) 0 100% / auto 200px repeat-x, url(/img/skyline-fundo.svg) 0 calc(100% - 26px) / auto 150px repeat-x; opacity: .8; }
+html.a11y-sem-movimento .cabecalho-pagina::after { background-image: url(/img/skyline-parado.svg); }
+html.a11y-sem-movimento .login-destaque::before { background-image: url(/img/ceu-parado.svg); }
+html.a11y-sem-movimento .login-destaque::after { background-image: url(/img/skyline-parado.svg), url(/img/skyline-fundo.svg); }
+html.a11y-contraste .login-destaque::before { display: none; }
+
+/* ---- cartões: foco de luz que segue o mouse ---- */
+.estatistica { background: radial-gradient(220px circle at var(--mx, -300px) var(--my, -300px), rgba(90, 176, 255, .22), rgba(90, 176, 255, 0) 70%), linear-gradient(135deg, var(--card) 55%, var(--tom-fundo) 190%); }
+.chamado, .chamado.emergencia { background-image: radial-gradient(260px circle at var(--mx, -400px) var(--my, -400px), rgba(90, 176, 255, .13), rgba(90, 176, 255, 0) 70%); }
+html.a11y-escuro .estatistica, html.a11y-escuro .chamado, html.a11y-escuro .chamado.emergencia { background-image: radial-gradient(240px circle at var(--mx, -400px) var(--my, -400px), rgba(143, 195, 255, .14), rgba(143, 195, 255, 0) 70%); }
+html.a11y-contraste .estatistica, html.a11y-contraste .chamado, html.a11y-contraste .chamado.emergencia { background-image: none; }
+
+/* ---- sirene no alto do chamado de emergência ---- */
+.chamado.emergencia { position: relative; overflow: hidden; }
+.chamado.emergencia::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: repeating-linear-gradient(135deg, #b83232 0 12px, #ff8a80 12px 24px); background-size: 34px 100%; pointer-events: none; }
+html.a11y-contraste .chamado.emergencia::before { background: repeating-linear-gradient(135deg, #000 0 12px, #fff 12px 24px); }
+
+/* ---- botões: onda no clique ---- */
+button:not(.sino):not(.link) { position: relative; overflow: hidden; }
+.onda { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, .42); transform: scale(0); pointer-events: none; animation: onda .6s ease-out forwards; }
+@keyframes onda { to { transform: scale(1); opacity: 0; } }
+button:not(.secundario):not(.link):not(.perigo):not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(31, 99, 194, .4); }
+
+/* ---- sino: balança e ganha um anel quando há avisos novos ---- */
+.sino .contador::after { content: ""; position: absolute; inset: -3px; border-radius: 999px; border: 2px solid var(--ambar); pointer-events: none; }
+
+
+@media (prefers-reduced-motion: no-preference) {
+  /* cidade em camadas deslizando (frente mais rápida que o fundo), sem emenda */
+  .cabecalho-pagina::after { animation: deriva-cabecalho 90s linear infinite; }
+  @keyframes deriva-cabecalho { from { background-position: 0 100%; } to { background-position: -700px 100%; } }
+  .login-destaque::after { animation: deriva-cidade 120s linear infinite; }
+  @keyframes deriva-cidade { from { background-position: 0 100%, 0 calc(100% - 26px); } to { background-position: -1000px 100%, -750px calc(100% - 26px); } }
+
+  /* brilho que varre o cabeçalho e ícone que flutua */
+  .cabecalho-pagina::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 26%; background: linear-gradient(100deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .13), rgba(255, 255, 255, 0)); transform: translateX(-160%) skewX(-18deg); animation: varredura 9s ease-in-out 1.2s infinite; pointer-events: none; }
+  @keyframes varredura { 0% { transform: translateX(-160%) skewX(-18deg); } 45%, 100% { transform: translateX(520%) skewX(-18deg); } }
+  .cabecalho-icone { animation: flutuar 5s ease-in-out infinite; }
+  @keyframes flutuar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+  /* topo: linha de destaque que corre */
+  .topo::after { background-size: 220% 100%; background-image: linear-gradient(90deg, var(--ambar), var(--ceu), var(--ambar), var(--ceu), rgba(90, 176, 255, 0)); animation: fluxo 7s ease-in-out infinite alternate; }
+  @keyframes fluxo { from { background-position: 0 0; } to { background-position: 100% 0; } }
+
+  /* menu: foto com movimento lento e ícone que dá um pulinho */
+  .menu::after { background: linear-gradient(180deg, rgba(6, 25, 51, .05) 0%, rgba(6, 25, 51, .75) 100%), url(/img/predio-anoitecer.jpg) 0% 50% / auto 135% no-repeat; animation: panoramica 26s ease-in-out infinite alternate; }
+  @keyframes panoramica { from { background-position: 0 0, 0% 50%; } to { background-position: 0 0, 100% 50%; } }
+  .menu a:hover .icone { animation: pulinho .5s ease; }
+  @keyframes pulinho { 40% { transform: scale(1.28) rotate(-8deg); } }
+
+  /* sino balançando */
+  .topo .sino:has(.contador:not(.hidden)) > svg.icone { animation: badalo 3.4s ease-in-out infinite; transform-origin: 50% 8%; }
+  @keyframes badalo { 0%, 55%, 100% { transform: rotate(0); } 8% { transform: rotate(16deg); } 16% { transform: rotate(-13deg); } 24% { transform: rotate(9deg); } 32% { transform: rotate(-6deg); } 40% { transform: rotate(3deg); } }
+  .sino .contador::after { animation: anel 1.9s ease-out infinite; }
+  @keyframes anel { from { transform: scale(1); opacity: .9; } to { transform: scale(2); opacity: 0; } }
+
+  /* entrada dos chamados, um depois do outro (a classe vem do JS só na primeira exibição) */
+  .chamado.entra { animation: entrar .55s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i, 0) * 70ms); }
+  .chamado.emergencia.entra { animation: entrar .55s cubic-bezier(.2, .8, .2, 1) both, pulso 2.4s ease-out infinite; animation-delay: calc(var(--i, 0) * 70ms), 0s; }
+  @keyframes entrar { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: none; } }
+  .estatistica.entra { animation: entrar .6s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i, 0) * 60ms); }
+  .estatistica.urgente.entra { animation: entrar .6s cubic-bezier(.2, .8, .2, 1) both, pulso 2.4s ease-out 1s infinite; animation-delay: calc(var(--i, 0) * 60ms), 1s; }
+
+  /* sirene correndo */
+  .chamado.emergencia::before { animation: sirene .9s linear infinite; }
+  @keyframes sirene { to { background-position: 34px 0; } }
+
+  /* login: entrada das vantagens e marca com brilho */
+  .login-destaque .marca-grande { animation: entrar .8s cubic-bezier(.2, .8, .2, 1) both; }
+  .login-destaque .lead { animation: entrar .8s cubic-bezier(.2, .8, .2, 1) .12s both; }
+  .vantagens li { animation: entrar .7s cubic-bezier(.2, .8, .2, 1) both; }
+  .vantagens li:nth-child(1) { animation-delay: .3s; } .vantagens li:nth-child(2) { animation-delay: .42s; } .vantagens li:nth-child(3) { animation-delay: .54s; } .vantagens li:nth-child(4) { animation-delay: .66s; }
+  .login-pagina > .login > .cartao { animation: entrar .8s cubic-bezier(.2, .8, .2, 1) .15s both; }
+  .login-destaque .marca-grande span { background: linear-gradient(90deg, #5ab0ff 0%, #d4ebff 45%, #5ab0ff 90%); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; animation: brilho-texto 5s linear infinite; }
+  @keyframes brilho-texto { to { background-position: -220% 0; } }
+  html.a11y-contraste .login-destaque .marca-grande span { background: none; -webkit-text-fill-color: #fff; color: #fff; animation: none; }
+}
+html.a11y-contraste .cabecalho-pagina::before { display: none; }
