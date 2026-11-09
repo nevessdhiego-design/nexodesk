@@ -165,3 +165,14 @@ html.a11y-contraste .caps-selo { background: #fff; color: #000; border: 2px soli
 @media (max-width: 860px) { .marca-placa { width: 108px; padding: 8px 10px 6px; border-radius: 14px; } .login-destaque .marca-grande { margin: 0; } }
 /* a regra antiga do brilho no texto "Desk" não vale para a placa da logo */
 .login-destaque .marca-grande .marca-placa, html.a11y-contraste .login-destaque .marca-grande .marca-placa { background: #fff; -webkit-background-clip: border-box; background-clip: border-box; -webkit-text-fill-color: initial; animation: none; }
+
+/* logo direto sobre a foto (PNG transparente), com contorno branco fino para o azul-marinho do nome continuar legível */
+.login-destaque .marca-grande .marca-placa { width: min(260px, 64%); padding: 0; border-radius: 0; background: none; box-shadow: none; }
+.marca-placa img { filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 8px 20px rgba(0, 0, 0, .35)); }
+.login-destaque .marca-grande { margin-bottom: 1.6rem; }
+@media (max-height: 760px) { .login-destaque .marca-grande .marca-placa { width: min(210px, 58%); } .login-destaque .marca-grande { margin-bottom: 1.1rem; } }
+@media (max-height: 640px) { .login-destaque .marca-grande .marca-placa { width: 160px; } }
+@media (max-width: 860px) { .login-destaque .marca-grande .marca-placa { width: 104px; } .marca-placa img { filter: drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff) drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff); } }
+/* alto contraste: fundo preto, então a logo volta para a placa branca */
+html.a11y-contraste .login-destaque .marca-grande .marca-placa { padding: 14px 16px; border-radius: 20px; background: #fff; }
+html.a11y-contraste .marca-placa img { filter: none; }
