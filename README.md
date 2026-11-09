@@ -1,3 +1,5 @@
+<p align="center"><img src="api-java/src/main/resources/static/img/logo-icone.png" alt="Símbolo do NexoDesk" width="96"></p>
+
 # NexoDesk (código)
 
 [![CI](https://github.com/nevessdhiego-design/nexodesk/actions/workflows/ci.yml/badge.svg)](https://github.com/nevessdhiego-design/nexodesk/actions/workflows/ci.yml) (o selo só aparece para quem tem acesso ao repositório privado)
@@ -28,6 +30,14 @@ relatório da 1ª parcial.
   Se estiver fora do ar, o Java classifica só pela categoria e marca `classificacaoFallback`;
   abrir chamado nunca fica bloqueado.
 - Banco: migrações do Flyway em `api-java/src/main/resources/db/migration/` (H2 em modo MySQL e MySQL 8).
+
+## Aparência e acessibilidade
+
+Menu lateral no computador (faixa no alto no celular), tela de entrada que cabe na janela sem rolar, cadastro em dois passos e
+cabeçalho com foto por área. Há **modo escuro**, **alto contraste**, **fonte mais legível**, **tamanho de texto** e **reduzir
+animações** (painel "Aa" em toda tela; o sistema também respeita `prefers-reduced-motion`). Tudo é HTML, CSS e JavaScript puros, sem
+estilo inline nem recurso externo (a CSP bloqueia). Fotos de prédios: Wikimedia Commons, domínio público (CC0), com a origem em
+[`docs/creditos-imagens.md`](docs/creditos-imagens.md).
 
 ## Requisitos x onde estão
 
@@ -188,7 +198,7 @@ cd api-java;           .\mvnw.cmd test                              # 191 testes
 - Gestão do projeto: [`CONTRIBUTING.md`](CONTRIBUTING.md) (política de versionamento), [`docs/riscos.md`](docs/riscos.md) (tabela de riscos) e
   [`docs/registro-de-revisoes.md`](docs/registro-de-revisoes.md) (quem revisou o quê, com as pendências).
 - Tempo real entre instâncias vale só para instâncias que compartilham o mesmo banco (atraso de ~1 s).
-- Gestão de vários condomínios, recuperação de senha por e-mail (hoje só o síndico redefine), painel desktop (PyQt5 do `aa`) e o que mais estiver em
+- Gestão de vários condomínios, painel desktop (PyQt5 do `aa`) e o que mais estiver em
   [`docs/ideias-futuras.md`](docs/ideias-futuras.md).
 - HTTPS real para publicar fora do localhost (o perfil `prod` já liga cookie `Secure` e leitura de cabeçalhos de proxy).
 - Revisão jurídica da página de privacidade.
