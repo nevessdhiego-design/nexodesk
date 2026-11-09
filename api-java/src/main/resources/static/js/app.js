@@ -280,7 +280,7 @@ function montarMenu(perfil) {
 /** Logotipo no topo, ícones nos botões do topo e ícones marcados com data-icone no HTML. */
 (function decorar() {
   document.querySelectorAll('.topo .marca').forEach((marca) =>
-    marca.prepend(el('img', { class: 'logo', src: '/img/logo.svg', alt: '', width: '28', height: '28' })));
+    marca.prepend(el('img', { class: 'logo', src: '/img/logo-icone-64.png', alt: '', width: '28', height: '28' })));
   const sino = document.getElementById('botao-sino');
   if (sino) sino.prepend(icone('sino'));
   const sairBotao = document.getElementById('botao-sair');
@@ -302,20 +302,6 @@ document.addEventListener('pointerdown', (ev) => {
   onda.style.top = (ev.clientY - caixa.top - tamanho / 2) + 'px';
   botao.append(onda);
   onda.addEventListener('animationend', () => onda.remove());
-});
-
-/** Foco de luz que acompanha o mouse nos cartões de resumo e nos chamados. */
-let quadroLuz = 0;
-document.addEventListener('pointermove', (ev) => {
-  if (quadroLuz || ev.pointerType === 'touch') return;
-  const alvo = ev.target.closest && ev.target.closest('.estatistica, .chamado');
-  if (!alvo || semMovimento()) return;
-  quadroLuz = requestAnimationFrame(() => {
-    quadroLuz = 0;
-    const caixa = alvo.getBoundingClientRect();
-    alvo.style.setProperty('--mx', (ev.clientX - caixa.left) + 'px');
-    alvo.style.setProperty('--my', (ev.clientY - caixa.top) + 'px');
-  });
 });
 
 /** Na primeira vez que a lista de chamados aparece, os cartões entram um depois do outro. As atualizações em tempo real não repetem. */

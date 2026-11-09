@@ -78,30 +78,38 @@ function blocoReabrir(c) {
     el('label', { for: 'reabrir-' + c.id, text: 'Motivo' }), motivo, el('div', { class: 'acoes' }, enviar), aviso);
 }
 
+/** O histórico pode trazer o código do status (EM_ANDAMENTO); na tela vai o nome por extenso. */
+const ROTULOS_STATUS = { ABERTO: 'Aberto', EM_ANDAMENTO: 'Em andamento', RESOLVIDO: 'Resolvido' };
+function rotuloDoStatus(codigo) {
+  return ROTULOS_STATUS[codigo] || codigo;
+}
+
 function cartaoChamado(c) {
   const detalhes = el('div', { class: 'hidden' });
   let carregado = false;
 
-  const alternar = el('button', { type: 'button', class: 'link', text: 'Ver detalhes' });
+  const alternar = el('button', { type: 'button', class: 'link', text: 'Ver detalhes', 'aria-expanded': 'false' });
   alternar.addEventListener('click', async () => {
     const aberto = !detalhes.classList.contains('hidden');
     if (aberto) {
       detalhes.classList.add('hidden');
       alternar.textContent = 'Ver detalhes';
+      alternar.setAttribute('aria-expanded', 'false');
       return;
     }
     if (!carregado) {
       try {
         const completo = await api('/api/chamados/' + c.id);
-        detalhes.append(
+        // Element.append(null) escreveria a palavra "null" na tela: só entra o que existe
+        detalhes.append(...[
           el('p', { class: 'descricao', text: completo.descricao }),
           blocoAntesDepois(completo),
           el('h3', { text: 'Histórico' }),
-          el('ul', {}, completo.historico.map((h) => el('li', {
-            text: formatarData(h.criadoEm) + ' — ' + (h.statusAnterior ? h.statusAnterior + ' → ' : '') + h.statusNovo
-              + (h.observacao ? ' (' + h.observacao + ')' : ''),
-          }))),
-        );
+          el('ul', { class: 'historico' }, completo.historico.map((h) => el('li', {},
+            el('span', { class: 'historico-data', text: formatarData(h.criadoEm) }),
+            el('span', { class: 'historico-texto', text: (h.statusAnterior ? rotuloDoStatus(h.statusAnterior) + ' → ' : '') + rotuloDoStatus(h.statusNovo)
+              + (h.observacao ? ' (' + h.observacao + ')' : '') })))),
+        ].filter(Boolean));
         carregado = true;
       } catch (erro) {
         detalhes.append(el('p', { class: 'mensagem erro', text: erro.message }));
@@ -109,6 +117,7 @@ function cartaoChamado(c) {
     }
     detalhes.classList.remove('hidden');
     alternar.textContent = 'Ocultar detalhes';
+    alternar.setAttribute('aria-expanded', 'true');
   });
 
   return el('article', { class: 'chamado st-' + c.status.toLowerCase() + (c.emergencia ? ' emergencia' : '') },
