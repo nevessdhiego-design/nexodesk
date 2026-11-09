@@ -196,11 +196,16 @@ function saudar(eu) {
   alvo.prepend(el('span', { class: 'saudacao', text: periodo + ', ' + eu.nome.split(' ')[0] }));
 }
 
+/** Quem pediu menos movimento (no sistema ou no painel de acessibilidade) não vê animações feitas por script. */
+function semMovimento() {
+  return (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+    || document.documentElement.classList.contains('a11y-sem-movimento');
+}
+
 /** Número que sobe até o valor (só na primeira vez; sem animação para quem pediu menos movimento). */
 function contar(no, valor) {
   const alvo = Number(valor);
-  const reduzido = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!Number.isFinite(alvo) || alvo <= 0 || reduzido || document.documentElement.classList.contains('a11y-sem-movimento')) {
+  if (!Number.isFinite(alvo) || alvo <= 0 || semMovimento()) {
     no.textContent = String(valor);
     return;
   }
@@ -279,4 +284,53 @@ function montarMenu(perfil) {
   const sairBotao = document.getElementById('botao-sair');
   if (sairBotao) sairBotao.prepend(icone('sair'));
   document.querySelectorAll('[data-icone]').forEach((no) => no.prepend(icone(no.dataset.icone)));
+})();
+
+// ---------- efeitos de movimento (só apresentação; tudo por classe e variável CSS, a CSP não aceita estilo inline) ----------
+
+/** Onda que nasce no ponto do clique, nos botões. */
+document.addEventListener('pointerdown', (ev) => {
+  const botao = ev.target.closest && ev.target.closest('button:not(:disabled):not(.link):not(.sino)');
+  if (!botao || semMovimento()) return;
+  const caixa = botao.getBoundingClientRect();
+  const tamanho = Math.max(caixa.width, caixa.height) * 2;
+  const onda = el('span', { class: 'onda', 'aria-hidden': 'true' });
+  onda.style.width = onda.style.height = tamanho + 'px';
+  onda.style.left = (ev.clientX - caixa.left - tamanho / 2) + 'px';
+  onda.style.top = (ev.clientY - caixa.top - tamanho / 2) + 'px';
+  botao.append(onda);
+  onda.addEventListener('animationend', () => onda.remove());
+});
+
+/** Foco de luz que acompanha o mouse nos cartões de resumo e nos chamados. */
+let quadroLuz = 0;
+document.addEventListener('pointermove', (ev) => {
+  if (quadroLuz || ev.pointerType === 'touch') return;
+  const alvo = ev.target.closest && ev.target.closest('.estatistica, .chamado');
+  if (!alvo || semMovimento()) return;
+  quadroLuz = requestAnimationFrame(() => {
+    quadroLuz = 0;
+    const caixa = alvo.getBoundingClientRect();
+    alvo.style.setProperty('--mx', (ev.clientX - caixa.left) + 'px');
+    alvo.style.setProperty('--my', (ev.clientY - caixa.top) + 'px');
+  });
+});
+
+/** Na primeira vez que a lista de chamados aparece, os cartões entram um depois do outro. As atualizações em tempo real não repetem. */
+(function entradaEscalonada() {
+  const lista = document.getElementById('lista-chamados');
+  if (!lista || !window.MutationObserver) return;
+  const observador = new MutationObserver(() => {
+    const cartoes = lista.querySelectorAll('.chamado');
+    if (!cartoes.length) return;
+    observador.disconnect();
+    if (semMovimento()) return;
+    cartoes.forEach((c, i) => {
+      if (i > 9) return;
+      c.style.setProperty('--i', String(i));
+      c.classList.add('entra');
+      c.addEventListener('animationend', (e) => { if (e.animationName === 'entrar') c.classList.remove('entra'); });
+    });
+  });
+  observador.observe(lista, { childList: true });
 })();
