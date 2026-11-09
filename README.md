@@ -183,8 +183,10 @@ cd api-java;           .\mvnw.cmd test                              # 191 testes
 
 ## Ainda não feito (decidir com o grupo)
 
-- **Teste de usabilidade com pessoas** (roteiro pronto em `docs/teste-usabilidade/`; nenhum teste aplicado).
+- **Teste de usabilidade (SUS): 87,5 pontos**, informado pelo grupo em 04/11/2026; participantes e respostas individuais ainda não registrados em `docs/teste-usabilidade/`. Falta validar a regra da fila com um síndico real.
 - E-mail (aviso de status **e recuperação de senha**) testado com um provedor real (hoje só contra servidor SMTP falso).
+- Gestão do projeto: [`CONTRIBUTING.md`](CONTRIBUTING.md) (política de versionamento), [`docs/riscos.md`](docs/riscos.md) (tabela de riscos) e
+  [`docs/registro-de-revisoes.md`](docs/registro-de-revisoes.md) (quem revisou o quê, com as pendências).
 - Tempo real entre instâncias vale só para instâncias que compartilham o mesmo banco (atraso de ~1 s).
 - Gestão de vários condomínios, recuperação de senha por e-mail (hoje só o síndico redefine), painel desktop (PyQt5 do `aa`) e o que mais estiver em
   [`docs/ideias-futuras.md`](docs/ideias-futuras.md).
