@@ -155,3 +155,13 @@ html.a11y-contraste .etapas li.feita span { background: #000; border-color: #000
 html.a11y-contraste .forca i { background: #ddd; }
 html.a11y-contraste .forca[data-nivel] i { outline: 1px solid #000; }
 html.a11y-contraste .caps-selo { background: #fff; color: #000; border: 2px solid #000; }
+
+/* logo do NexoDesk em uma placa branca sobre a foto (o nome é azul-marinho e só aparece bem em fundo claro) */
+.login-destaque .marca-grande { margin: 0 0 1.1rem; font-size: 1rem; line-height: 0; }
+.marca-placa { display: block; width: min(250px, 62%); padding: 16px 18px 14px; border-radius: 24px; background: #fff; box-shadow: 0 18px 50px rgba(6, 12, 24, .45); }
+.marca-placa img { display: block; width: 100%; height: auto; }
+@media (max-height: 760px) { .marca-placa { width: min(200px, 56%); padding: 12px 14px 10px; border-radius: 20px; } .login-destaque .marca-grande { margin-bottom: .8rem; } }
+@media (max-height: 640px) { .marca-placa { width: 150px; } }
+@media (max-width: 860px) { .marca-placa { width: 108px; padding: 8px 10px 6px; border-radius: 14px; } .login-destaque .marca-grande { margin: 0; } }
+/* a regra antiga do brilho no texto "Desk" não vale para a placa da logo */
+.login-destaque .marca-grande .marca-placa, html.a11y-contraste .login-destaque .marca-grande .marca-placa { background: #fff; -webkit-background-clip: border-box; background-clip: border-box; -webkit-text-fill-color: initial; animation: none; }

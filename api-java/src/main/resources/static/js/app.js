@@ -280,7 +280,7 @@ function montarMenu(perfil) {
 /** Logotipo no topo, ícones nos botões do topo e ícones marcados com data-icone no HTML. */
 (function decorar() {
   document.querySelectorAll('.topo .marca').forEach((marca) =>
-    marca.prepend(el('img', { class: 'logo', src: '/img/logo.svg', alt: '', width: '28', height: '28' })));
+    marca.prepend(el('img', { class: 'logo', src: '/img/logo-icone-64.png', alt: '', width: '28', height: '28' })));
   const sino = document.getElementById('botao-sino');
   if (sino) sino.prepend(icone('sino'));
   const sairBotao = document.getElementById('botao-sair');

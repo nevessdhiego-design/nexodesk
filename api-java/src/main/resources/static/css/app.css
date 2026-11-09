@@ -1053,3 +1053,55 @@ html.a11y-contraste .chamado button.link { border: 2px solid #000; background: #
 /* ---------- refino 8g: contraste do passo atual (branco sobre azul chegava a 4,1:1; agora 5,9:1) ---------- */
 .passos li.atual .bolinha { background: var(--accent); border-color: var(--accent); }
 html.a11y-escuro .passos li.atual .bolinha { background: var(--highlight); border-color: var(--highlight); }
+
+/* =====================================================================
+   Refino 8h: detalhes achados em uso real.
+   - botão "link" ficava com fundo azul e texto azul no hover (ilegível)
+   - "Ver detalhes" tinha outro formato que "Conversa" e ficava colado no "Enviar"
+   - avisos eram uma pilha de blocos grandes com link sublinhado
+   - histórico do chamado mostrava códigos soltos e a palavra "null"
+   ===================================================================== */
+button.link, button.link:hover, button.link:active { background: none; box-shadow: none; }
+button.link:hover { color: #1a56a8; text-decoration: underline; }
+button.link:focus-visible { outline: 3px solid rgba(47, 127, 214, .55); outline-offset: 2px; border-radius: 6px; }
+html.a11y-escuro button.link:hover { color: #b9d9ff; }
+html.a11y-contraste button.link:hover { color: #000; }
+
+/* ações em pílula do cartão: mesmo formato, mesma altura, espaço entre elas */
+.chamado > details, .chamado > button.link { margin-top: .6rem; }
+.chamado button.link { display: flex; align-items: center; gap: .5rem; width: max-content; padding: .32rem .8rem; border-radius: 999px; background: var(--chip); color: var(--chip-texto); font-size: .86rem; font-weight: 700; line-height: 1.5; text-decoration: none; }
+.chamado button.link::before { content: ""; width: .42rem; height: .42rem; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); transition: transform .2s ease; }
+.chamado button.link[aria-expanded="true"]::before { transform: rotate(45deg); }
+.chamado button.link:hover { background: #e3e6eb; color: var(--chip-texto); text-decoration: none; }
+html.a11y-escuro .chamado button.link:hover { background: #2c3441; color: var(--chip-texto); }
+html.a11y-contraste .chamado button.link:hover { background: #fff; color: #000; }
+.conversa .acoes, .reabrir .acoes, .envio-depois .acoes { margin-top: .75rem; }
+.conversa > label, .reabrir > label { margin-top: .75rem; }
+
+/* botão pequeno (ações dentro de listas) */
+button.pequeno { padding: .4rem .85rem; border-radius: 10px; font-size: .85rem; white-space: nowrap; }
+
+/* avisos: texto à esquerda, ação à direita, barra com "marcar todos" */
+.avisos-barra { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .6rem; }
+#lista-avisos { max-height: 360px; overflow-y: auto; padding: .15rem .35rem .35rem .15rem; }
+.notificacao { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.aviso-corpo { flex: 1; min-width: 0; }
+.aviso-texto { font-weight: 500; line-height: 1.4; }
+.aviso-hora { margin-top: .15rem; font-size: .8rem; }
+.notificacao button.pequeno { flex: none; }
+.notificacao.emergencia .aviso-texto { font-weight: 700; }
+@media (max-width: 560px) { .notificacao { flex-direction: column; align-items: flex-start; gap: .6rem; } .avisos-barra { flex-direction: column; align-items: flex-start; } }
+
+/* histórico do chamado em linha do tempo */
+.chamado h3 { margin: 1rem 0 .3rem; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.chamado ul.historico { list-style: none; margin: .5rem 0 0 .35rem; padding: 0 0 0 1.1rem; display: grid; gap: .65rem; border-left: 2px solid var(--border); font-size: .92rem; color: var(--text); }
+.chamado ul.historico li { position: relative; display: flex; flex-direction: column; gap: .05rem; }
+.chamado ul.historico li::before { content: ""; position: absolute; left: calc(-1.1rem - 5px); top: .42rem; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--card); }
+.historico-data { font-size: .78rem; color: var(--muted); }
+html.a11y-contraste .chamado ul.historico li::before { background: #000; }
+
+/* ---------- refino 8i: caixas e interruptores chapados, sem brilho colorido ---------- */
+input[type=checkbox]:checked, input[type=radio]:checked { box-shadow: none; }
+.interruptor input[type=checkbox]:checked, .a11y-opcao input[type=checkbox]:checked { box-shadow: none; }
+#emergencia:checked { background: var(--danger); box-shadow: none; }
+.interruptor input[type=checkbox]::before, .a11y-opcao input[type=checkbox]::before { box-shadow: 0 1px 3px rgba(0, 0, 0, .28); }
