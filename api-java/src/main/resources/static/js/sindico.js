@@ -194,7 +194,13 @@ async function carregarEstatisticas() {
       el('div', { class: 'rotulo', text: rotulo }))));
   if (!estatisticasJaApareceram) {
     estatisticasJaApareceram = true;
-    document.querySelectorAll('#estatisticas .valor').forEach((no) => contar(no, no.textContent));
+    document.querySelectorAll('#estatisticas .estatistica').forEach((cartao, i) => {
+      contar(cartao.querySelector('.valor'), cartao.querySelector('.valor').textContent);
+      if (semMovimento()) return;
+      cartao.style.setProperty('--i', String(i));
+      cartao.classList.add('entra');
+      cartao.addEventListener('animationend', (e) => { if (e.animationName === 'entrar') cartao.classList.remove('entra'); });
+    });
   }
   document.getElementById('graficos').replaceChildren(
     rosca('Chamados por situação', [['Abertos', e.abertos, 'c-aberto'], ['Em andamento', e.emAndamento, 'c-andamento'], ['Resolvidos', e.resolvidos, 'c-resolvido']]),
