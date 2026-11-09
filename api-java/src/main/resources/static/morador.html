@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NexoDesk - Meus chamados</title>
-  <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
+  <link rel="icon" type="image/png" href="/img/logo-icone-64.png">
   <link rel="stylesheet" href="/css/app.css">
   <link rel="stylesheet" href="/css/acessibilidade.css">
   <script src="/js/acessibilidade.js"></script>
@@ -25,7 +25,7 @@
   <main class="pagina" id="conteudo" tabindex="-1">
     <header class="cabecalho-pagina tema-morador">
       <span class="cabecalho-icone" data-icone="chamados"></span>
-      <div><h1>Meus chamados e abertura de chamado</h1><p>Abra um chamado e acompanhe cada passo até a resolução.</p></div>
+      <div><h1>Meus chamados</h1><p>Abra um chamado e acompanhe cada passo até a resolução.</p></div>
     </header>
     <section class="cartao hidden" id="painel-avisos" aria-live="polite">
       <h2>Avisos</h2>
@@ -39,11 +39,12 @@
         <label for="titulo">Título</label>
         <input id="titulo" type="text" maxlength="150" placeholder="Ex.: Lâmpada queimada no corredor do 2º andar" required>
 
-        <label for="categoria">Categoria</label>
-        <select id="categoria" required></select>
-
-        <label for="local">Local (opcional)</label>
-        <input id="local" type="text" maxlength="120" placeholder="Ex.: Garagem, bloco B">
+        <div class="duas-colunas">
+          <div><label for="categoria">Categoria</label>
+          <select id="categoria" required></select></div>
+          <div><label for="local">Local <span class="muted rotulo-extra">(opcional)</span></label>
+          <input id="local" type="text" maxlength="120" placeholder="Ex.: Garagem, bloco B"></div>
+        </div>
 
         <label for="descricao">Descrição</label>
         <textarea id="descricao" maxlength="2000" required></textarea>

@@ -8,7 +8,7 @@
 /* a página não rola; só o painel da direita rola se a janela for minúscula ou o texto estiver ampliado */
 html:has(.login-pagina), body:has(.login-pagina) { height: 100%; overflow: hidden; }
 .login-pagina { height: 100vh; height: 100dvh; min-height: 0; grid-template-columns: minmax(0, 1.05fr) minmax(420px, 620px); }
-.login-pagina > .login { position: relative; display: flex; overflow-y: auto; padding: 1rem clamp(1rem, 3vw, 3rem); background: linear-gradient(160deg, #f4f8fe 0%, #e6eefa 100%); }
+.login-pagina > .login { position: relative; display: flex; overflow-y: auto; padding: 1rem clamp(1rem, 3vw, 3rem); background: #f4f5f7; }
 .login-pagina > .login > .cartao { margin: auto; max-width: 470px; padding: 1.6rem 1.75rem 1.2rem; border: 0; box-shadow: 0 2px 4px rgba(6, 25, 51, .06), 0 24px 60px rgba(6, 25, 51, .18); }
 
 /* lado esquerdo */
@@ -25,8 +25,8 @@ html:has(.login-pagina), body:has(.login-pagina) { height: 100%; overflow: hidde
 .entrar-topo p { margin: .15rem 0 0; }
 
 /* abas em controle segmentado, com indicador que desliza */
-.abas { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 4px; margin-bottom: .55rem; border-radius: 14px; background: var(--abas-fundo, #e3ebf6); }
-.abas::before { content: ""; position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 11px; background: linear-gradient(180deg, #2f7fd6, #1f63c2); box-shadow: 0 4px 12px rgba(31, 99, 194, .35); transition: transform .32s cubic-bezier(.3, .8, .3, 1); }
+.abas { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 4px; margin-bottom: .55rem; border-radius: 14px; background: var(--abas-fundo, #eceef2); }
+.abas::before { content: ""; position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 11px; background: var(--accent); box-shadow: 0 2px 8px rgba(31, 99, 194, .3); transition: transform .32s cubic-bezier(.3, .8, .3, 1); }
 .abas[data-ativa="cadastrar"]::before { transform: translateX(100%); }
 .abas button.secundario { position: relative; z-index: 1; background: transparent; color: var(--secondary); border: 0; box-shadow: none; padding: .55rem .8rem; transition: color .25s ease; }
 .abas button.secundario.ativa { background: transparent; color: #fff; }
@@ -65,7 +65,7 @@ html:has(.login-pagina), body:has(.login-pagina) { height: 100%; overflow: hidde
 .etapas li span { width: 1.6rem; height: 1.6rem; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; border: 2px solid var(--border); background: #fff; font-size: .78rem; transition: all .25s ease; }
 .etapas li + li::before { content: ""; width: 2.4rem; height: 3px; border-radius: 2px; background: var(--border); transition: background .3s ease; }
 .etapas li.atual { color: var(--secondary); }
-.etapas li.atual span { border-color: var(--highlight); background: var(--highlight); color: #fff; box-shadow: 0 0 0 4px rgba(47, 127, 214, .2); }
+.etapas li.atual span { border-color: var(--accent); background: var(--accent); color: #fff; box-shadow: 0 0 0 4px rgba(47, 127, 214, .2); }
 .etapas li.feita { color: var(--ok); }
 .etapas li.feita span { border-color: var(--ok); background: var(--ok); color: #fff; }
 #etapa-1.feita + li::before { background: var(--ok); }
@@ -155,3 +155,24 @@ html.a11y-contraste .etapas li.feita span { background: #000; border-color: #000
 html.a11y-contraste .forca i { background: #ddd; }
 html.a11y-contraste .forca[data-nivel] i { outline: 1px solid #000; }
 html.a11y-contraste .caps-selo { background: #fff; color: #000; border: 2px solid #000; }
+
+/* logo do NexoDesk em uma placa branca sobre a foto (o nome é azul-marinho e só aparece bem em fundo claro) */
+.login-destaque .marca-grande { margin: 0 0 1.1rem; font-size: 1rem; line-height: 0; }
+.marca-placa { display: block; width: min(250px, 62%); padding: 16px 18px 14px; border-radius: 24px; background: #fff; box-shadow: 0 18px 50px rgba(6, 12, 24, .45); }
+.marca-placa img { display: block; width: 100%; height: auto; }
+@media (max-height: 760px) { .marca-placa { width: min(200px, 56%); padding: 12px 14px 10px; border-radius: 20px; } .login-destaque .marca-grande { margin-bottom: .8rem; } }
+@media (max-height: 640px) { .marca-placa { width: 150px; } }
+@media (max-width: 860px) { .marca-placa { width: 108px; padding: 8px 10px 6px; border-radius: 14px; } .login-destaque .marca-grande { margin: 0; } }
+/* a regra antiga do brilho no texto "Desk" não vale para a placa da logo */
+.login-destaque .marca-grande .marca-placa, html.a11y-contraste .login-destaque .marca-grande .marca-placa { background: #fff; -webkit-background-clip: border-box; background-clip: border-box; -webkit-text-fill-color: initial; animation: none; }
+
+/* logo direto sobre a foto (PNG transparente), com contorno branco fino para o azul-marinho do nome continuar legível */
+.login-destaque .marca-grande .marca-placa { width: min(260px, 64%); padding: 0; border-radius: 0; background: none; box-shadow: none; }
+.marca-placa img { filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 8px 20px rgba(0, 0, 0, .35)); }
+.login-destaque .marca-grande { margin-bottom: 1.6rem; }
+@media (max-height: 760px) { .login-destaque .marca-grande .marca-placa { width: min(210px, 58%); } .login-destaque .marca-grande { margin-bottom: 1.1rem; } }
+@media (max-height: 640px) { .login-destaque .marca-grande .marca-placa { width: 160px; } }
+@media (max-width: 860px) { .login-destaque .marca-grande .marca-placa { width: 104px; } .marca-placa img { filter: drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff) drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff); } }
+/* alto contraste: fundo preto, então a logo volta para a placa branca */
+html.a11y-contraste .login-destaque .marca-grande .marca-placa { padding: 14px 16px; border-radius: 20px; background: #fff; }
+html.a11y-contraste .marca-placa img { filter: none; }
