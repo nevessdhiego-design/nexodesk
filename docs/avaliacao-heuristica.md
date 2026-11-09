@@ -55,4 +55,4 @@ desativar usuário e ao excluir a conta, anonimato explicado na própria tela.
 
 - "Fizemos uma **avaliação heurística** das telas (10 heurísticas de Nielsen) e uma revisão dos casos da regra. Isso encontrou 8 pontos de
   melhoria, dois de gravidade 3 que são os próximos."
-- **Não dizer** "testamos com usuários", "SUS de X pontos" nem "validado por síndico" se isso não aconteceu com pessoas reais e com respostas em mãos.
+- O SUS de **87,5** é do grupo (teste com pessoas, informado em 04/11/2026): citem o número de participantes. **Não dizer** "validado por síndico": isso ainda não aconteceu.
