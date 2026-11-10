@@ -232,3 +232,7 @@ cd api-java;           .\mvnw.cmd test                              # 191 testes
   [`docs/ideias-futuras.md`](docs/ideias-futuras.md).
 - HTTPS real para publicar fora do localhost (o perfil `prod` já liga cookie `Secure` e leitura de cabeçalhos de proxy).
 - Revisão jurídica da página de privacidade.
+
+## Licença
+
+[MIT](LICENSE). Projeto acadêmico da equipe NexoDesk (USJT). As fotos de prédios têm origem e licença em [`docs/creditos-imagens.md`](docs/creditos-imagens.md).
