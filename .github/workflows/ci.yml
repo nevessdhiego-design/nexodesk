@@ -30,7 +30,7 @@ jobs:
         run: chmod +x mvnw && ./mvnw -B clean test
       - name: Relatórios dos testes (só se falhar)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: relatorios-java-h2
           path: api-java/target/surefire-reports
@@ -67,7 +67,7 @@ jobs:
         run: chmod +x mvnw && ./mvnw -B clean test
       - name: Relatórios dos testes (só se falhar)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: relatorios-java-mysql
           path: api-java/target/surefire-reports
