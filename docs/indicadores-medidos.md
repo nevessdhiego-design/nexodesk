@@ -91,7 +91,7 @@ O relatório da 2ª parcial traz estes valores; confirmem com o Kanban antes de 
 | Indicador do relatório | Situação |
 |---|---|
 | Sprints concluídas / total ("2 / 3") | só o grupo sabe; o Kanban (GitHub Projects) deve mostrar |
-| Tarefas concluídas no Kanban ("16") | **conferido em 04/11/2026** (`gh issue list`): **20 cards, 14 fechados e 6 abertos**; o relatório diz 16, então 14 e 16 não são o mesmo número. Os 6 abertos (#15 a #20) são itens do plano da 1ª parcial: parte já foi feita (documentação técnica, testes de integração, refino da priorização) e os cards não foram fechados |
+| Tarefas concluídas no Kanban ("16") | **conferido em 09/11/2026** (`gh issue list`): **20 cards, 16 fechados e 4 abertos**. Em 04/11 eram 14 fechados e 6 abertos; os cards #17 (refino da priorização) e #18 (testes de integração) foram fechados em 09/11 por já estarem feitos. O "16" do relatório só bate com o Kanban a partir de 09/11, não na data em que foi escrito. Abertos: #15 e #16 (bugs de interface sem descrição, **o grupo precisa dizer quais eram**), #19 (documentação técnica, com pendências de revisão) e #20 (apresentação final) |
 | Bugs em aberto ("2 de interface") | os cards #15 e #16 existem **sem descrição**; um defeito real de interface foi achado e corrigido em 14/10 (rolagem horizontal no celular, commit `8bc8040`). Descrevam os bugs reais ou fechem os cards |
 | % de conclusão estimado | estimativa do grupo |
 
