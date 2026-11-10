@@ -1,16 +1,46 @@
-<p align="center"><img src="api-java/src/main/resources/static/img/logo-icone.png" alt="Símbolo do NexoDesk" width="96"></p>
+<p align="center"><img src="api-java/src/main/resources/static/img/logo-nexodesk.png" alt="NexoDesk" width="220"></p>
 
-# NexoDesk (código)
+<p align="center">
+  <a href="https://github.com/nevessdhiego-design/nexodesk/actions/workflows/ci.yml"><img src="https://github.com/nevessdhiego-design/nexodesk/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/Java-21-orange" alt="Java 21">
+  <img src="https://img.shields.io/badge/Spring%20Boot-4-6DB33F" alt="Spring Boot 4">
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/FastAPI-009688" alt="FastAPI">
+  <img src="https://img.shields.io/badge/MySQL%208.4%20%7C%20H2-4479A1" alt="MySQL 8.4 ou H2">
+</p>
 
-[![CI](https://github.com/nevessdhiego-design/nexodesk/actions/workflows/ci.yml/badge.svg)](https://github.com/nevessdhiego-design/nexodesk/actions/workflows/ci.yml) (o selo só aparece para quem tem acesso ao repositório privado)
+# NexoDesk
 
-Helpdesk para condomínios: o morador abre chamados e conversa com a equipe dentro deles; o sistema estima a
-**dificuldade** de cada um e monta a fila do síndico (**emergências primeiro**, depois do mais fácil ao mais difícil, com bônus
-para o chamado antigo não ser esquecido). O síndico atribui um **responsável** (ele ou um zelador) e tudo aparece **em tempo
-real** nas telas abertas.
+**Helpdesk para condomínios.** O morador abre um chamado (com foto, se quiser) e conversa com a equipe dentro dele; o sistema
+estima a **dificuldade** e monta a fila do síndico (**emergências primeiro**, depois do mais fácil ao mais difícil, com bônus para o
+chamado antigo não ser esquecido). O síndico atribui um **responsável** (ele ou um zelador) e tudo aparece **em tempo real** nas
+telas abertas.
 
-Reescrita do protótipo antigo "Nexo" (PHP + PyQt5, pasta `aa`) para **Java + Python + SQL**, como no
-relatório da 1ª parcial.
+Projeto acadêmico em grupo: A3 de *Projeto e Engenharia de Software* (USJT, 2026/2). Reescrita do protótipo antigo "Nexo"
+(PHP + PyQt5) para **Java + Python + SQL**.
+
+## Em 30 segundos
+
+- **Emergência passa na frente** da fila e mostra os telefones 190, 192, 193 e 199. O sistema **não liga** para ninguém.
+- **Dificuldade estimada** por um serviço Python com regras testadas; quem **atribui** o responsável é sempre o síndico (o sistema só sugere).
+- **Atendimento completo:** checklist por serviço, foto do "antes" e do "depois", conversa dentro do chamado, prazo por categoria e avisos em tempo real.
+- **Para o síndico:** relatório do período com CSV, gestão de usuários, ausências e escala da equipe.
+- **Segurança e privacidade:** senhas com bcrypt, CSRF, CSP restritiva, foto regravada sem GPS, chamado anônimo opcional e exclusão de conta.
+- **Qualidade:** 191 testes Java e 20 Python, com CI no GitHub Actions (Java no H2, Java no MySQL 8.4 e Python).
+
+## Telas
+
+Prints do perfil de demonstração, com dados fictícios.
+
+| Entrar | Painel do síndico |
+|:--:|:--:|
+| <img src="docs/telas/01-entrar.jpg" alt="Tela de entrada" width="100%"> | <img src="docs/telas/02-painel-do-sindico.jpg" alt="Painel do síndico com resumo e gráficos" width="100%"> |
+| **Fila de chamados** | **Modo escuro** |
+| <img src="docs/telas/03-fila-de-chamados.jpg" alt="Fila de chamados com emergência no topo" width="100%"> | <img src="docs/telas/04-modo-escuro.jpg" alt="Painel no modo escuro" width="100%"> |
+| **Relatórios** | **Morador: abrir e acompanhar chamados** |
+| <img src="docs/telas/05-relatorios.jpg" alt="Relatórios do período" width="100%"> | <img src="docs/telas/06-morador.jpg" alt="Tela do morador" width="100%"> |
+
+<p align="center"><img src="docs/telas/07-celular.jpg" alt="Tela do morador no celular" width="260"></p>
 
 ## Arquitetura
 
