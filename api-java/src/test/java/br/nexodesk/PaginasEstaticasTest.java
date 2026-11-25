@@ -86,6 +86,17 @@ class PaginasEstaticasTest {
         }
     }
 
+    /** A tela de carregamento é montada por JS e desligada por "reduzir movimento": toda tela precisa carregá-la. */
+    @Test
+    void todaTelaCarregaATelaDeCarregamento() throws IOException {
+        for (Path p : arquivos(".html")) {
+            String html = ler(p);
+            assertThat(html).as(p.getFileName().toString()).contains("/css/carregando.css").contains("/js/carregando.js");
+        }
+        String css = ler(RAIZ.resolve("css").resolve("carregando.css"));
+        assertThat(css).contains("prefers-reduced-motion").contains("a11y-sem-movimento");
+    }
+
     @Test
     void todoCampoDeFormularioTemRotulo() throws IOException {
         Pattern campo = Pattern.compile("<(?:input|select|textarea)\\b[^>]*\\bid=\"([^\"]+)\"[^>]*>");
