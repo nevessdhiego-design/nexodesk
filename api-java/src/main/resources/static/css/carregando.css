@@ -1,0 +1,50 @@
+/* =====================================================================
+   Tela de carregamento: um prédio cujas janelas vão acendendo, como chamados sendo atendidos.
+   Sem barra de progresso. Montada por js/carregando.js (a CSP não aceita HTML nem estilo inline).
+   Desligada por "reduzir movimento" (sistema ou painel de acessibilidade).
+   ===================================================================== */
+.carregando {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  text-align: center;
+  color: #fff;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; /* fica fora do body: precisa da própria fonte */
+  line-height: 1.5;
+  background: radial-gradient(ellipse at 50% 32%, #14407e 0%, #0b2850 46%, #0f1b2d 100%);
+  transition: opacity .5s ease, visibility .5s ease;
+}
+.carregando.saindo { opacity: 0; visibility: hidden; }
+
+.carregando-predio { width: 150px; height: auto; overflow: visible; filter: drop-shadow(0 14px 30px rgba(47, 127, 214, .45)); }
+.carregando-corpo { fill: #153562; stroke: #2f7fd6; stroke-width: 2; }
+.carregando-topo { fill: #1b4580; stroke: #2f7fd6; stroke-width: 2; }
+.carregando-chao { stroke: #2f7fd6; stroke-width: 2; stroke-linecap: round; opacity: .7; }
+.carregando-porta { fill: #0f1b2d; stroke: #2f7fd6; stroke-width: 1.5; }
+.carregando-janela { fill: #1d4a86; animation: carregando-acender 1.8s ease-in-out infinite both; }
+
+@keyframes carregando-acender {
+  0%, 8% { fill: #1d4a86; }
+  26%, 66% { fill: #ffd36b; }
+  86%, 100% { fill: #1d4a86; }
+}
+
+.carregando-marca { margin: 0; font-size: 1.7rem; font-weight: 800; letter-spacing: .02em; }
+.carregando-marca span { color: #5ab0ff; }
+.carregando-texto { margin: 0; font-size: .95rem; color: #c9dcf5; }
+.carregando-pontos span { animation: carregando-ponto 1.4s ease-in-out infinite both; }
+.carregando-pontos span:nth-child(2) { animation-delay: .2s; }
+.carregando-pontos span:nth-child(3) { animation-delay: .4s; }
+@keyframes carregando-ponto { 0%, 20% { opacity: .15; } 50%, 80% { opacity: 1; } 100% { opacity: .15; } }
+
+.carregando-so-leitor { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+@media (prefers-reduced-motion: reduce) { .carregando { display: none; } }
+html.a11y-sem-movimento .carregando { display: none; }
+html:has(.carregando) { overflow: hidden; }
